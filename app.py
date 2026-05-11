@@ -1,128 +1,112 @@
 import chainlit as cl
-from autogen import AssistantAgent
+import asyncio
 import os
-import requests
-
-# 配置
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-WIKI_JS_URL = os.getenv("WIKI_JS_URL", "https://wiki.git4ta.fun")
-WIKI_JS_TOKEN = os.getenv("WIKI_JS_TOKEN")
+from debate.modern_engine import ModernDebateEngine
+from core.config import config
+from core.search import get_global_mapping
 
 @cl.on_chat_start
 async def start():
-    """初始化辩论系统"""
+    """Initialize the Modern Kunpengzhi AI Debate System (v1.1)."""
+    chapter_dir = "/home/ben/kunpengzhi/牧人记/"
+    chapters = []
+    if os.path.exists(chapter_dir):
+        chapters = [f.replace(".md", "") for f in os.listdir(chapter_dir) if f.endswith(".md")]
+        chapters.sort()
+
+    # Fixed cl.Action for Chainlit 1.3+ Compatibility
+    actions = []
+    for c in chapters[:8]:
+        # Using payload as required by newer Pydantic/Chainlit versions
+        actions.append(cl.Action(
+            name="select_chapter", 
+            value=c, 
+            label=c[:12] + "..",
+            payload={"value": c} 
+        ))
+    
     await cl.Message(
-        content="""🦅 **鲲鹏志 4v4 辩论系统**
+        content=f"""🦅 **鲲鹏志 1.1: 全景 GraphRAG 辩论系统**
 
-我可以组织 4v4 辩论队，辩题包括：
-- 历史事件分析
-- 地缘政治博弈  
-- 文明演进路径
-- 技术发展趋势
-
-请输入您想辩论的议题，例如：
-"雅尔塔体系是否加速了冷战爆发？"
-"""
+系统已就绪，已连接 OCI HeatWave 核心。
+请直接点击按钮开始，或输入编号。
+""",
+        actions=actions
     ).send()
+
+@cl.action_callback("select_chapter")
+async def on_action(action: cl.Action):
+    # Retrieve value from payload to be safe
+    topic_value = action.payload.get("value", action.value)
+    await main(cl.Message(content=topic_value))
 
 @cl.on_message
 async def main(message: cl.Message):
-    """处理辩论请求"""
-    topic = message.content
+    """Handle debate requests with Global Mapping and Provocative 1v1."""
+    topic = message.content.strip()
     
-    msg = cl.Message(content=f"🎯 **辩题**: {topic}\n\n正在从 Wiki.js 获取相关知识...")
-    await msg.send()
+    # 1. Human-Centric Global Mapping
+    status_msg = cl.Message(content=f"📡 **正在调取 40 万字全景地图...**")
+    await status_msg.send()
     
+    global_map = get_global_mapping(topic)
+    await cl.Message(content=global_map).send()
+
+    # 2. Local Context Search
+    chapter_dir = "/home/ben/kunpengzhi/牧人记/"
+    chapter_context = None
+    matched_file = None
+    
+    if os.path.exists(chapter_dir):
+        files = os.listdir(chapter_dir)
+        for f in files:
+            if not f.endswith(".md"): continue
+            if topic in f or topic.zfill(2) in f:
+                matched_file = f
+                break
+
+    if matched_file:
+        chapter_path = os.path.join(chapter_dir, matched_file)
+        await cl.Message(content=f"📖 **加载本地原文**: `{matched_file}`").send()
+        with open(chapter_path, 'r', encoding='utf-8') as f:
+            chapter_context = f.read()
+        await cl.Message(content=f"📜 **预览**:\n---\n{chapter_context[:800]}...\n---").send()
+    else:
+        await cl.Message(content=f"🔍 未发现本地匹配，将使用 HeatWave 全量搜索。").send()
+
     try:
-        # 从 Wiki.js 获取相关内容
-        wiki_content = fetch_wiki_content(topic)
-        
-        # 创建 8 个智能体（4v4）
-        agents = create_debate_agents(topic, wiki_content)
-        
-        # 启动辩论
-        debate_result = await run_debate(agents, topic)
-        
-        await msg.stream_token(f"\n\n✅ **辩论完成**\n\n{debate_result}")
-        
+        # 3. Engine Init
+        engine = ModernDebateEngine(topic, chapter_context=chapter_context)
+        team = engine.create_debate_team(num_pro=1, num_con=1)
+
+        await cl.Message(content=f"🎬 **辩论开始 (1v1 + Coordinator)**").send()
+
+        # 4. Token Streaming
+        async def run_and_display():
+            current_author = None
+            current_msg = None
+
+            async for event in team.run_stream(task=f"开始针对‘{topic}’进行深度辩论。"):
+                source = getattr(event, 'source', None)
+                content = getattr(event, 'content', None)
+
+                if content:
+                    if source != current_author:
+                        current_author = source
+                        current_msg = cl.Message(author=source, content="")
+                        await current_msg.send()
+                    
+                    # Smooth streaming
+                    chunk_size = 6
+                    for i in range(0, len(content), chunk_size):
+                        chunk = content[i:i+chunk_size]
+                        await current_msg.stream_token(chunk)
+                        await asyncio.sleep(0.01)
+                    
+                    await current_msg.update()
+
+        await run_and_display()
+        await cl.Message(content="🏆 **当前回合结束**。").send()
+
     except Exception as e:
-        await cl.Message(
-            content=f"❌ 辩论出错：{str(e)}"
-        ).send()
-
-def fetch_wiki_content(topic):
-    """从 Wiki.js GraphQL API 获取内容"""
-    if not WIKI_JS_TOKEN:
-        return "Wiki.js 未配置，使用默认知识"
-    
-    query = f"""
-    {{
-      pages {{
-        list(query: "{topic}") {{
-          title
-          description
-          path
-        }}
-      }}
-    }}
-    """
-    
-    try:
-        response = requests.post(
-            f"{WIKI_JS_URL}/api/graphql",
-            json={"query": query},
-            headers={"Authorization": f"Bearer {WIKI_JS_TOKEN}"}
-        )
-        data = response.json()
-        pages = data.get('data', {}).get('pages', {}).get('list', [])
-        return f"找到 {len(pages)} 个相关页面"
-    except Exception as e:
-        return f"Wiki.js 查询失败: {str(e)}"
-
-def create_debate_agents(topic, context):
-    """创建 4v4 辩论智能体"""
-    
-    # 正方 4 人
-    pro_agents = [
-        AssistantAgent(
-            name=f"正方_{i}",
-            llm_config={"config_list": [{"model": "gpt-4", "api_key": OPENAI_API_KEY}]},
-            system_message=f"""你是鲲鹏志知识库的正方辩手 #{i}。
-辩题：{topic}
-你的立场：支持该观点
-背景知识：{context}
-要求：引用历史事实、数据支撑、逻辑严密"""
-        )
-        for i in range(1, 5)
-    ]
-    
-    # 反方 4 人
-    con_agents = [
-        AssistantAgent(
-            name=f"反方_{i}",
-            llm_config={"config_list": [{"model": "gpt-4", "api_key": OPENAI_API_KEY}]},
-            system_message=f"""你是鲲鹏志知识库的反方辩手 #{i}。
-辩题：{topic}
-你的立场：反对该观点
-背景知识：{context}
-要求：提出质疑、指出漏洞、提供反例"""
-        )
-        for i in range(1, 5)
-    ]
-    
-    return pro_agents + con_agents
-
-async def run_debate(agents, topic):
-    """运行辩论流程"""
-    results = []
-    
-    # 简化版：轮流发言
-    for agent in agents[:4]:
-        response = f"**{agent.name}**: 我认为{topic}是正确的，因为..."
-        results.append(response)
-    
-    for agent in agents[4:]:
-        response = f"**{agent.name}**: 我不同意，理由是..."
-        results.append(response)
-    
-    return "\n\n".join(results)
+        await cl.Message(content=f"❌ 运行错误: {str(e)}").send()
