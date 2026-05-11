@@ -8,12 +8,12 @@ from core.search import get_global_mapping
 @cl.on_chat_start
 async def start():
     """Initialize the Modern Kunpengzhi AI Debate System (v1.1)."""
-    # Heroku doesn't have the local path /home/ben/..., use relative or configurable path
-    chapter_dir = os.getenv("CHAPTER_DIR", "./.files/chapters/")
+    chapter_dir = config.CHAPTER_DIR
     if not os.path.exists(chapter_dir):
         os.makedirs(chapter_dir, exist_ok=True)
     
     chapters = []
+    if os.path.exists(chapter_dir):
         chapters = [f.replace(".md", "") for f in os.listdir(chapter_dir) if f.endswith(".md")]
         chapters.sort()
 
@@ -56,7 +56,7 @@ async def main(message: cl.Message):
     await cl.Message(content=global_map).send()
 
     # 2. Local Context Search
-    chapter_dir = "/home/ben/kunpengzhi/牧人记/"
+    chapter_dir = config.CHAPTER_DIR
     chapter_context = None
     matched_file = None
     

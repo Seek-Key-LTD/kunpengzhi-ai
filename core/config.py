@@ -20,6 +20,10 @@ class Config:
     # Voyage AI for Embeddings
     VOYAGE_API_KEY = os.getenv("VOYAGE_API_KEY", "")
     VOYAGE_API_URL = os.getenv("VOYAGE_API_URL", "https://api.voyageai.com/v1/embeddings")
+    VOYAGE_MODEL = os.getenv("VOYAGE_MODEL", "voyage-large-2")
+    
+    # GraphRAG Configuration
+    POLL_INTERVAL = int(os.getenv("POLL_INTERVAL", "60"))
     
     # Wiki.js Configuration
     WIKI_JS_URL = os.getenv("WIKI_JS_URL", "https://wiki.seekkey.eu.org/graphql")
@@ -27,5 +31,8 @@ class Config:
     
     # Chainlit Configuration
     CHAINLIT_AUTH_SECRET = os.getenv("CHAINLIT_AUTH_SECRET", "")
+    
+    # Path Configuration
+    CHAPTER_DIR = os.getenv("CHAPTER_DIR", "./.files/chapters/")
 
 config = Config()

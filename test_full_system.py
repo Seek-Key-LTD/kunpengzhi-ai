@@ -21,7 +21,7 @@ async def test_modern_debate_cli(topic_input: str):
     print(f"\n{global_map}")
 
     # 2. Local Context Search
-    chapter_dir = "/home/ben/kunpengzhi/牧人记/"
+    chapter_dir = config.CHAPTER_DIR
     chapter_context = None
     matched_file = None
     
