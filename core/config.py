@@ -13,10 +13,13 @@ class Config:
     
     # OpenAI Configuration
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
     OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    DEBATE_MODEL = os.getenv("DEBATE_MODEL", "gemini-2.5-flash")
     
     # Voyage AI for Embeddings
     VOYAGE_API_KEY = os.getenv("VOYAGE_API_KEY", "")
+    VOYAGE_API_URL = os.getenv("VOYAGE_API_URL", "https://api.voyageai.com/v1/embeddings")
     
     # Wiki.js Configuration
     WIKI_JS_URL = os.getenv("WIKI_JS_URL", "https://wiki.seekkey.eu.org/graphql")

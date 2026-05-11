@@ -8,9 +8,12 @@ from core.search import get_global_mapping
 @cl.on_chat_start
 async def start():
     """Initialize the Modern Kunpengzhi AI Debate System (v1.1)."""
-    chapter_dir = "/home/ben/kunpengzhi/牧人记/"
+    # Heroku doesn't have the local path /home/ben/..., use relative or configurable path
+    chapter_dir = os.getenv("CHAPTER_DIR", "./.files/chapters/")
+    if not os.path.exists(chapter_dir):
+        os.makedirs(chapter_dir, exist_ok=True)
+    
     chapters = []
-    if os.path.exists(chapter_dir):
         chapters = [f.replace(".md", "") for f in os.listdir(chapter_dir) if f.endswith(".md")]
         chapters.sort()
 
