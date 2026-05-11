@@ -3,17 +3,24 @@ from .config import config
 
 class Database:
     def __init__(self):
-        # Optimized for OCI HeatWave / MySQL 8.x
+        # Support both local (Tailscale) and production (Heroku/SSL)
         kwargs = {
             "host": config.DB_HOST,
             "port": config.DB_PORT,
             "user": config.DB_USER,
             "password": config.DB_PASSWORD,
             "database": config.DB_NAME,
-            "ssl_disabled": True,  # OCI MySQL 9.6-cloud requires SSL disabled
             "use_pure": True,
             "connection_timeout": 10,
         }
+        
+        # For OCI MySQL with public endpoint (Heroku), enable SSL
+        # For Tailscale internal access, disable SSL
+        if not config.DB_HOST.startswith('100.'):  # Not Tailscale IP
+            kwargs["ssl_disabled"] = False
+            # OCI provides CA cert, but mysql.connector can auto-negotiate
+        else:
+            kwargs["ssl_disabled"] = True  # Tailscale doesn't need SSL
         
         # OCI HeatWave often requires specific auth and SSL
         try:
