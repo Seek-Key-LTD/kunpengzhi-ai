@@ -31,6 +31,7 @@ class Config:
     
     # Chainlit Configuration
     CHAINLIT_AUTH_SECRET = os.getenv("CHAINLIT_AUTH_SECRET", "")
+    APP_PASSWORD = os.getenv("APP_PASSWORD", "3131")
     
     # Path Configuration
     CHAPTER_DIR = os.getenv("CHAPTER_DIR", "./.files/chapters/")

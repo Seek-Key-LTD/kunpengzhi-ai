@@ -5,6 +5,13 @@ from debate.modern_engine import ModernDebateEngine
 from core.config import config
 from core.search import get_global_mapping
 
+@cl.password_auth_callback
+def auth_callback(username: str, password: str):
+    """Simple password authentication."""
+    if password == config.APP_PASSWORD:
+        return cl.User(identifier=username)
+    return None
+
 @cl.on_chat_start
 async def start():
     """Initialize the Modern Kunpengzhi AI Debate System (v1.1)."""
