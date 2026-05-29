@@ -190,35 +190,5 @@
     "skill_hash": "fc55af2721ded2f473da6ad580b081642a5f67808d655182577a24c6453f5e2c",
     "is_detected": true,
     "last_detect_ts": 1780046571164
-  },
-  "feishu-channel-rules": {
-    "skill_name": "feishu-channel-rules",
-    "skill_hash": "b1617037daa99291dd43caa2dac95236b62cfd5d469912f145e94897a915508c",
-    "is_detected": true,
-    "last_detect_ts": 1780049043792
-  },
-  "feishu-lark-cli": {
-    "skill_name": "feishu-lark-cli",
-    "skill_hash": "7fea78d96361d4b416f5570f4ec9892342d39c0f9a7e48a623ee9432ca74e93f",
-    "is_detected": true,
-    "last_detect_ts": 1780049043964
-  },
-  "feishu-troubleshoot": {
-    "skill_name": "feishu-troubleshoot",
-    "skill_hash": "297db77e448182cb21a3dbd4c764ee966c8d5fe0efa36c6326cd921e256f8208",
-    "is_detected": true,
-    "last_detect_ts": 1780049044263
-  },
-  "miaoda-coding": {
-    "skill_name": "miaoda-coding",
-    "skill_hash": "fdba55f241b913ad859ea4ca8a7c1a9f19c9968b8f90f50b7b0cb963080a674f",
-    "is_detected": true,
-    "last_detect_ts": 1780049044495
-  },
-  "miaoda-database-skill": {
-    "skill_name": "miaoda-database-skill",
-    "skill_hash": "4bd93439f61b8c495031b9e36aaa594944e5dd35ef7fd954a34a8ca9c5acc49b",
-    "is_detected": true,
-    "last_detect_ts": 1780049044693
   }
 }
