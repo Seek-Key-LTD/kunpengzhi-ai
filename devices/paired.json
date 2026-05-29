@@ -68,11 +68,12 @@
           "operator.read",
           "operator.write"
         ],
-        "createdAtMs": 1772965495329
+        "createdAtMs": 1772965495329,
+        "lastUsedAtMs": 1780047681585
       }
     },
     "createdAtMs": 1772965495329,
     "approvedAtMs": 1772965495329,
-    "displayName": "agent"
+    "displayName": "gateway:health"
   }
 }

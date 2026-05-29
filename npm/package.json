@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "overrides": {
+    "axios": "1.16.0",
+    "fast-uri": "3.1.2",
+    "follow-redirects": "1.16.0",
+    "ip-address": "10.2.0",
+    "node-domexception": "npm:@nolyfill/domexception@1.0.28",
+    "uuid": "14.0.0"
+  },
+  "openclaw": {
+    "managedOverrides": [
+      "axios",
+      "fast-uri",
+      "follow-redirects",
+      "ip-address",
+      "node-domexception",
+      "uuid"
+    ]
+  },
+  "dependencies": {
+    "@lark-tns/openclaw-guardian-plugin": "2026.5.19",
+    "@shareclz/openclaw-mem0-plugin": "1.1.7"
+  }
+}

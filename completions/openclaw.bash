@@ -6,21 +6,26 @@ _openclaw_completion() {
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     
     # Simple top-level completion for now
-    opts="completion setup onboard configure config backup doctor dashboard reset uninstall message mcp agent agents status health sessions tasks acp gateway daemon logs system models infer approvals exec-policy nodes devices node sandbox tui cron dns docs proxy hooks webhooks qr clawbot browser memory feishu-diagnose pairing plugins channels directory security secrets skills update -V, --container --dev --profile --log-level --no-color"
+    opts="completion crestodian setup onboard configure config backup migrate doctor dashboard reset uninstall message mcp transcripts agent agents status health sessions commitments tasks acp gateway daemon logs system models infer approvals exec-policy nodes devices node sandbox tui cron dns docs proxy hooks webhooks qr clawbot pairing plugins channels directory security secrets skills update --version --container --dev --profile --log-level --no-color"
     
     case "${prev}" in
       completion)
-        opts=" -s, -i, --write-state -y,"
+        opts=" --shell --install --write-state --yes"
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+        ;;
+      crestodian)
+        opts=" --message --yes --json"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
       setup)
-        opts=" --workspace --wizard --non-interactive --mode --remote-url --remote-token"
+        opts=" --workspace --wizard --non-interactive --mode --import-from --import-source --import-secrets --remote-url --remote-token"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
       onboard)
-        opts=" --workspace --reset --reset-scope --non-interactive --accept-risk --flow --mode --auth-choice --token-provider --token --token-profile-id --token-expires-in --secret-input-mode --cloudflare-ai-gateway-account-id --cloudflare-ai-gateway-gateway-id --alibaba-model-studio-api-key --anthropic-api-key --arceeai-api-key --openrouter-api-key --byteplus-api-key --chutes-api-key --cloudflare-ai-gateway-api-key --deepseek-api-key --fal-api-key --fireworks-api-key --gemini-api-key --huggingface-api-key --kilocode-api-key --kimi-code-api-key --litellm-api-key --minimax-api-key --mistral-api-key --moonshot-api-key --openai-api-key --opencode-zen-api-key --opencode-go-api-key --qianfan-api-key --modelstudio-standard-api-key-cn --modelstudio-standard-api-key --modelstudio-api-key-cn --modelstudio-api-key --runway-api-key --stepfun-api-key --synthetic-api-key --together-api-key --venice-api-key --ai-gateway-api-key --volcengine-api-key --vydra-api-key --xai-api-key --xiaomi-api-key --zai-api-key --custom-base-url --custom-api-key --custom-model-id --custom-provider-id --custom-compatibility --gateway-port --gateway-bind --gateway-auth --gateway-token --gateway-token-ref-env --gateway-password --remote-url --remote-token --tailscale --tailscale-reset-on-exit --install-daemon --no-install-daemon --skip-daemon --daemon-runtime --skip-channels --skip-skills --skip-search --skip-health --skip-ui --node-manager --json"
+        opts=" --workspace --reset --reset-scope --non-interactive --modern --accept-risk --flow --mode --auth-choice --token-provider --token --token-profile-id --token-expires-in --secret-input-mode --cloudflare-ai-gateway-account-id --cloudflare-ai-gateway-gateway-id --alibaba-model-studio-api-key --anthropic-api-key --arceeai-api-key --openrouter-api-key --byteplus-api-key --cerebras-api-key --chutes-api-key --cloudflare-ai-gateway-api-key --comfy-api-key --deepinfra-api-key --deepseek-api-key --fal-api-key --fireworks-api-key --github-copilot-token --gemini-api-key --huggingface-api-key --kilocode-api-key --kimi-code-api-key --litellm-api-key --lmstudio-api-key --minimax-api-key --mistral-api-key --moonshot-api-key --nvidia-api-key --openai-api-key --opencode-zen-api-key --opencode-go-api-key --qianfan-api-key --modelstudio-standard-api-key-cn --modelstudio-standard-api-key --modelstudio-api-key-cn --modelstudio-api-key --runway-api-key --stepfun-api-key --synthetic-api-key --tokenhub-api-key --together-api-key --venice-api-key --ai-gateway-api-key --volcengine-api-key --vydra-api-key --xai-api-key --xiaomi-api-key --zai-api-key --custom-base-url --custom-api-key --custom-model-id --custom-provider-id --custom-compatibility --custom-image-input --custom-text-input --gateway-port --gateway-bind --gateway-auth --gateway-token --gateway-token-ref-env --gateway-password --remote-url --remote-token --tailscale --tailscale-reset-on-exit --install-daemon --no-install-daemon --skip-daemon --daemon-runtime --skip-channels --skip-skills --skip-bootstrap --skip-search --skip-health --skip-ui --suppress-gateway-token-output --skip-hooks --node-manager --import-from --import-source --import-secrets --json"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -30,7 +35,7 @@ _openclaw_completion() {
         return 0
         ;;
       config)
-        opts="get set unset file schema validate --section"
+        opts="get set patch unset file schema validate --section"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -39,13 +44,18 @@ _openclaw_completion() {
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
+      migrate)
+        opts="list plan apply --from --include-secrets --no-auth-credentials --overwrite --dry-run --yes --skill --plugin --backup-output --no-backup --force --json --verify-plugin-apps"
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+        ;;
       doctor)
-        opts=" --no-workspace-suggestions --yes --repair --fix --force --non-interactive --generate-gateway-token --deep"
+        opts=" --no-workspace-suggestions --yes --repair --fix --force --non-interactive --generate-gateway-token --deep --lint --json --severity-min --skip --only"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
       dashboard)
-        opts=" --no-open"
+        opts=" --no-open --yes"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -69,8 +79,13 @@ _openclaw_completion() {
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
+      transcripts)
+        opts="list show path "
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+        ;;
       agent)
-        opts=" -m, -t, --session-id --agent --thinking --verbose --channel --reply-to --reply-channel --reply-account --local --deliver --json --timeout"
+        opts=" --message --to --session-key --session-id --agent --model --thinking --verbose --channel --reply-to --reply-channel --reply-account --local --deliver --json --timeout"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -90,7 +105,12 @@ _openclaw_completion() {
         return 0
         ;;
       sessions)
-        opts="cleanup --json --verbose --store --agent --all-agents --active"
+        opts="list cleanup export-trajectory --json --verbose --store --agent --all-agents --active --limit"
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+        ;;
+      commitments)
+        opts="list dismiss --json --agent --status --all"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -100,12 +120,12 @@ _openclaw_completion() {
         return 0
         ;;
       acp)
-        opts="client --url --token --token-file --password --password-file --session --session-label --require-existing --reset-session --no-prefix-cwd --provenance -v,"
+        opts="client --url --token --token-file --password --password-file --session --session-label --require-existing --reset-session --no-prefix-cwd --provenance --verbose"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
       gateway)
-        opts="run status install uninstall start stop restart call usage-cost health probe discover --port --bind --token --auth --password --password-file --tailscale --tailscale-reset-on-exit --allow-unconfigured --dev --reset --force --verbose --cli-backend-logs --claude-cli-logs --ws-log --compact --raw-stream --raw-stream-path"
+        opts="run status install uninstall start stop restart call usage-cost health stability diagnostics probe discover --port --bind --token --auth --password --password-file --tailscale --tailscale-reset-on-exit --allow-unconfigured --dev --reset --force --verbose --cli-backend-logs --claude-cli-logs --ws-log --compact --raw-stream --raw-stream-path"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -115,7 +135,7 @@ _openclaw_completion() {
         return 0
         ;;
       logs)
-        opts=" --limit --max-bytes --follow --interval --json --plain --no-color --local-time --url --token --timeout --expect-final"
+        opts=" --limit --max-bytes --follow --interval --json --plain --no-color --local-time --utc --url --token --timeout --expect-final"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -145,7 +165,7 @@ _openclaw_completion() {
         return 0
         ;;
       nodes)
-        opts="status describe list pending approve reject rename invoke notify push canvas camera screen location "
+        opts="status describe list pending approve reject remove rename invoke notify push camera screen location "
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -155,7 +175,7 @@ _openclaw_completion() {
         return 0
         ;;
       node)
-        opts="run status install uninstall stop restart "
+        opts="run status install uninstall stop start restart "
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -165,12 +185,12 @@ _openclaw_completion() {
         return 0
         ;;
       tui)
-        opts=" --url --token --password --session --deliver --thinking --message --timeout-ms --history-limit"
+        opts=" --local --url --token --password --session --deliver --thinking --message --timeout-ms --history-limit"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
       cron)
-        opts="status list add rm enable disable runs run edit "
+        opts="status list add rm enable disable get show runs run edit "
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -185,12 +205,12 @@ _openclaw_completion() {
         return 0
         ;;
       proxy)
-        opts="start run coverage sessions query blob purge "
+        opts="start run validate coverage sessions query blob purge "
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
       hooks)
-        opts="list info check enable disable install update "
+        opts="list info check enable disable relay install update "
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -209,28 +229,13 @@ _openclaw_completion() {
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
-      browser)
-        opts="status start stop reset-profile tabs tab open focus close profiles create-profile delete-profile screenshot snapshot navigate resize click type press hover scrollintoview drag select upload waitfordownload download dialog fill wait evaluate console pdf responsebody highlight errors requests trace cookies storage set --browser-profile --json --url --token --timeout --expect-final"
-        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-        return 0
-        ;;
-      memory)
-        opts="status index search promote promote-explain rem-harness rem-backfill "
-        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-        return 0
-        ;;
-      feishu-diagnose)
-        opts=" --trace --analyze"
-        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-        return 0
-        ;;
       pairing)
         opts="list approve "
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
       plugins)
-        opts="list inspect enable disable uninstall install update doctor marketplace "
+        opts="list search inspect enable disable uninstall install update registry doctor build validate init marketplace "
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
@@ -255,12 +260,12 @@ _openclaw_completion() {
         return 0
         ;;
       skills)
-        opts="search install update list info check "
+        opts="search install update list info check --agent"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
       update)
-        opts="wizard status --json --no-restart --dry-run --channel --tag --timeout --yes"
+        opts="finalize wizard status --json --no-restart --dry-run --channel --tag --timeout --yes"
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
         ;;
