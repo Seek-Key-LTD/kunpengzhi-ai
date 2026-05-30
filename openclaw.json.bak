@@ -1,7 +1,7 @@
 {
   "meta": {
-    "lastTouchedVersion": "2026.5.27",
-    "lastTouchedAt": "2026-05-29T09:41:11.273Z"
+    "lastTouchedVersion": "2026.4.11",
+    "lastTouchedAt": "2026-05-29T10:03:09.306Z"
   },
   "wizard": {
     "lastRunAt": "2026-05-29T09:33:43.460Z",
@@ -577,7 +577,8 @@
       "openclaw-extension-miaoda",
       "openclaw-guardian-plugin",
       "openclaw-lark",
-      "openclaw-mem0-plugin"
+      "openclaw-mem0-plugin",
+      "feishu"
     ],
     "entries": {
       "openclaw-extension-miaoda-coding": {

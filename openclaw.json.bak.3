@@ -1,7 +1,7 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.5.27",
-    "lastTouchedAt": "2026-05-29T09:33:43.573Z"
+    "lastTouchedAt": "2026-05-29T09:40:14.691Z"
   },
   "wizard": {
     "lastRunAt": "2026-05-29T09:33:43.460Z",
@@ -372,27 +372,7 @@
         "provider": "miaoda-secret-provider",
         "id": "/channels_feishu_app_secret"
       },
-      "domain": "feishu",
-      "requireMention": true,
-      "dmPolicy": "allowlist",
-      "allowFrom": [
-        "ou_2f92a7aebdf35e672c28652e21aa4460"
-      ],
-      "groupPolicy": "allowlist",
-      "groupAllowFrom": [
-        "ou_2f92a7aebdf35e672c28652e21aa4460"
-      ],
-      "groups": {
-        "*": {
-          "enabled": true
-        }
-      },
-      "streaming": true,
-      "threadSession": true,
-      "footer": {
-        "elapsed": false,
-        "status": false
-      }
+      "domain": "feishu"
     }
   },
   "discovery": {
@@ -572,19 +552,14 @@
   },
   "plugins": {
     "allow": [
-      "openclaw-lark",
-      "openclaw-extension-miaoda-coding",
       "browser",
       "openclaw-guardian-plugin",
       "openclaw-extension-miaoda",
       "memory-core"
     ],
     "entries": {
-      "openclaw-lark": {
-        "enabled": true
-      },
       "openclaw-extension-miaoda-coding": {
-        "enabled": true
+        "enabled": false
       },
       "browser": {
         "enabled": true
