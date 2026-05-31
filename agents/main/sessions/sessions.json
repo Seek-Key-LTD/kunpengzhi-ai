@@ -1,7 +1,7 @@
 {
   "agent:main:feishu:default:direct:ou_2f92a7aebdf35e672c28652e21aa4460": {
     "sessionId": "ed9041f1-0415-4352-b95c-0f9218d231ff",
-    "updatedAt": 1780122357956,
+    "updatedAt": 1780210194284,
     "systemSent": true,
     "abortedLastRun": false,
     "chatType": "direct",
@@ -882,15 +882,13 @@
       "version": 0
     },
     "status": "done",
-    "startedAt": 1780122348346,
-    "endedAt": 1780122357863,
-    "runtimeMs": 9517,
+    "startedAt": 1780210186758,
     "modelProvider": "miaoda",
     "model": "miaoda-model-auto",
     "contextTokens": 200000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1780122347974,
+      "generatedAt": 1780210186469,
       "sessionId": "ed9041f1-0415-4352-b95c-0f9218d231ff",
       "sessionKey": "agent:main:feishu:default:direct:ou_2f92a7aebdf35e672c28652e21aa4460",
       "provider": "miaoda",
@@ -1498,12 +1496,14 @@
         ]
       }
     },
-    "inputTokens": 33505,
-    "outputTokens": 234,
-    "cacheRead": 443,
+    "inputTokens": 647,
+    "outputTokens": 156,
+    "cacheRead": 34491,
     "cacheWrite": 0,
     "estimatedCostUsd": 0,
-    "totalTokens": 33948,
-    "totalTokensFresh": true
+    "totalTokens": 35138,
+    "totalTokensFresh": true,
+    "endedAt": 1780210194267,
+    "runtimeMs": 7509
   }
 }
