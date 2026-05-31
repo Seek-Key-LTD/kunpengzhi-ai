@@ -190,5 +190,11 @@
     "skill_hash": "fc55af2721ded2f473da6ad580b081642a5f67808d655182577a24c6453f5e2c",
     "is_detected": true,
     "last_detect_ts": 1780220159093
+  },
+  "ima-skill": {
+    "skill_name": "ima-skill",
+    "skill_hash": "160ef3df67a67add55f85eaa20ade4aa9406ca19f8b618ebf31692f91a49f3a1",
+    "is_detected": true,
+    "last_detect_ts": 1780235767948
   }
 }
