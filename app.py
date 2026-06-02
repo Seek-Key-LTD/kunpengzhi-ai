@@ -148,6 +148,86 @@ ROUND_LABELS = [
     "反方四辩 · 总结陈词",
 ]
 
+# ─── 定场诗（八仙 · 先天八卦阵）─────────────────
+# 每人上场前慢推一首，营造「运筹推演」的仪式感
+
+DEFENSE_POEM = """《定场引子·临江仙》
+
+晋代钟声惊说法，生公顽石皆开。
+普度众生大乘来。
+打破凡圣界，万类尽投怀。
+
+暗演先天八卦阵，阴阳鱼走乾坤。
+从七到零序纷纷。
+当面锣鼓响，自由辩风云。"""
+
+SPEAKER_POEMS = {
+    # 第一阵：乾 ☰（7）vs 坤 ☷（0）—— 男 vs 女
+    "正方一辩": """☯ 乾 ☰ · 吕洞宾 —— 《鹊桥仙》
+
+一柄纯阳宝剑，寒芒乍现，辞却九重天阙。
+人间自古情难尽，斩不绝、红尘恩怨。
+醉扶吕祖，清吟太白，试问纯阳生灭。
+道心点破鹊桥边，化作了、清风明月。""",
+
+    "反方一辩": """☯ 坤 ☷ · 何仙姑 —— 《卷珠帘》
+
+手执碧水青莲步玉沙，云散处、现仙家。
+不染红尘半点，珠帘高卷，缥缈看流霞。
+弱水三千空浪迹，心似月、净无瑕。
+一缕香风归去，高唐梦醒，独坐守瑶华。""",
+
+    # 第二阵：艮 ☶（4）vs 兑 ☱（3）—— 老 vs 少
+    "正方二辩": """☯ 艮 ☶ · 张果老 —— 《临江仙》
+
+倒骑毛驴江渚上，朝行碧海苍梧。
+手扣通玄渔鼓道情孤。
+古今多少事，盲眼看虚无。
+莫问老翁年几许，曾陪尧舜双枯。
+冷眼公卿尽泥涂，乾坤装入壳，一杖任徐驱。""",
+
+    "反方二辩": """☯ 兑 ☱ · 韩湘子 —— 《苏幕遮》
+
+紫金箫，清怨起，声振灵樾，音动微茫里。
+碧海苍梧飞仙履，一曲横吹，截断江河水。
+少年郎，心不死，踏遍群山，笑看红尘死。
+万古沧桑皆入耳，渔鼓声沉，唯有仙音在。""",
+
+    # 第三阵：离 ☲（5）vs 坎 ☵（2）—— 富 vs 贫
+    "正方三辩": """☯ 离 ☲ · 汉钟离 —— 《一剪梅》
+
+手摇芭蕉宝扇夜气清，急鼓初催，乐奏公卿。
+满堂金翠转头空，大汉将军，解甲归蓬。
+一展神风雾隐腾，莫问流光，冷眼输赢。
+任他樱桃红透时，几度春风，老了仙翁。""",
+
+    "反方三辩": """☯ 坎 ☵ · 蓝采和 —— 《西江月》
+
+手执叠板花篮，盛来满槛春风。
+竹板声声戏顽童，醉倒长街乱冢。
+几点山前疏雨，半宵稻海鸣虫。
+算来贫贱与公侯，都是南柯一梦。""",
+
+    # 第四阵：震 ☳（6）vs 巽 ☴（1）—— 贵 vs 贱
+    "正方四辩": """☯ 震 ☳ · 曹国舅 —— 《虞美人》
+
+掌中云阳玉笏何时了？权柄如罂粟。
+满城开遍美人花，谁解红衣妖艳、是鸩家。
+雕栏玉砌生尸骨，大梦惊吞吐。
+老夫脱却大朝衣，洗净满身浮毒、白云归。""",
+
+    "反方四辩": """☯ 巽 ☴ · 铁拐李 —— 《卜算子》
+
+背负太极葫芦落红尘，拐杖惊风雨。
+莫笑形骸至贱躯，壶里乾坤寓。
+酒肉任穿肠，不肯栖寒树。
+待到悬壶济世时，散作山前雾。""",
+}
+
+# 定场诗打字速度（慢推慢算，比正文慢）
+POEM_SPEED_MS = 80   # ms/字
+INTRO_SPEED_MS = 100  # 引子更慢
+
 
 # ─── 辩论引擎 ────────────────────────────────────
 
@@ -184,12 +264,11 @@ def strip_speaker_prefix(text: str) -> str:
 
 async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     """
-    实时流式辩论：
-    - 从 API token 流中实时打出文字
-    - 逐字符 state machine 识别【回合】切换
-    - 切换时插入停顿 + 主席宣布
-    - 后台异步生成 TTS 并上传 R2
-    - 返回所有语音 URL
+    实时流式辩论（八仙阵）：
+    - 临江仙引子开篇（慢推）
+    - 每人上场前先慢敲定场诗（80ms/字）→ 营造「运筹推演」感
+    - 定场诗期间 buff API 内容，诗完后连播
+    - TTS 后台异步生成
     """
     import openai
     client = openai.AsyncOpenAI(
@@ -208,15 +287,19 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     round_text = ""          # 当前回合文本累积（用于 TTS）
     current_tag = ""         # 当前回合标签
     partial_tag = ""         # 检测中的【标签】
-    in_tag = False           # 是否在【内部
+    in_tag = False           # 是否在【】内部
     round_idx = 0
     tts_tasks: list = []
+    poem_buf = ""            # 定场诗期间的 API 缓冲
+    showing_poem = False     # 正在慢推定场诗
 
-    # 主席开场
-    for ch in "🎙️ **辩论开始！**\n\n":
+    # ═══════════════════════════════════════════════════
+    # 开幕：临江仙引子（最慢，像在运筹）
+    # ═══════════════════════════════════════════════════
+    for ch in f"📜 **八仙总驱 · 定场引子**\n\n{ DEFENSE_POEM }\n\n":
         await msg.stream_token(ch)
-        await asyncio.sleep(8 / 1000)
-    await asyncio.sleep(0.5)
+        await asyncio.sleep(INTRO_SPEED_MS / 1000)
+    await asyncio.sleep(0.8)
 
     async for chunk in stream:
         delta = chunk.choices[0].delta if chunk.choices else None
@@ -228,7 +311,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
         for ch in token:
             # ── state machine 检测回合切换 ──
             if ch == "【":
-                # 遇到新【→ flush 上一回合
+                # flush 上一回合
                 if round_text.strip() and current_tag and TTS_ENABLED:
                     t = asyncio.ensure_future(
                         TTSEngine().generate(
@@ -242,7 +325,6 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
                 # 切换停顿
                 if current_tag:
-                    # 判断是否换方
                     is_new_side = (
                         "正方" in current_tag and "反方" in partial_tag.lower()
                     ) or (
@@ -257,9 +339,10 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
             if ch == "】" and in_tag:
                 in_tag = False
                 partial_tag += "】"
-                current_tag = partial_tag[1:-1].strip()  # 去掉【】
+                current_tag = partial_tag[1:-1].strip()
                 partial_tag = ""
                 round_text = ""
+                poem_buf = ""
 
                 # 主席宣布
                 annc = f"\n\n🎙️ **主席**: 有请 {current_tag}——\n\n"
@@ -267,19 +350,45 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
                     await msg.stream_token(ach)
                     await asyncio.sleep(6 / 1000)
                 await asyncio.sleep(0.3)
+
+                # ── 慢推定场诗 ──
+                # 从八仙词库取对应角色的定场诗
+                base_role = current_tag.split("·")[0].strip()
+                poem = SPEAKER_POEMS.get(base_role, "")
+                if poem:
+                    await msg.stream_token("\n")
+                    for pch in poem:
+                        await msg.stream_token(pch)
+                        await asyncio.sleep(POEM_SPEED_MS / 1000)
+                    await msg.stream_token("\n")
+                await asyncio.sleep(0.4)
+                showing_poem = True
                 continue
 
             if in_tag:
                 partial_tag += ch
                 continue
 
+            # ── 定场诗期间的 API 内容：缓冲 ──
+            if showing_poem:
+                poem_buf += ch
+                continue
+
             # ── 正常打字输出 ──
             await msg.stream_token(ch)
             await asyncio.sleep(TYPE_SPEED_MS / 1000)
-
-            # 累积到当前回合
             if current_tag:
                 round_text += ch
+
+        # ── 定场诗结束后，flush 缓冲 ──
+        if showing_poem and poem_buf:
+            for pb in poem_buf:
+                await msg.stream_token(pb)
+                await asyncio.sleep(TYPE_SPEED_MS / 1000)
+                if current_tag:
+                    round_text += pb
+            poem_buf = ""
+            showing_poem = False
 
     # ─ 最后一回合 flush ─
     if round_text.strip() and current_tag and TTS_ENABLED:
