@@ -29,6 +29,29 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(message)s")
 log = logging.getLogger("kunpengzhi")
 
+# ─── 内存日志缓存（监控与诊断） ──────────────────────
+class LogBufferHandler(logging.Handler):
+    def __init__(self, capacity=200):
+        super().__init__()
+        self.capacity = capacity
+        self.buffer = []
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            self.buffer.append(msg)
+            if len(self.buffer) > self.capacity:
+                self.buffer.pop(0)
+        except Exception:
+            self.handleError(record)
+
+log_buffer_handler = LogBufferHandler()
+log_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+log_buffer_handler.setFormatter(log_formatter)
+log.addHandler(log_buffer_handler)
+logging.getLogger().addHandler(log_buffer_handler)
+
+
 # ─── 配置 ─────────────────────────────────────────
 DEBATE_MODEL = os.getenv("DEBATE_MODEL", "gemini-2.5-flash")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "http://localhost:4000/v1")
@@ -843,6 +866,51 @@ async def main(message: cl.Message):
     log.info(f"🎯 辩题: {topic['title']}")
     await run_debate_stream(msg, topic_id)
     log.info(f"✅ 完成: {topic['title']}")
+
+from chainlit.server import app
+
+@app.get("/status")
+async def get_system_status():
+    llm_error = None
+    llm_ok = False
+    try:
+        import openai
+        client = openai.AsyncOpenAI(
+            base_url=os.getenv("OPENAI_BASE_URL", "http://localhost:4000/v1"),
+            api_key=os.getenv("OPENAI_API_KEY", "sk-47318")
+        )
+        resp = await client.chat.completions.create(
+            model=DEBATE_MODEL,
+            messages=[{"role": "user", "content": "ping"}],
+            max_tokens=5,
+            timeout=5.0
+        )
+        if resp.choices:
+            llm_ok = True
+    except Exception as e:
+        llm_error = str(e)
+
+    raw_key = os.getenv("OPENAI_API_KEY", "")
+    masked_key = "Not Set"
+    if raw_key:
+        masked_key = raw_key[:4] + "..." + raw_key[-4:] if len(raw_key) > 8 else "***"
+
+    return {
+        "status": "healthy" if llm_ok else "unhealthy",
+        "timestamp": datetime.now().isoformat(),
+        "config": {
+            "DEBATE_MODEL": DEBATE_MODEL,
+            "OPENAI_BASE_URL": os.getenv("OPENAI_BASE_URL", "http://localhost:4000/v1"),
+            "OPENAI_API_KEY": masked_key,
+            "TTS_ENABLED": TTS_ENABLED,
+            "TTS_VOICE": TTS_VOICE,
+        },
+        "llm_check": {
+            "success": llm_ok,
+            "error": llm_error
+        },
+        "logs": log_buffer_handler.buffer
+    }
 
 if __name__ == "__main__":
     print("鲲鹏志 v4.6 · chainlit run app.py")
