@@ -81,15 +81,17 @@ class DebateMatch:
         """运行辩论赛，返回完整文本"""
         prompt = self.build_prompt()
 
-        proc = await asyncio.create_subprocess_exec(
-            "pi", "--model", f"google-vertex/{model}",
-            "--no-session", "-p", prompt,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            cwd=os.getcwd(),
+        # 通过 liteLLM (OpenAI 兼容 API) 调用 Vertex AI Gemini
+        import openai
+        client = openai.AsyncOpenAI(
+            base_url="http://localhost:4000/v1",
+            api_key="sk-47318",
         )
-        stdout, _ = await proc.communicate()
-        debate_text = stdout.decode("utf-8", errors="replace")
+        response = await client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        debate_text = response.choices[0].message.content
         self.transcript.append(debate_text)
         return debate_text
 
@@ -102,6 +104,11 @@ class Teahouse:
     @staticmethod
     async def comment(debate_text: str, model: str = "gemini-2.5-flash") -> str:
         """对辩论进行讲茶大堂评论"""
+        import openai
+        client = openai.AsyncOpenAI(
+            base_url="http://localhost:4000/v1",
+            api_key="sk-47318",
+        )
         prompt = f"""
 你是一个茶馆里的各路食客，正在观看一场辩论赛。
 
@@ -119,14 +126,11 @@ class Teahouse:
 每人至少一段，风格鲜活。
 """
 
-        proc = await asyncio.create_subprocess_exec(
-            "pi", "--model", f"google-vertex/{model}",
-            "--no-session", "-p", prompt,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+        response = await client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
         )
-        stdout, _ = await proc.communicate()
-        return stdout.decode("utf-8", errors="replace")
+        return response.choices[0].message.content
 
 
 # ─── 擂台编排 ─────────────────────────────────────

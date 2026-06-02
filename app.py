@@ -175,73 +175,55 @@ async def main(message: cl.Message):
 
     await msg.send()
 
-    # 用 pi 运行辩论
-    proc = await asyncio.create_subprocess_exec(
-        "pi",
-        "--model", f"google-vertex/{DEBATE_MODEL}",
-        "--no-session", "-p", prompt,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+    # 通过 liteLLM 调用 Vertex AI
+    import openai
+    client = openai.AsyncOpenAI(
+        base_url="http://localhost:4000/v1",
+        api_key="sk-47318",
     )
 
-    # 逐行读取输出
-    current_speaker = ""
-    speech_buffer = ""
-    round_num = 0
+    response = await client.chat.completions.create(
+        model=DEBATE_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    debate_text = response.choices[0].message.content
 
     # TTS 引擎
     tts = TTSEngine()
     tts_tasks = []
 
-    async def read_stream():
-        nonlocal current_speaker, speech_buffer, round_num
+    # 逐段解析发言人并输出
+    current_speaker = ""
+    speech_buffer = ""
+    round_num = 0
 
-        while True:
-            line = await proc.stdout.readline()
-            if not line:
-                break
+    for line in debate_text.split("\n"):
+        text = line.strip()
+        if not text:
+            continue
 
-            text = line.decode("utf-8", errors="replace").strip()
-            if not text:
-                continue
+        if text.startswith("【"):
+            if speech_buffer and current_speaker:
+                display = f"\n\n**{current_speaker}**:\n{speech_buffer}"
+                await msg.stream_token(display)
 
-            # 检测发言人切换
-            if text.startswith("【"):
-                # 先发送上一位发言人的内容
-                if speech_buffer and current_speaker:
-                    # 动画效果：逐字显示
-                    display = f"\n\n**{current_speaker}**:\n{speech_buffer}"
-                    await msg.stream_token(display)
+                if TTS_ENABLED and len(speech_buffer) > 10:
+                    audio_file = f"/tmp/debate_{round_num}.mp3"
+                    tts_tasks.append(
+                        asyncio.create_task(tts.speak(speech_buffer, audio_file))
+                    )
 
-                    # TTS：异步生成语音
-                    if TTS_ENABLED and len(speech_buffer) > 10:
-                        audio_file = f"/tmp/debate_{round_num}.mp3"
-                        tts_tasks.append(
-                            asyncio.create_task(
-                                tts.speak(speech_buffer, audio_file)
-                            )
-                        )
+            current_speaker = text
+            speech_buffer = ""
+            round_num += 1
+            await msg.stream_token(f"\n\n--- *{current_speaker}* ---\n")
+        else:
+            speech_buffer += text + "\n"
 
-                # 切换发言人
-                current_speaker = text
-                speech_buffer = ""
-                round_num += 1
+    if speech_buffer and current_speaker:
+        display = f"\n\n**{current_speaker}**:\n{speech_buffer}"
+        await msg.stream_token(display)
 
-                # 显示发言人切换
-                await msg.stream_token(f"\n\n--- *{current_speaker}* ---\n")
-
-            else:
-                speech_buffer += text + "\n"
-
-        # 最后一位发言人
-        if speech_buffer and current_speaker:
-            display = f"\n\n**{current_speaker}**:\n{speech_buffer}"
-            await msg.stream_token(display)
-
-    await read_stream()
-    await proc.wait()
-
-    # 等待所有 TTS 任务完成
     if TTS_ENABLED and tts_tasks:
         await msg.stream_token("\n\n🔊 **语音生成中...**\n")
         await asyncio.gather(*tts_tasks, return_exceptions=True)
@@ -255,8 +237,12 @@ async def main(message: cl.Message):
 async def run_teahouse(debate_text: str):
     """
     讲茶大堂：对辩论进行场外评论
-    可通过 CLI 独立调用：python app.py --teahouse <debate_file>
     """
+    import openai
+    client = openai.AsyncOpenAI(
+        base_url="http://localhost:4000/v1",
+        api_key="sk-47318",
+    )
     prompt = f"""
 你是一个茶馆里的各路食客，正在观看刚才结束的一场辩论赛。
 
@@ -273,15 +259,11 @@ async def run_teahouse(debate_text: str):
 每人至少一段，风格鲜活，像真的茶馆。
 """
 
-    proc = await asyncio.create_subprocess_exec(
-        "pi",
-        "--model", f"google-vertex/{DEBATE_MODEL}",
-        "--no-session", "-p", prompt,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+    response = await client.chat.completions.create(
+        model=DEBATE_MODEL,
+        messages=[{"role": "user", "content": prompt}],
     )
-    stdout, _ = await proc.communicate()
-    return stdout.decode("utf-8", errors="replace")
+    return response.choices[0].message.content
 
 
 if __name__ == "__main__":
