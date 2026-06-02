@@ -178,8 +178,8 @@ async def main(message: cl.Message):
     # 通过 liteLLM 调用 Vertex AI
     import openai
     client = openai.AsyncOpenAI(
-        base_url="http://localhost:4000/v1",
-        api_key="sk-47318",
+        base_url=os.getenv("OPENAI_BASE_URL", "http://localhost:4000/v1"),
+        api_key=os.getenv("OPENAI_API_KEY", "sk-47318"),
     )
 
     response = await client.chat.completions.create(
@@ -240,8 +240,8 @@ async def run_teahouse(debate_text: str):
     """
     import openai
     client = openai.AsyncOpenAI(
-        base_url="http://localhost:4000/v1",
-        api_key="sk-47318",
+        base_url=os.getenv("OPENAI_BASE_URL", "http://localhost:4000/v1"),
+        api_key=os.getenv("OPENAI_API_KEY", "sk-47318"),
     )
     prompt = f"""
 你是一个茶馆里的各路食客，正在观看刚才结束的一场辩论赛。
