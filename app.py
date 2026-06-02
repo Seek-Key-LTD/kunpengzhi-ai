@@ -91,19 +91,14 @@ class TTSEngine:
     def __init__(self, voice: str = TTS_VOICE):
         self.voice = voice
 
-    async def generate(self, text: str, tag: str, idx: int) -> Optional[str]:
+    async def generate(self, text: str, tag: str, idx: int, tmp_paths: Optional[list] = None) -> Optional[str]:
         if not text or len(text.strip()) < 5:
             return None
         try:
-            # ── 去掉 markdown/格式符号 ──
             clean = self.strip_markdown(text)
-
-            # ── 书面语→口头语 ──
             oral_text = await self.to_oral(clean)
             if not oral_text:
                 oral_text = clean[:2000]
-
-            # ── 再去掉可能残余的格式字符 ──
             final = self.strip_markdown(oral_text)[:2000]
             if len(final) < 5:
                 final = clean[:2000]
@@ -114,15 +109,61 @@ class TTSEngine:
             await edge_tts.Communicate(final, self.voice).save(tmp)
             if not os.path.exists(tmp):
                 return None
+
+            # 记录临时路径，供后续拼接
+            if tmp_paths is not None:
+                tmp_paths.append(tmp)
+
             with open(tmp, "rb") as f:
                 data = f.read()
             ok = await R2Store.upload(key, data)
-            os.remove(tmp)
+            # 不删 tmp 文件——stitch_audio 负责清理
             if ok:
-                log.info(f"🔊 TTS: {tag} ({len(final)} chars)")
+                log.info(f"🔊 TTS done: {tag} ({len(final)} chars)")
                 return R2Store.public_url(key)
         except Exception as e:
             log.error(f"TTS fail {tag}: {e}")
+        return None
+
+    async def stitch_audio(self, audio_paths: List[str]) -> Optional[str]:
+        """将多段音频合并为一段完整辩论录音"""
+        if len(audio_paths) < 1:
+            return None
+        if len(audio_paths) == 1:
+            with open(audio_paths[0], "rb") as f:
+                return audio_paths[0]
+
+        try:
+            from pydub import AudioSegment
+            combined = AudioSegment.empty()
+            for path in audio_paths:
+                if os.path.exists(path) and os.path.getsize(path) > 100:
+                    seg = AudioSegment.from_mp3(path)
+                    combined += seg
+                    combined += AudioSegment.silent(duration=300)  # 300ms 间隔
+
+            if len(combined) > 0:
+                out_path = f"/tmp/辩论全录_{uuid.uuid4().hex[:8]}.mp3"
+                combined.export(out_path, format="mp3", bitrate="48k")
+
+                # 上传 R2
+                with open(out_path, "rb") as f:
+                    data = f.read()
+                key = f"tts/debate_full_{uuid.uuid4().hex[:8]}.mp3"
+                ok = await R2Store.upload(key, data)
+                os.remove(out_path)
+
+                # 清理单个音频
+                for p in audio_paths:
+                    if os.path.exists(p):
+                        os.remove(p)
+
+                if ok:
+                    url = R2Store.public_url(key)
+                    log.info(f"🎧 辩论全录上传: {url} ({len(data)} bytes)")
+                    return url
+        except Exception as e:
+            log.warning(f"Stitch failed: {e}, falling back to individual files")
         return None
 
     @staticmethod
@@ -471,6 +512,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     prev_text = ""
     round_idx = 0
     tts_tasks = []
+    tmp_paths = []  # 临时音频文件列表，供拼接
 
     for role, stage in DEBATE_ROLES:
         round_idx += 1
@@ -536,7 +578,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
                 t = asyncio.ensure_future(
                     TTSEngine().generate(
                         re.sub(r"^【[^】]+】\s*", "", round_text).strip(),
-                        role, round_idx,
+                        role, round_idx, tmp_paths,
                     )
                 )
                 tts_tasks.append(t)
@@ -557,7 +599,18 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
         log.info(f"⏳ 等待 {len(tts_tasks)} 段 TTS...")
         results = await asyncio.gather(*tts_tasks)
         urls = [r for r in results if r]
-        if urls:
+
+        # 缝合音频
+        stitched_url = await TTSEngine().stitch_audio(tmp_paths)
+
+        if stitched_url:
+            # 一段完整的辩论录音
+            await cl.Message(
+                content=f"## 🎧 完整辩论录音\n\n"
+                        f"<audio controls src='{stitched_url}' style='width:100%'></audio>"
+            ).send()
+        elif urls:
+            # 回退到逐段播放
             for start in range(0, len(urls), 3):
                 batch = urls[start : start + 3]
                 items = "\n\n".join(
