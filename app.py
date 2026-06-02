@@ -1,5 +1,5 @@
 """
-鲲鹏志 · 内容驱动辩论系统 v4.5
+鲲鹏志 · 内容驱动辩论系统 v4.6
 ====================================
 Moneyball 数据驱动辩论：
 - Vectorize RAG: 原文 + 历史辩论实录
@@ -10,6 +10,7 @@ Moneyball 数据驱动辩论：
 - 霞鹜文楷字体
 - 教练策略在 UI 上按需显示
 - 显示 RAG 检索到的原文
+- **增加辩论进度和阶段性提示**
 """
 
 import chainlit as cl
@@ -181,7 +182,7 @@ SPEAKER_POEMS = {
     "正方一辩": """【乾 ☰ · 吕洞宾 —— 鹊桥仙】\n一柄纯阳宝剑，寒芒乍现，辞却九重天阙。人间自古情难尽，斩不绝、红尘恩怨。醉扶吕祖，清吟太白，试问纯阳生灭。道心点破鹊桥边，化作了、清风明月。""",
     "反方一辩": """【坤 ☷ · 何仙姑 —— 卷珠帘】\n手执碧水青莲步玉沙。云散处、现仙家。不染红尘半点，珠帘高卷，缥缈看流霞。弱水三千空浪迹。心似月、净无瑕。一缕香风归去，高唐梦醒，独坐守瑶华。""",
     "正方二辩": """【艮 ☶ · 张果老 —— 临江仙】\n倒骑毛驴江渚上，朝行碧海苍梧。手扣通玄渔鼓道情孤。古今多少事，盲眼看虚无。莫问老翁年几许，曾陪尧舜双枯。冷眼公卿尽泥涂。乾坤装入壳，一杖任徐驱。""",
-    "反方一辩": """【兑 ☱ · 韩湘子 —— 苏幕遮】\n紫金箫，清怨起。声振灵樾，音动微茫里。碧海苍梧飞仙履。一曲横吹，截断江河水。少年郎，心不死。踏遍群山，笑看红尘死。万古沧桑皆入耳。渔鼓声沉，唯有仙音在。""",
+    "反方二辩": """【兑 ☱ · 韩湘子 —— 苏幕遮】\n紫金箫，清怨起。声振灵樾，音动微茫里。碧海苍梧飞仙履。一曲横吹，截断江河水。少年郎，心不死。踏遍群山，笑看红尘死。万古沧桑皆入耳。渔鼓声沉，唯有仙音在。""",
     "正方三辩": """【离 ☲ · 汉钟离 —— 一剪梅】\n手摇芭蕉宝扇夜气清。急鼓初催，乐奏公卿。满堂金翠转头空，大汉将军，解甲归蓬。一展神风雾隐腾。莫问流光，冷眼输赢。任他樱桃红透时，几度春风，老了仙翁。""",
     "反方三辩": """【坎 ☵ · 蓝采和 —— 西江月】\n手执叠板花篮，盛来满槛春风。竹板声声戏顽童，醉倒长街乱冢。几点山前疏雨，半宵稻海鸣虫。算来贫贱与公侯，都是南柯一梦。""",
     "正方四辩": """【震 ☳ · 曹国舅 —— 虞美人】\n掌中云阳玉笏何时了？权柄如罂粟。满城开遍美人花，谁解红衣妖艳、是鸩家。雕栏玉砌生尸骨，大梦惊吞吐。老夫脱却大朝衣，洗净满身浮毒、白云归。""",
@@ -364,13 +365,14 @@ async def save_and_index_transcript(topic_id: str, history: str, pro_strat: str,
 async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     t = TOPICS.get(topic_id, TOPICS["1"])
 
-    # 1. 加载原文（本地→GitHub）
+    # 1. 加载原文（本地→GitHub→Vectorize）
     chapters_data = await BookRetriever().load_relevant_chapters(topic_id)
     book_content = BookRetriever.extract_relevant(chapters_data) if chapters_data else ""
 
     # 2. 检索历史辩论数据（Moneyball）
     past_debates = ""
     try:
+        # 向量搜索历史辩论，找到与当前辩题相关的记录
         debate_matches = await vectorize_query(t["title"], top_k=5)
         if debate_matches:
             past_lines = []
@@ -385,7 +387,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     except Exception as e:
         log.warning(f"Moneyball query fail: {e}")
 
-    # ── 原文检索结果显示 ──
+    # ── 阶段 1/4: 原文检索结果显示 ──
     if book_content:
         for ch in f"📖 **原文检索结果**:\n\n{book_content}\n\n---\n\n":
             await msg.stream_token(ch)
@@ -398,7 +400,9 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
             await asyncio.sleep(6 / 1000)
         await asyncio.sleep(0.5)
 
-    # ── 双教练并行 ──
+    await cl.Message(content="**[进度: 1/4] 原文检索完成，教练正在研读并制定策略...**\n").send()
+
+    # ── 阶段 2/4: 双教练并行 ──
     log.info("🏋️ 教练分析中...")
     pro_strat, con_strat = await asyncio.gather(
         DebateCoach.generate_pre_strategy(topic_id, book_content, "pro", past_debates),
@@ -415,9 +419,9 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     actions = [
         cl.Action(name="show_coach_briefing", value="show_briefing", label="📊 查看教练策略")
     ]
-    await cl.Message(content="教练已完成策略部署。", actions=actions).send()
+    await cl.Message(content="**[进度: 2/4] 教练策略已部署，辩论即将开始...**", actions=actions).send()
 
-    # ── 辩论开始（罗伯特议事规则） ──
+    # ── 阶段 3/4: 辩论进行中 ──
     await msg.stream_token("🏛️ **议事长**: 欢迎来到鲲鹏志辩论现场！本场辩论采用罗伯特议事规则。\n"
                            "每轮发言后麦克风交还议事长，由议事长归纳交锋，确保辩论焦点清晰。\n"
                            "双方辩手将围绕辩题展开激烈交锋，并引用《鲲鹏志》书库原文。\n\n")
@@ -432,6 +436,8 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
     for role, stage in DEBATE_ROLES:
         round_idx += 1
+        # 总共 8 轮辩论，加上开场白，可以粗略认为 9 个环节
+        total_stages = len(DEBATE_ROLES) + 1 # +1 for final summary
 
         # 议事长归纳（非首轮）
         if round_idx > 1:
@@ -446,7 +452,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
         # 主席传麦
         side_color = "🔴" if "正方" in role else "🔵"
-        for ch in f"\n\n🎙️ **主席**: {side_color} 有请 {role}（{stage}）——\n":
+        for ch in f"\n\n🎙️ **主席**: **[进度: {round_idx}/{total_stages}]** {side_color} 有请 {role}（{stage}）——\n":
             await msg.stream_token(ch)
             await asyncio.sleep(5 / 1000) # 主席语速
 
@@ -492,6 +498,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     await msg.stream_token("\n\n---\n✅ **辩论结束**")
     await msg.send()
 
+    # ── 阶段 4/4: 音频处理与存档 ──
     tts_url = None
     if tts_tasks:
         log.info(f"⏳ 等待 {len(tts_tasks)} 段 TTS...")
@@ -504,6 +511,8 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
             await cl.Message(content="ℹ️ 语音合成失败，跳过。").send()
     else:
         await cl.Message(content="ℹ️ 语音生成跳过（TTS 未开启或内容过短）。").send()
+
+    await cl.Message(content="**[进度: 4/4] 辩论全程已归档。请查看上方录音回放。**").send()
 
     # 存档 + 索引 (现在 Vectorize 已经支持)
     asyncio.ensure_future(save_and_index_transcript(topic_id, history, pro_strat, con_strat))
@@ -587,4 +596,4 @@ async def main(message: cl.Message):
     log.info(f"✅ 完成: {topic['title']}")
 
 if __name__ == "__main__":
-    print("鲲鹏志 v4.5 · chainlit run app.py")
+    print("鲲鹏志 v4.6 · chainlit run app.py")
