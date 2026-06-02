@@ -662,7 +662,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
     # 显示教练策略摘要 + 查看按钮
     actions = [
-        cl.Action(name="show_coach_briefing", value="show_briefing", label="📊 查看教练策略", payload="show_briefing")
+        cl.Action(name="show_coach_briefing", value="show_briefing", label="📊 查看教练策略", payload={"value": "show_briefing"})
     ]
     await cl.Message(content="**[进度: 2/4] 教练策略已部署，辩论即将开始...**", actions=actions).send()
 
