@@ -366,7 +366,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     3. 8 轮逐轮辩论（每轮回应前一人，议事长+主席双控场）
     """
     t = TOPICS.get(topic_id, TOPICS["1"])
-    book_content = load_topic_content(topic_id, t["title"])
+    book_content = await load_topic_content(topic_id)
 
     # ── 加载中提示 ──
     for ch in f"📖 **正在阅读原文...**\n\n":
