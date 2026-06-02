@@ -1807,15 +1807,16 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --card-bg: rgba(17, 24, 39, 0.7);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --accent-color: #3b82f6; /* Blue */
-            --neon-green: #10b981; /* Emerald Green */
-            --neon-cyan: #06b6d4; /* Cyan */
-            --terminal-bg: #05070c;
+            --bg-color: #030508;
+            --card-bg: rgba(7, 10, 17, 0.95);
+            --border-color: rgba(59, 130, 246, 0.25);
+            --text-primary: #38bdf8; /* Cyan */
+            --text-secondary: #0ea5e9;
+            --neon-green: #34d399;
+            --neon-amber: #fbbf24;
+            --neon-cyan: #22d3ee;
+            --neon-red: #f87171;
+            --terminal-bg: #010204;
         }
 
         * {
@@ -1827,12 +1828,12 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
-            font-family: "Outfit", "Noto Sans SC", sans-serif;
-            min-height: 100vh;
+            font-family: "Share Tech Mono", "Outfit", "Noto Sans SC", sans-serif;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
-            padding: 1.5rem;
+            padding: 0.6rem;
             position: relative;
         }
 
@@ -1842,213 +1843,395 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
             display: block;
             position: fixed;
             top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%);
             z-index: 9999;
-            background-size: 100% 4px, 6px 100%;
+            background-size: 100% 3px;
             pointer-events: none;
+            opacity: 0.85;
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.8rem;
-            margin-bottom: 1.2rem;
+            border-bottom: 1.5px solid var(--border-color);
+            padding-bottom: 0.4rem;
+            margin-bottom: 0.5rem;
+            flex-shrink: 0;
         }
 
         h1 {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--neon-cyan);
             display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .status-badge {
-            display: inline-flex;
             align-items: center;
             gap: 0.4rem;
-            padding: 0.25rem 0.6rem;
-            border-radius: 9999px;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            font-size: 0.75rem;
-            color: var(--neon-green);
+            text-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
         }
 
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            background-color: var(--neon-green);
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
+        .ticker {
+            font-size: 0.72rem;
+            color: var(--neon-amber);
+            display: flex;
+            gap: 0.6rem;
+            background: rgba(251, 191, 36, 0.05);
+            padding: 0.15rem 0.5rem;
+            border: 1px dashed rgba(251, 191, 36, 0.2);
+            border-radius: 4px;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(0.9); opacity: 0.6; }
-            50% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(0.9); opacity: 0.6; }
+        .ticker span {
+            font-weight: bold;
         }
 
-        .container {
+        .grid-container {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.5rem;
             flex: 1;
+            overflow: hidden;
         }
 
         .panel {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1rem;
+            border-radius: 6px;
+            padding: 0.6rem;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .panel::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-cyan), transparent);
         }
 
         .panel-header {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--neon-cyan);
+            margin-bottom: 0.4rem;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 0.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding-bottom: 0.25rem;
+            user-select: none;
         }
 
-        .panel-icon {
-            font-size: 0.95rem;
+        .panel-header .tag {
+            background: rgba(34, 211, 238, 0.1);
+            padding: 0.05rem 0.3rem;
+            border-radius: 3px;
+            font-size: 0.65rem;
         }
 
         .rag-content {
-            font-size: 0.8rem;
-            line-height: 1.5;
-            color: var(--text-secondary);
-            max-height: 180px;
+            font-size: 0.72rem;
+            line-height: 1.4;
+            color: var(--neon-green);
             overflow-y: auto;
             padding-right: 0.3rem;
             white-space: pre-wrap;
             scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.1) transparent;
+            scrollbar-color: rgba(59, 130, 246, 0.2) transparent;
+            flex: 1;
         }
 
         .rag-content strong {
-            color: var(--text-primary);
+            color: var(--neon-amber);
+            text-shadow: 0 0 4px rgba(251, 191, 36, 0.3);
         }
 
-        .terminal-container {
+        /* Oscilloscope & Stats Grid */
+        .metrics-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            padding: 0.2rem 0;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.3rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .m-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+        }
+
+        .m-value {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--neon-amber);
+        }
+
+        .m-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .m-bar-inner {
+            height: 100%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 5px var(--neon-cyan);
+            transition: width 0.3s ease;
+        }
+
+        .oscilloscope-panel {
+            grid-column: span 2;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 0.3rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* TTY Console Shell */
+        .terminal-shell {
             flex: 1;
+            display: flex;
+            flex-direction: column;
             background: var(--terminal-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 0.75rem;
-            font-family: "Share Tech Mono", monospace;
-            font-size: 0.75rem;
-            line-height: 1.4;
-            color: #38bdf8; /* light blue */
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(59, 130, 246, 0.15);
+        }
+
+        .terminal-logs {
+            flex: 1;
             overflow-y: auto;
-            min-height: 200px;
-            max-height: 320px;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+            padding: 0.4rem;
+            font-size: 0.72rem;
+            line-height: 1.3;
+            color: #38bdf8;
             scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.1) transparent;
+            scrollbar-color: rgba(59, 130, 246, 0.2) transparent;
         }
 
         .log-entry {
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.2rem;
             word-break: break-all;
         }
 
         .log-entry.info { color: #38bdf8; }
-        .log-entry.warn { color: #fbbf24; }
-        .log-entry.error { color: #f87171; }
+        .log-entry.warn { color: var(--neon-amber); }
+        .log-entry.error { color: var(--neon-red); }
         .log-entry.success { color: var(--neon-green); }
+        .log-entry.input-command { color: #ffffff; font-weight: bold; }
+
+        .terminal-form {
+            display: flex;
+            align-items: center;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 0.3rem 0.5rem;
+            background: #020305;
+            flex-shrink: 0;
+        }
+
+        .prompt-symbol {
+            color: var(--neon-green);
+            font-weight: bold;
+            margin-right: 0.4rem;
+            user-select: none;
+            font-size: 0.72rem;
+        }
+
+        .terminal-form input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-family: "Share Tech Mono", monospace;
+            font-size: 0.72rem;
+            caret-color: var(--neon-cyan);
+        }
 
         .placeholder {
             font-style: italic;
-            opacity: 0.5;
+            opacity: 0.4;
             text-align: center;
-            padding: 1.5rem 0;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
+            padding: 1rem 0;
+            font-size: 0.7rem;
+            color: var(--neon-green);
         }
 
         /* custom scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
+            height: 4px;
         }
         ::-webkit-scrollbar-track {
             background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 2px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(59, 130, 246, 0.4);
         }
     </style>
 </head>
 <body>
     <header>
-        <h1><span>📡</span> 监控 & 检索面板</h1>
-        <div class="status-badge">
-            <span class="status-dot"></span>
-            <span>系统联机</span>
+        <h1><span>📡</span> KUNPENG_TELEMETRY</h1>
+        <div class="ticker">
+            SYS: <span>ACTIVE</span> | LLM: <span style="color: var(--neon-green)">OK</span> | TTS: <span id="ticker-tts">ON</span>
         </div>
     </header>
 
-    <div class="container">
-        <div class="panel">
+    <div class="grid-container">
+        <!-- F1: BOOK RAG -->
+        <div class="panel" style="height: 145px; flex-shrink: 0;">
             <div class="panel-header">
-                <span class="panel-icon">📖</span>
-                <span>书库原文检索 (RAG)</span>
+                <span>[F1: BOOK_RAG_SOURCE]</span>
+                <span class="tag">QUERY_OK</span>
             </div>
             <div class="rag-content" id="rag-book-content">
                 <div class="placeholder">等待检索关联原文...</div>
             </div>
         </div>
 
-        <div class="panel">
+        <!-- F2: VECTOR MATCHES -->
+        <div class="panel" style="height: 145px; flex-shrink: 0;">
             <div class="panel-header">
-                <span class="panel-icon">📊</span>
-                <span>历史辩论关联线索</span>
+                <span>[F2: VEC_HIST_DB]</span>
+                <span class="tag">COS_SIM</span>
             </div>
             <div class="rag-content" id="rag-past-content">
                 <div class="placeholder">等待检索历史关联数据...</div>
             </div>
         </div>
 
-        <div class="panel" style="flex: 1;">
+        <!-- F3: HARDWARE MONITOR & OSCILLOSCOPE -->
+        <div class="panel" style="height: 105px; flex-shrink: 0;">
             <div class="panel-header">
-                <span class="panel-icon">💻</span>
-                <span>后台运行实时日志</span>
+                <span>[F3: SYS_OSCILLOSCOPE]</span>
+                <span class="tag">LIVE</span>
             </div>
-            <div class="terminal-container" id="terminal-logs">
-                <div class="log-entry success">[SYSTEM] Terminal initialized. Waiting for incoming log streams...</div>
+            <div class="metrics-container">
+                <div class="metric-item">
+                    <div class="m-header">
+                        <span>CPU_LOAD</span>
+                        <span id="cpu-num">32%</span>
+                    </div>
+                    <div class="m-bar">
+                        <div class="m-bar-inner" id="cpu-bar" style="width: 32%;"></div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="m-header">
+                        <span>API_LATENCY</span>
+                        <span id="lat-num">1.1s</span>
+                    </div>
+                    <div class="m-bar">
+                        <div class="m-bar-inner" id="lat-bar" style="width: 55%; background: var(--neon-amber); box-shadow: 0 0 5px var(--neon-amber);"></div>
+                    </div>
+                </div>
+                <div class="oscilloscope-panel">
+                    <span style="font-size: 0.65rem; color: var(--text-secondary); flex-shrink: 0;">OSCILLOSCOPE:</span>
+                    <canvas id="wave-canvas" width="230" height="15" style="background: #020203; border: 1px solid rgba(59, 130, 246, 0.15); flex: 1;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- F4: INTERACTIVE TTY CONSOLE -->
+        <div class="panel" style="flex: 1; min-height: 150px;">
+            <div class="panel-header">
+                <span>[F4: TTY_SHELL_CONSOLE]</span>
+                <span class="tag">STDOUT</span>
+            </div>
+            <div class="terminal-shell">
+                <div class="terminal-logs" id="terminal-logs">
+                    <div class="log-entry success">[SYSTEM] Bloomberg Terminal v5.0 initialized.</div>
+                    <div class="log-entry success">[SYSTEM] Telemetry hook connected to KUNPENGZHI API.</div>
+                    <div class="log-entry success">[SYSTEM] Type 'help' to access active command deck.</div>
+                </div>
+                <form class="terminal-form" id="terminal-form">
+                    <span class="prompt-symbol">KUNPENG@ROOT:~#</span>
+                    <input type="text" id="terminal-input" autocomplete="off" placeholder="Enter command (e.g. 'help')...">
+                </form>
             </div>
         </div>
     </div>
 
     <script>
         let lastLogs = [];
+        let localDebateState = null;
 
+        // Oscilloscope animation
+        const canvas = document.getElementById('wave-canvas');
+        const ctx = canvas.getContext('2d');
+        let points = Array(40).fill(7.5);
+        function drawWave() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            points.shift();
+            const last = points[points.length - 1] || 7.5;
+            const next = Math.max(2, Math.min(13, last + (Math.random() - 0.5) * 4));
+            points.push(next);
+            
+            ctx.strokeStyle = '#22d3ee'; // Neon Cyan
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for(let i = 0; i < points.length; i++) {
+                const x = (canvas.width / (points.length - 1)) * i;
+                const y = points[i];
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+        setInterval(drawWave, 200);
+
+        // Telemetry fluctuation simulator
+        function fluctuateMetrics() {
+            // CPU
+            const cpuVal = Math.floor(25 + Math.random() * 20);
+            document.getElementById('cpu-num').textContent = cpuVal + '%';
+            document.getElementById('cpu-bar').style.width = cpuVal + '%';
+            
+            // Latency
+            const latVal = (0.8 + Math.random() * 0.6).toFixed(2);
+            document.getElementById('lat-num').textContent = latVal + 's';
+            // Scale bar up to 2 seconds
+            const latPercent = Math.min(100, Math.floor((latVal / 2) * 100));
+            document.getElementById('lat-bar').style.width = latPercent + '%';
+        }
+        setInterval(fluctuateMetrics, 2000);
+
+        // Fetch state and logs from backend
         async function pollStateAndLogs() {
-            // 1. 获取原文/辩论检索状态
+            // 1. Fetch RAG data
             try {
                 const res = await fetch('/bagua/api');
                 if (res.ok) {
                     const state = await res.json();
+                    localDebateState = state;
                     
-                    // 更新原文检索
+                    // Update Book RAG
                     const bookEl = document.getElementById('rag-book-content');
                     if (state.book_content && state.book_content.trim() !== "") {
                         bookEl.innerHTML = state.book_content.replace(/\n/g, '<br>');
@@ -2056,7 +2239,7 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
                         bookEl.innerHTML = '<div class="placeholder">等待检索关联原文...</div>';
                     }
 
-                    // 更新历史关联
+                    // Update Past Debates
                     const pastEl = document.getElementById('rag-past-content');
                     if (state.past_debates && state.past_debates.trim() !== "") {
                         let formatted = state.past_debates
@@ -2066,12 +2249,18 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
                     } else {
                         pastEl.innerHTML = '<div class="placeholder">等待检索历史关联数据...</div>';
                     }
+
+                    // Ticker updates
+                    const tickerTts = document.getElementById('ticker-tts');
+                    if (tickerTts) {
+                        tickerTts.textContent = state.config && state.config.TTS_ENABLED === false ? 'OFF' : 'ON';
+                    }
                 }
             } catch (err) {
                 console.error("Error polling debate api:", err);
             }
 
-            // 2. 获取实时日志
+            // 2. Fetch Logs
             try {
                 const res = await fetch('/status');
                 if (res.ok) {
@@ -2081,24 +2270,14 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
                     if (logs.length > 0 && JSON.stringify(logs) !== JSON.stringify(lastLogs)) {
                         lastLogs = [...logs];
                         const termEl = document.getElementById('terminal-logs');
-                        termEl.innerHTML = '';
                         
+                        // Keep user-typed commands and outputs while appending new system logs
+                        // To avoid complete wipe, we only append new logs
                         logs.forEach(log => {
-                            const entry = document.createElement('div');
-                            entry.className = 'log-entry';
-                            
-                            if (log.includes('ERROR') || log.includes('Exception') || log.includes('fail')) {
-                                entry.classList.add('error');
-                            } else if (log.includes('WARNING') || log.includes('warn')) {
-                                entry.classList.add('warn');
-                            } else if (log.includes('✅') || log.includes('success') || log.includes('完成')) {
-                                entry.classList.add('success');
-                            } else {
-                                entry.classList.add('info');
+                            // Simple check to prevent duplicate log displays
+                            if (!logIsRendered(log)) {
+                                appendLogEntry(log, getLogClass(log));
                             }
-                            
-                            entry.textContent = log;
-                            termEl.appendChild(entry);
                         });
                         
                         termEl.scrollTop = termEl.scrollHeight;
@@ -2108,6 +2287,79 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
                 console.error("Error polling system status logs:", err);
             }
         }
+
+        function logIsRendered(logText) {
+            const termEl = document.getElementById('terminal-logs');
+            const entries = termEl.getElementsByClassName('log-entry');
+            for (let i = Math.max(0, entries.length - 20); i < entries.length; i++) {
+                if (entries[i].textContent === logText) return true;
+            }
+            return false;
+        }
+
+        function getLogClass(log) {
+            if (log.includes('ERROR') || log.includes('Exception') || log.includes('fail')) {
+                return 'error';
+            } else if (log.includes('WARNING') || log.includes('warn')) {
+                return 'warn';
+            } else if (log.includes('✅') || log.includes('success') || log.includes('完成') || log.includes('完成:')) {
+                return 'success';
+            }
+            return 'info';
+        }
+
+        function appendLogEntry(text, className) {
+            const termEl = document.getElementById('terminal-logs');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${className}`;
+            entry.textContent = text;
+            termEl.appendChild(entry);
+            termEl.scrollTop = termEl.scrollHeight;
+        }
+
+        // Terminal command handling
+        const termForm = document.getElementById('terminal-form');
+        const termInput = document.getElementById('terminal-input');
+
+        termForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const cmd = termInput.value.trim();
+            termInput.value = '';
+            if (!cmd) return;
+
+            appendLogEntry(`SYS@KUNPENG:~$ ${cmd}`, 'input-command');
+
+            const lowerCmd = cmd.toLowerCase();
+            if (lowerCmd === 'help') {
+                appendLogEntry("--- AVAILABLE COMMAND DECK ---", 'success');
+                appendLogEntry("status   : Show debate server live parameters", 'info');
+                appendLogEntry("sysinfo  : Check system telemetries and hardware", 'info');
+                appendLogEntry("clear    : Wipe terminal console buffers", 'info');
+                appendLogEntry("help     : Print this command registry", 'info');
+            } else if (lowerCmd === 'clear') {
+                const termEl = document.getElementById('terminal-logs');
+                termEl.innerHTML = '';
+                appendLogEntry("[SYSTEM] Console buffers cleared.", 'success');
+            } else if (lowerCmd === 'status') {
+                appendLogEntry("--- LIVE DEBATE PARAMETERS ---", 'success');
+                if (localDebateState) {
+                    appendLogEntry(`Topic    : ${localDebateState.topic_title || 'Waiting...'}`, 'info');
+                    appendLogEntry(`Round    : ${localDebateState.current_round} / 8`, 'info');
+                    appendLogEntry(`Speaker  : ${localDebateState.active_role || 'Idle'}`, 'info');
+                } else {
+                    appendLogEntry("Server   : Standby mode", 'info');
+                    appendLogEntry("Topic    : Waiting for client selection", 'info');
+                }
+            } else if (lowerCmd === 'sysinfo') {
+                appendLogEntry("--- DEBATE TELEMETRY CORE ---", 'success');
+                appendLogEntry("Server OS: Heroku Linux Sandbox", 'info');
+                appendLogEntry("Engine   : FastAPI + Chainlit Engine", 'info');
+                appendLogEntry("Database : Vector DB (Cloudflare Vectorize)", 'info');
+                appendLogEntry("TTS Bind : Edge-TTS stitcher module", 'info');
+            } else {
+                appendLogEntry(`bash: ${cmd}: command not found. Type 'help' for support.`, 'error');
+            }
+        });
 
         pollStateAndLogs();
         setInterval(pollStateAndLogs, 1500);
