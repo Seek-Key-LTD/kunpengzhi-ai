@@ -672,27 +672,37 @@ async def type_text_in_html_from_string(
 async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     t = TOPICS.get(topic_id, TOPICS["1"])
 
-    # 1. 加载原文（本地→GitHub→Vectorize）
-    chapters_data = await BookRetriever.load_relevant_chapters(topic_id)
-    book_content = BookRetriever.extract_relevant(chapters_data) if chapters_data else ""
-
-    # 2. 检索历史辩论数据（Moneyball）
+    # 1. 并行加载原文与检索历史辩论数据（优化网络延迟）
+    log.info("🔍 并行加载原文与检索历史辩论...")
+    chapters_future = BookRetriever.load_relevant_chapters(topic_id)
+    vectorize_future = vectorize_query(t["title"], top_k=5)
+    
+    chapters_data, debate_matches = await asyncio.gather(chapters_future, vectorize_future, return_exceptions=True)
+    
+    # 提取原文内容
+    book_content = ""
+    if not isinstance(chapters_data, Exception) and chapters_data:
+        book_content = BookRetriever.extract_relevant(chapters_data)
+        
+    # 提取历史辩论
     past_debates = ""
-    try:
-        # 向量搜索历史辩论，找到与当前辩题相关的记录
-        debate_matches = await vectorize_query(t["title"], top_k=5)
-        if debate_matches:
-            past_lines = []
-            for m in debate_matches:
-                if m.get("source", "").startswith("辩论实录"):
-                    past_lines.append(f"- **{m['source'].replace('辩论实录/', '').replace('_', ' ')}** (相似度: {m['score']:.3f})\n  {m.get('text', '')[:300]}")
-            if past_lines:
-                past_debates = "\n".join(past_lines)
-                log.info(f"📊 Moneyball: 找到 {len(past_lines)} 条历史辩论")
-    except Exception as e:
-        log.warning(f"Moneyball query fail: {e}")
+    if not isinstance(debate_matches, Exception) and debate_matches:
+        past_lines = []
+        for m in debate_matches:
+            if m.get("source", "").startswith("辩论实录"):
+                past_lines.append(f"- **{m['source'].replace('辩论实录/', '').replace('_', ' ')}** (相似度: {m['score']:.3f})\n  {m.get('text', '')[:300]}")
+        if past_lines:
+            past_debates = "\n".join(past_lines)
+            log.info(f"📊 Moneyball: 找到 {len(past_lines)} 条历史辩论")
 
-    # ── 阶段 1/4: 原文检索结果显示 ──
+    # 2. 【关键优化】立即启动后台生成教练策略（LLM 耗时最长，与前台渲染原文进行并发）
+    log.info("🏋️ [运筹学并发] 后台启动双教练赛前策略生成任务...")
+    coach_task = asyncio.create_task(asyncio.gather(
+        DebateCoach.generate_pre_strategy(topic_id, book_content, "pro", past_debates),
+        DebateCoach.generate_pre_strategy(topic_id, book_content, "con", past_debates),
+    ))
+
+    # 3. 前台并发渲染原文检索结果（打字机流式展示，不占用 LLM 等待时间）
     if book_content:
         for ch in f"📖 **原文检索结果**:\n\n{book_content}\n\n---\n\n":
             await msg.stream_token(ch)
@@ -708,13 +718,9 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
     await cl.Message(content="**[进度: 1/4] 原文检索完成，教练正在研读并制定策略...**\n").send()
 
-    # ── 阶段 2/4: 双教练并行 ──
-    log.info("🏋️ 教练分析中...")
+    # ── 阶段 2/4: 等待后台教练策略任务结束 ──
     try:
-        pro_strat, con_strat = await asyncio.gather(
-            DebateCoach.generate_pre_strategy(topic_id, book_content, "pro", past_debates),
-            DebateCoach.generate_pre_strategy(topic_id, book_content, "con", past_debates),
-        )
+        pro_strat, con_strat = await coach_task
         log.info(f"✅ 策略完成: pro={len(pro_strat)}c con={len(con_strat)}c")
     except Exception as e:
         error_msg = f"❌ **大模型调用失败 (双教练策略生成错误)**: {str(e)}\n\n" \
