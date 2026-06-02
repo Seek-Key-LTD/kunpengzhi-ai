@@ -912,5 +912,12 @@ async def get_system_status():
         "logs": log_buffer_handler.buffer
     }
 
+# 将 /status 路由移动到 FastAPI 路由表的最前列，绕过 Chainlit 自带的单页应用 (SPA) 兜底通配符
+try:
+    status_route = app.routes.pop()
+    app.routes.insert(0, status_route)
+except Exception as e:
+    log.error(f"Failed to prioritize status route: {e}")
+
 if __name__ == "__main__":
     print("鲲鹏志 v4.6 · chainlit run app.py")
