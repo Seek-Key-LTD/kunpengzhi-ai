@@ -1,80 +1,84 @@
-# 鲲鹏志 AI 辩论服务
+# 🦅 鲲鹏志 AI 辩论系统 v2.0
 
-基于 Chainlit + AutoGen 的 4v4 智能辩论系统，集成 Wiki.js 知识库。
+4v4 大专辩论会 + 🍵 讲茶大堂 + 🔊 微软免费 TTS
 
-## 技术栈
-
-- **Chainlit**: AI 应用前端
-- **AutoGen**: 多智能体协作框架
-- **Wiki.js GraphQL API**: 知识库检索
-- **Heroku**: 云平台部署
-
-## 功能特性
-
-- ✅ 4v4 辩论队（正方 4 人 vs 反方 4 人）
-- ✅ 实时查询 Wiki.js 获取背景知识
-- ✅ 支持历史、地缘政治、文明演进等辩题
-- ✅ 流式响应展示辩论过程
-
-## 本地开发
+## 快速开始
 
 ```bash
-# 创建虚拟环境
-python -m venv venv
-source venv/bin/activate
-
 # 安装依赖
 pip install -r requirements.txt
 
-# 设置环境变量
-export OPENAI_API_KEY=your_key
-export WIKI_JS_URL=https://wiki.git4ta.fun
-export WIKI_JS_TOKEN=your_token
+# 配置环境（复制并编辑）
+cp .env.example .env
 
-# 启动服务
-chainlit run app.py
+# 启动 Web 界面
+chainlit run app.py --host 0.0.0.0 --port 8080
+
+# 打开浏览器 → http://localhost:8080
+# 密码: 3131
 ```
 
-## Heroku 部署
+## 功能
+
+### 🎤 4v4 大专辩论会
+- 正方 4 人 vs 反方 4 人
+- 开篇立论 → 驳论 → 自由辩论 → 总结陈词
+- 预设 3 个辩题 + 自定义辩题
+- 使用 Gemini 2.5 Flash（或配置其他模型）
+
+### 🍵 讲茶大堂
+- 茶博士：德高望重的老茶客
+- 店小二：消息灵通的跑堂
+- 神秘客：意想不到的视角
+- 账房先生：算赔率、打分
+
+### 🔊 微软免费 TTS
+- 基于 edge-tts，无需 API Key
+- 支持多种中文语音
+- 辩论过程自动朗读
+
+### CLI 独立运行
 
 ```bash
-# 创建应用
-heroku create kunpengzhi-ai-debate
+# 直接运行辩论赛
+python debate/engine.py 1 ./存档目录
 
-# 设置环境变量
-heroku config:set OPENAI_API_KEY=xxx
-heroku config:set WIKI_JS_URL=https://wiki.git4ta.fun
-heroku config:set WIKI_JS_TOKEN=xxx
-
-# 部署
-git push heroku main
-
-# 查看日志
-heroku logs --tail
-
-# 打开应用
-heroku open
+# 运行讲茶大堂
+python app.py --teahouse debate_output.md
 ```
 
-## 架构说明
+## 预设辩题
+
+| # | 辩题 |
+|---|------|
+| 1 | 白貂皮大衣：全球贸易铁证 vs 过度诠释 |
+| 2 | 木兰的哥哥：历史真相 vs 叙事虚构 |
+| 3 | 产权分割：安史之乱的经济学本质 |
+
+## 架构
 
 ```
 用户输入辩题
     ↓
-Chainlit 接收请求
+Chainlit Web 界面
     ↓
-查询 Wiki.js GraphQL API 获取相关知识
+pi --model gemini-2.5-flash 运行辩论
     ↓
-创建 8 个 AutoGen Agents（4v4）
+逐人逐句流式输出 + TTS 语音朗读
     ↓
-Agents 基于背景知识展开辩论
+辩论完成后 → 讲茶大堂场外评论
     ↓
-流式返回辩论结果
+存档 Markdown 文件
 ```
 
-## 下一步
+## 录制脚本示例
 
-- [ ] 集成 GraphRAG 知识图谱检索
-- [ ] 实现真正的多轮辩论对话
-- [ ] 添加辩论评分系统
-- [ ] 支持导出辩论记录
+```python
+from debate.engine import DebateOrchestrator
+import asyncio
+
+result = asyncio.run(
+    DebateOrchestrator.run("1", save_dir="./擂台存档")
+)
+print(f"辩论完成: {result['file']}")
+```
