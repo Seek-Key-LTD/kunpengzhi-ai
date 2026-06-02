@@ -95,10 +95,23 @@ class TTSEngine:
         if not text or len(text.strip()) < 5:
             return None
         try:
+            # ── 去掉 markdown/格式符号 ──
+            clean = self.strip_markdown(text)
+
+            # ── 书面语→口头语 ──
+            oral_text = await self.to_oral(clean)
+            if not oral_text:
+                oral_text = clean[:2000]
+
+            # ── 再去掉可能残余的格式字符 ──
+            final = self.strip_markdown(oral_text)[:2000]
+            if len(final) < 5:
+                final = clean[:2000]
+
             import edge_tts
             key = f"tts/debate_{idx:03d}_{uuid.uuid4().hex[:8]}.mp3"
             tmp = f"/tmp/{uuid.uuid4().hex}.mp3"
-            await edge_tts.Communicate(text[:2000], self.voice).save(tmp)
+            await edge_tts.Communicate(final, self.voice).save(tmp)
             if not os.path.exists(tmp):
                 return None
             with open(tmp, "rb") as f:
@@ -106,11 +119,67 @@ class TTSEngine:
             ok = await R2Store.upload(key, data)
             os.remove(tmp)
             if ok:
-                log.info(f"🔊 TTS: {tag}")
+                log.info(f"🔊 TTS: {tag} ({len(final)} chars)")
                 return R2Store.public_url(key)
         except Exception as e:
             log.error(f"TTS fail {tag}: {e}")
         return None
+
+    @staticmethod
+    def strip_markdown(text: str) -> str:
+        """去掉 markdown 格式符号，只留纯文本"""
+        import re
+        # 去掉 **加粗** 和 *斜体*
+        text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+        text = re.sub(r'(?<!\*)\*([^*]+)\*(?!\*)', r'\1', text)
+        # 去掉 # 标题
+        text = re.sub(r'^#+\s*', '', text, flags=re.MULTILINE)
+        # 去掉 【】 但保留内容
+        text = text.replace('【', '').replace('】', '')
+        # 去掉 `code`
+        text = re.sub(r'`([^`]+)`', r'\1', text)
+        # 去掉 > 引用
+        text = re.sub(r'^>\s*', '', text, flags=re.MULTILINE)
+        # 去掉超链接 [text](url) → text
+        text = re.sub(r'\[([^]]+)]\([^)]+\)', r'\1', text)
+        # 去掉多余的空白行
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        return text.strip()
+
+    async def to_oral(self, text: str) -> str:
+        """书面语→口头语"""
+        if len(text) < 20:
+            return text
+        try:
+            prompt = f"""请把以下文字改写成自然的口头语，就像人在正常说话。
+
+## 要求
+- 长句拆短句
+- 加语气词（啊、吧、呢、嘛）
+- 去掉书面套话
+- **不要输出任何格式符号**，纯文字
+- 直接输出改写结果，不要加说明
+
+## 原文
+{text[:1800]}
+
+## 改写
+"""
+            import openai
+            client = openai.AsyncOpenAI(
+                base_url=os.getenv("OPENAI_BASE_URL"),
+                api_key=os.getenv("OPENAI_API_KEY"),
+            )
+            resp = await client.chat.completions.create(
+                model=DEBATE_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                timeout=15,
+            )
+            result = resp.choices[0].message.content.strip()
+            return result if len(result) > 10 else text
+        except Exception as e:
+            log.warning(f"Oralize failed: {e}")
+            return text
 
 
 # ─── 辩题库 ──────────────────────────────────────
