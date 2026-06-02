@@ -45,35 +45,32 @@ class BookRetriever:
         return ""
 
     @staticmethod
-    async def load_chapter_remote(book: str, chapter: str) -> str:
+    async def load_chapter_remote(book: str, chapter: str, branch: str = "main") -> str:
         """加载章节：本地优先 → GitHub 兜底"""
         base = BookRetriever.get_content_path()
         local = os.path.join(base, book, chapter)
         if os.path.exists(local):
             with open(local, "r") as f:
                 return f.read()
-        return await BookRetriever.fetch_from_github(f"{book}/{chapter}")
+        return await BookRetriever.fetch_from_github(f"{book}/{chapter}", branch=branch)
 
     @staticmethod
     async def load_relevant_chapters(topic_id: str) -> Dict[str, str]:
         """根据辩题 ID 加载相关章节"""
         chapters: Dict[str, str] = {}
 
-        # 辩题 1: 白貂皮 → 牧人记/第08章
         if topic_id == "1":
-            ch = await BookRetriever.load_chapter_remote("牧人记", "第08章 半江瑟瑟半江红.md")
+            ch = await BookRetriever.load_chapter_remote("牧人记", "第08章 半江瑟瑟半江红.md", branch="digest")
             if ch:
                 chapters["牧人记·第08章 半江瑟瑟半江红"] = ch
 
-        # 辩题 2: 木兰的哥哥 → 牧人记/第07章
         elif topic_id == "2":
-            ch = await BookRetriever.load_chapter_remote("牧人记", "第07章 木兰无长兄.md")
+            ch = await BookRetriever.load_chapter_remote("牧人记", "第07章 木兰无长兄.md", branch="digest")
             if ch:
                 chapters["牧人记·第07章 木兰无长兄"] = ch
 
-        # 辩题 3: 安史之乱 → 牧人记/第01章
         elif topic_id == "3":
-            ch = await BookRetriever.load_chapter_remote("牧人记", '第01章 玉玺：华夏改朝换代的"止血石".md')
+            ch = await BookRetriever.load_chapter_remote("牧人记", '第01章 玉玺：华夏改朝换代的"止血石".md', branch="digest")
             if ch:
                 chapters["牧人记·第01章 玉玺"] = ch
 
@@ -89,27 +86,6 @@ class BookRetriever:
                     chapters[f"{dig}·{book_name}"] = text
 
         return chapters
-
-    @staticmethod
-    def chunk_text(text: str, max_chars: int = 2000) -> List[str]:
-        """将长文本切块"""
-        # 按段落切
-        paragraphs = re.split(r"\n\n+", text)
-        chunks = []
-        current = ""
-        for p in paragraphs:
-            para = p.strip()
-            if not para:
-                continue
-            if len(current) + len(para) > max_chars and current:
-                if current:
-                    chunks.append(current.strip())
-                current = para
-            else:
-                current = (current + "\n\n" + para) if current else para
-        if current:
-            chunks.append(current.strip())
-        return chunks
 
     @staticmethod
     def extract_relevant(chapters: Dict[str, str], max_chars: int = 4000) -> str:

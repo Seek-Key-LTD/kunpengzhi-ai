@@ -222,6 +222,20 @@ DEBATE_ROLES = [
     ("正方四辩", "总结陈词"), ("反方四辩", "总结陈词"),
 ]
 
+# 全局八卦看板状态
+DEBATE_STATE = {
+    "topic_title": "等待选择辩题开始辩论...",
+    "current_round": 0,
+    "active_role": "",
+    "rounds": {
+        role: {
+            "status": "pending",
+            "speech": "",
+            "whisper": ""
+        } for role, _ in DEBATE_ROLES
+    }
+}
+
 
 # ─── Vectorize RAG ──────────────────────────────
 
@@ -886,12 +900,809 @@ async def get_system_status():
         "logs": log_buffer_handler.buffer
     }
 
-# 将 /status 路由移动到 FastAPI 路由表的最前列，绕过 Chainlit 自带的单页应用 (SPA) 兜底通配符
+# 将 /status, /bagua, /bagua/api 路由移动到 FastAPI 路由表的最前列，绕过 Chainlit 自带的单页应用 (SPA) 兜底通配符
+from fastapi.responses import HTMLResponse
+
+HTML_CONTENT = r"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鲲鹏志 · 八卦乾坤辩论看板</title>
+    <meta name="description" content="鲲鹏志内容驱动辩论系统的实时八卦流可视化看板。">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --color-pro: #ef4444;
+            --color-con: #3b82f6;
+            --color-pro-glow: rgba(239, 68, 68, 0.5);
+            --color-con-glow: rgba(59, 130, 246, 0.5);
+            --color-active: #fbbf24;
+            --color-active-glow: rgba(251, 191, 36, 0.6);
+            --color-completed: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(31, 41, 55, 0.3) 0, transparent 50%),
+                radial-gradient(at 50% 0%, rgba(17, 24, 39, 0.5) 0, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(31, 41, 55, 0.3) 0, transparent 50%);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+        }
+
+        .logo-section h1 {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #fbbf24, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .logo-section p {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+        }
+
+        .status-dot.active {
+            background-color: var(--color-active);
+            box-shadow: 0 0 10px var(--color-active);
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-dot.completed {
+            background-color: var(--color-completed);
+            box-shadow: 0 0 8px var(--color-completed);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1100px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .canvas-card {
+            flex: 1.2;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 2rem;
+            min-height: 600px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .svg-container {
+            width: 100%;
+            max-width: 580px;
+            height: auto;
+            aspect-ratio: 1 / 1;
+        }
+
+        .info-sidebar {
+            flex: 0.8;
+            width: 100%;
+            max-width: 460px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .glass-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topic-panel h2 {
+            font-size: 1.2rem;
+            color: #fbbf24;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid #fbbf24;
+            padding-left: 0.6rem;
+            line-height: 1.2;
+        }
+
+        .topic-panel p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .debater-card {
+            flex: 1;
+        }
+
+        .trigram-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 2.2rem;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        .debater-title h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+        }
+
+        .debater-title p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+
+        .poem-box {
+            font-family: 'Noto Sans SC', sans-serif;
+            font-style: italic;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #fbbf24;
+            border-left: 2px solid rgba(251, 191, 36, 0.4);
+            white-space: pre-line;
+        }
+
+        .speech-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            min-height: 120px;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            margin-bottom: 1rem;
+        }
+
+        .speech-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        .speech-box::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .whisper-box {
+            border: 1px dashed var(--color-active);
+            background: rgba(251, 191, 36, 0.04);
+            color: #fbbf24;
+            border-radius: 8px;
+            padding: 1.2rem 1rem 1rem 1rem;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .whisper-box::before {
+            content: "👂 教练耳语指导";
+            position: absolute;
+            top: -10px;
+            left: 12px;
+            background: #0f172a;
+            padding: 0 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .grid-circle {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.03);
+            stroke-width: 1;
+        }
+
+        .grid-line {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.015);
+            stroke-width: 1;
+        }
+
+        .taiji-group {
+            cursor: pointer;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.15));
+        }
+
+        .taiji-rotate {
+            animation: taiji-spin 30s linear infinite;
+            transform-origin: 300px 300px;
+        }
+
+        @keyframes taiji-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .debate-path {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.04);
+            stroke-width: 2;
+            stroke-dasharray: 4 4;
+            transition: all 0.5s ease;
+        }
+
+        .debate-path.completed {
+            stroke-dasharray: none;
+            stroke-width: 2.5;
+            filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.2));
+        }
+
+        .debate-path.active {
+            stroke-width: 3.5;
+            stroke-dasharray: 8 4;
+            animation: dash 1s linear infinite;
+        }
+
+        .debate-path.pro-path {
+            stroke: rgba(239, 68, 68, 0.2);
+        }
+        .debate-path.pro-path.completed {
+            stroke: var(--color-pro);
+            filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.4));
+        }
+        .debate-path.pro-path.active {
+            stroke: var(--color-pro);
+            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
+        }
+
+        .debate-path.con-path {
+            stroke: rgba(59, 130, 246, 0.2);
+        }
+        .debate-path.con-path.completed {
+            stroke: var(--color-con);
+            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
+        }
+        .debate-path.con-path.active {
+            stroke: var(--color-con);
+            filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -20;
+            }
+        }
+
+        .node-group {
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .node-group:hover {
+            transform: scale(1.08);
+        }
+
+        .node-ring {
+            transition: all 0.5s ease;
+        }
+
+        .node-group.pro .node-ring {
+            stroke: rgba(239, 68, 68, 0.3);
+            fill: #0c0e15;
+        }
+        .node-group.pro.completed .node-ring {
+            stroke: var(--color-pro);
+            fill: rgba(239, 68, 68, 0.08);
+            filter: drop-shadow(0 0 6px var(--color-pro-glow));
+        }
+
+        .node-group.con .node-ring {
+            stroke: rgba(59, 130, 246, 0.3);
+            fill: #0c0e15;
+        }
+        .node-group.con.completed .node-ring {
+            stroke: var(--color-con);
+            fill: rgba(59, 130, 246, 0.08);
+            filter: drop-shadow(0 0 6px var(--color-con-glow));
+        }
+
+        .node-group.active {
+            transform: scale(1.08);
+        }
+
+        .node-group.active .node-ring {
+            stroke: var(--color-active) !important;
+            stroke-width: 3px;
+            fill: rgba(251, 191, 36, 0.12) !important;
+            filter: drop-shadow(0 0 10px var(--color-active-glow)) !important;
+        }
+
+        .pulsate-circle {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+            transform-origin: center;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 0.3; }
+            100% { transform: scale(1.25); opacity: 0; }
+        }
+
+        .node-trigram {
+            font-family: 'Ma Shan Zheng', cursive;
+            fill: var(--text-primary);
+            text-anchor: middle;
+            dominant-baseline: middle;
+            font-size: 26px;
+        }
+
+        .node-label {
+            font-size: 11px;
+            fill: var(--text-secondary);
+            text-anchor: middle;
+        }
+
+        .node-character {
+            font-size: 11px;
+            font-weight: 500;
+            text-anchor: middle;
+        }
+
+        .pro-text {
+            fill: #fca5a5;
+        }
+
+        .con-text {
+            fill: #93c5fd;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.15);
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .back-link {
+            color: #fbbf24;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: #ef4444;
+            transform: translateX(-3px);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-section">
+            <h1>八卦乾坤</h1>
+            <p>KUNPENGZHI • BAGUA DEBATE MONITOR</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="/" class="back-link">← 返回主页</a>
+            <div class="status-badge" id="monitor-status">
+                <span class="status-dot"></span>
+                <span id="status-text">实时连接中</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="canvas-card">
+            <svg class="svg-container" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+                <circle class="grid-circle" cx="300" cy="300" r="140" />
+                <circle class="grid-circle" cx="300" cy="300" r="220" />
+                <line class="grid-line" x1="300" y1="50" x2="300" y2="550" />
+                <line class="grid-line" x1="50" y1="300" x2="550" y2="300" />
+                <line class="grid-line" x1="123" y1="123" x2="477" y2="477" />
+                <line class="grid-line" x1="477" y1="123" x2="123" y2="477" />
+
+                <line id="path-1" class="debate-path pro-path" x1="300" y1="80" x2="300" y2="520" />
+                <line id="path-2" class="debate-path con-path" x1="300" y1="520" x2="145" y2="145" />
+                <line id="path-3" class="debate-path pro-path" x1="145" y1="145" x2="455" y2="455" />
+                <line id="path-4" class="debate-path con-path" x1="455" y1="455" x2="80" y2="300" />
+                <line id="path-5" class="debate-path pro-path" x1="80" y1="300" x2="520" y2="300" />
+                <line id="path-6" class="debate-path con-path" x1="520" y1="300" x2="455" y2="145" />
+                <line id="path-7" class="debate-path pro-path" x1="455" y1="145" x2="145" y2="455" />
+
+                <g class="taiji-group" id="taiji">
+                    <g class="taiji-rotate">
+                        <circle cx="300" cy="300" r="50" fill="#111" stroke="#333" stroke-width="1.5" />
+                        <path d="M 300,250 A 25,25 0 0,1 300,300 A 25,25 0 0,0 300,350 A 50,50 0 0,1 300,250 Z" fill="#e2e8f0" />
+                        <circle cx="300" cy="275" r="7" fill="#111" />
+                        <circle cx="300" cy="325" r="7" fill="#e2e8f0" />
+                    </g>
+                </g>
+
+                <g class="node-group pro" id="node-pro1" onclick="selectNode('正方一辩')">
+                    <circle cx="300" cy="80" r="30" class="node-ring" />
+                    <text x="300" y="81" class="node-trigram">☰</text>
+                    <text x="300" y="38" class="node-label">正方一辩</text>
+                    <text x="300" y="126" class="node-character pro-text">乾 · 吕洞宾</text>
+                </g>
+
+                <g class="node-group con" id="node-con1" onclick="selectNode('反方一辩')">
+                    <circle cx="300" cy="520" r="30" class="node-ring" />
+                    <text x="300" y="521" class="node-trigram">☷</text>
+                    <text x="300" y="562" class="node-label">反方一辩</text>
+                    <text x="300" y="474" class="node-character con-text">坤 · 何仙姑</text>
+                </g>
+
+                <g class="node-group pro" id="node-pro2" onclick="selectNode('正方二辩')">
+                    <circle cx="145" cy="145" r="30" class="node-ring" />
+                    <text x="145" y="146" class="node-trigram">☶</text>
+                    <text x="145" y="102" class="node-label">正方二辩</text>
+                    <text x="145" y="191" class="node-character pro-text">艮 · 张果老</text>
+                </g>
+
+                <g class="node-group con" id="node-con2" onclick="selectNode('反方二辩')">
+                    <circle cx="455" cy="455" r="30" class="node-ring" />
+                    <text x="455" y="456" class="node-trigram">☱</text>
+                    <text x="455" y="499" class="node-label">反方二辩</text>
+                    <text x="455" y="411" class="node-character con-text">兑 · 韩湘子</text>
+                </g>
+
+                <g class="node-group pro" id="node-pro3" onclick="selectNode('正方三辩')">
+                    <circle cx="80" cy="300" r="30" class="node-ring" />
+                    <text x="80" y="301" class="node-trigram">☲</text>
+                    <text x="80" y="258" class="node-label">正方三辩</text>
+                    <text x="80" y="346" class="node-character pro-text">离 · 汉钟离</text>
+                </g>
+
+                <g class="node-group con" id="node-con3" onclick="selectNode('反方三辩')">
+                    <circle cx="520" cy="300" r="30" class="node-ring" />
+                    <text x="520" y="301" class="node-trigram">☵</text>
+                    <text x="520" y="258" class="node-label">反方三辩</text>
+                    <text x="520" y="346" class="node-character con-text">坎 · 蓝采和</text>
+                </g>
+
+                <g class="node-group pro" id="node-pro4" onclick="selectNode('正方四辩')">
+                    <circle cx="455" cy="145" r="30" class="node-ring" />
+                    <text x="455" y="146" class="node-trigram">☳</text>
+                    <text x="455" y="102" class="node-label">正方四辩</text>
+                    <text x="455" y="191" class="node-character pro-text">震 · 曹国舅</text>
+                </g>
+
+                <g class="node-group con" id="node-con4" onclick="selectNode('反方四辩')">
+                    <circle cx="145" cy="455" r="30" class="node-ring" />
+                    <text x="145" y="456" class="node-trigram">☴</text>
+                    <text x="145" y="499" class="node-label">反方四辩</text>
+                    <text x="145" y="411" class="node-character con-text">巽 · 铁拐李</text>
+                </g>
+            </svg>
+        </div>
+
+        <div class="info-sidebar">
+            <div class="glass-panel topic-panel">
+                <h2>当前辩题</h2>
+                <h3 id="topic-title" style="margin-top: 0.5rem; font-size: 1.05rem; font-weight: 600;">等待辩题加载...</h3>
+                <p id="debate-phase" style="margin-top: 0.4rem; color: #fbbf24; font-size: 0.85rem; font-weight: 500;">阶段: 尚未开始</p>
+            </div>
+
+            <div class="glass-panel debater-card" id="detail-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div class="trigram-avatar" id="detail-avatar">☰</div>
+                        <div class="debater-title">
+                            <h3 id="detail-role">正方一辩</h3>
+                            <p id="detail-identity">乾 · 吕洞宾</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--text-secondary);">
+                        <input type="checkbox" id="auto-track-cb" checked onchange="toggleAutoTrack(this)">
+                        <label for="auto-track-cb" style="cursor: pointer; user-select: none;">自动追踪</label>
+                    </div>
+                </div>
+                <div class="poem-box" id="detail-poem">点击八卦节点查看诗词与发言</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem; font-weight: 600;">🎙️ 发言实录</div>
+                <div class="speech-box" id="detail-speech">无发言记录</div>
+                <div class="whisper-box" id="detail-whisper">无实时指导</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        鲲鹏志内容驱动辩论系统 · 智慧可视化看板 v1.0
+    </footer>
+
+    <script>
+        const SPEAKER_POEMS = {
+            "正方一辩": `【乾 ☰ · 吕洞宾 —— 鹊桥仙】
+一柄纯阳宝剑，寒芒乍现，辞却九重天阙。人间自古情难尽，斩不绝、红尘恩怨。醉扶吕祖，清吟太白，试问纯阳生灭。道心点破鹊桥边，化作了、清风明月。`,
+            "反方一辩": `【坤 ☷ · 何仙姑 —— 卷珠帘】
+手执碧水青莲步玉沙。云散处、现仙家。不染红尘半点，珠帘高卷，缥缈看流霞。弱水三千空浪迹。心似月、净无瑕。一缕香风归去，高唐梦醒，独坐守瑶华。`,
+            "正方二辩": `【艮 ☶ · 张果老 —— 临江仙】
+倒骑毛驴江渚上，朝行碧海苍梧。手扣通玄渔鼓道情孤。古今多少事，盲眼看虚无。莫问老翁年几许，曾陪尧舜双枯。冷眼公卿尽泥涂。乾坤装入壳，一杖任徐驱。`,
+            "反方二辩": `【兑 ☱ · 韩湘子 —— 苏幕遮】
+紫金箫，清怨起。声振灵樾，音动微茫里。碧海苍梧飞仙履。一曲横吹，截断江河水。少年郎，心不死。踏遍群山，笑看红尘死。万古沧桑皆入耳。渔鼓声沉，唯有仙音在。`,
+            "正方三辩": `【离 ☲ · 汉钟离 —— 一剪梅】
+手摇芭蕉宝扇夜气清。急鼓初催，乐奏公卿。满堂金翠转头空，大汉将军，解甲归蓬。一展神风雾隐腾。莫问流光，冷眼输赢。任他樱桃红透时，几度春风，老了仙翁。`,
+            "反方三辩": `【坎 ☵ · 蓝采和 —— 西江月】
+手执叠板花篮，盛来满槛春风。竹板声声戏顽童，醉倒长街乱冢。几点山前疏雨，半宵稻海鸣虫。算来贫贱与公侯，都是南柯一梦。`,
+            "正方四辩": `【震 ☳ · 曹国舅 —— 虞美人】
+掌中云阳玉笏何时了？权柄如罂粟。满城开遍美人花，谁解红衣妖艳、是鸩家。雕栏玉砌生尸骨，大梦惊吞吐。老夫脱却大朝衣，洗净满身浮毒、白云归。`,
+            "反方四辩": `【巽 ☴ · 铁拐李 —— 卜算子】
+背负太极葫芦落红尘，拐杖惊风雨。莫笑形骸至贱躯，壶里乾坤寓.酒肉任穿肠，不肯栖寒树。待到悬壶济世时，散作山前雾。`
+        };
+
+        const SPEAKER_INFO = {
+            "正方一辩": { trigram: "☰", name: "乾 · 吕洞宾", id: "pro1", type: "pro" },
+            "反方一辩": { trigram: "☷", name: "坤 · 何仙姑", id: "con1", type: "con" },
+            "正方二辩": { trigram: "☶", name: "艮 · 张果老", id: "pro2", type: "pro" },
+            "反方二辩": { trigram: "☱", name: "兑 · 韩湘子", id: "con2", type: "con" },
+            "正方三辩": { trigram: "☲", name: "离 · 汉钟离", id: "pro3", type: "pro" },
+            "反方三辩": { trigram: "☵", name: "坎 · 蓝采和", id: "con3", type: "con" },
+            "正方四辩": { trigram: "☳", name: "震 · 曹国舅", id: "pro4", type: "pro" },
+            "反方四辩": { trigram: "☴", name: "巽 · 铁拐李", id: "con4", type: "con" }
+        };
+
+        let localDebateState = null;
+        let selectedRole = "正方一辩";
+        let autoTracking = true;
+
+        function selectNode(role) {
+            autoTracking = false;
+            document.getElementById("auto-track-cb").checked = false;
+            selectedRole = role;
+            updateDetailPanel();
+        }
+
+        function toggleAutoTrack(cb) {
+            autoTracking = cb.checked;
+            if (autoTracking && localDebateState && localDebateState.active_role) {
+                selectedRole = localDebateState.active_role;
+                updateDetailPanel();
+            }
+        }
+
+        function updateDetailPanel() {
+            if (!localDebateState) return;
+
+            const role = selectedRole;
+            const info = SPEAKER_INFO[role];
+            const roundData = localDebateState.rounds[role] || {};
+
+            document.getElementById("detail-role").textContent = role;
+            document.getElementById("detail-role").className = info.type + "-text";
+            document.getElementById("detail-identity").textContent = info.name;
+            document.getElementById("detail-avatar").textContent = info.trigram;
+            document.getElementById("detail-poem").textContent = SPEAKER_POEMS[role] || "无";
+
+            const speechEl = document.getElementById("detail-speech");
+            const whisperEl = document.getElementById("detail-whisper");
+
+            const incomingSpeech = (roundData.speech || "暂无发言内容").trim();
+            const renderedSpeech = speechEl.dataset.fullText || "";
+            
+            if (incomingSpeech !== "暂无发言内容" && incomingSpeech.startsWith(renderedSpeech) && renderedSpeech.length > 0) {
+                const diffText = incomingSpeech.substring(renderedSpeech.length);
+                if (diffText.length > 0) {
+                    speechEl.innerHTML += diffText.replace(/\n/g, '<br>');
+                    speechEl.dataset.fullText = incomingSpeech;
+                    speechEl.scrollTop = speechEl.scrollHeight;
+                }
+            } else {
+                speechEl.innerHTML = incomingSpeech.replace(/\n/g, '<br>');
+                speechEl.dataset.fullText = incomingSpeech;
+            }
+
+            whisperEl.textContent = roundData.whisper || "暂无教练实时耳语指导";
+        }
+
+        async function fetchState() {
+            try {
+                const res = await fetch('/bagua/api');
+                if (!res.ok) throw new Error("API response error");
+                const state = await res.json();
+                
+                localDebateState = state;
+                document.getElementById("topic-title").textContent = state.topic_title || "等待辩题开始...";
+                
+                const dot = document.querySelector(".status-dot");
+                const text = document.getElementById("status-text");
+                
+                if (state.current_round === 0) {
+                    dot.className = "status-dot";
+                    text.textContent = "辩论未开始";
+                    document.getElementById("debate-phase").textContent = "阶段: 尚未开始";
+                } else if (state.current_round === 9) {
+                    dot.className = "status-dot completed";
+                    text.textContent = "辩论已结束";
+                    document.getElementById("debate-phase").textContent = "阶段: 终局归纳";
+                } else {
+                    dot.className = "status-dot active";
+                    text.textContent = "辩论进行中";
+                    document.getElementById("debate-phase").textContent = `阶段: 第 \${state.current_round} / 8 轮 (\${state.active_role} 发言中)`;
+                    
+                    if (autoTracking && state.active_role && selectedRole !== state.active_role) {
+                        selectedRole = state.active_role;
+                    }
+                }
+
+                updateVisuals(state);
+                updateDetailPanel();
+
+            } catch (err) {
+                console.error("Polling state error:", err);
+                const dot = document.querySelector(".status-dot");
+                const text = document.getElementById("status-text");
+                dot.className = "status-dot";
+                text.textContent = "连接断开，重试中";
+            }
+        }
+
+        function updateVisuals(state) {
+            for (const [role, info] of Object.entries(SPEAKER_INFO)) {
+                const nodeEl = document.getElementById(`node-\${info.id}`);
+                if (!nodeEl) continue;
+
+                const roundData = state.rounds[role] || {};
+                const status = roundData.status || "pending";
+
+                nodeEl.classList.remove("active", "completed", "pending");
+                nodeEl.classList.add(status);
+
+                const oldPulse = nodeEl.querySelector(".pulsate-circle");
+                if (oldPulse) oldPulse.remove();
+
+                if (status === "active") {
+                    const cx = nodeEl.querySelector("circle").getAttribute("cx");
+                    const cy = nodeEl.querySelector("circle").getAttribute("cy");
+                    const pulseCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    pulseCircle.setAttribute("cx", cx);
+                    pulseCircle.setAttribute("cy", cy);
+                    pulseCircle.setAttribute("r", "30");
+                    pulseCircle.setAttribute("fill", "none");
+                    pulseCircle.setAttribute("stroke", "var(--color-active)");
+                    pulseCircle.setAttribute("stroke-width", "1.5");
+                    pulseCircle.setAttribute("class", "pulsate-circle");
+                    nodeEl.insertBefore(pulseCircle, nodeEl.firstChild);
+                }
+            }
+
+            const currentRound = state.current_round;
+
+            for (let i = 1; i <= 7; i++) {
+                const pathEl = document.getElementById(`path-\${i}`);
+                if (!pathEl) continue;
+
+                pathEl.classList.remove("active", "completed");
+
+                if (currentRound === 9) {
+                    pathEl.classList.add("completed");
+                } else if (i < currentRound) {
+                    pathEl.classList.add("completed");
+                } else if (i === currentRound) {
+                    pathEl.classList.add("active");
+                }
+            }
+        }
+
+        document.getElementById("taiji").addEventListener("click", () => {
+            autoTracking = true;
+            document.getElementById("auto-track-cb").checked = true;
+            if (localDebateState && localDebateState.active_role) {
+                selectedRole = localDebateState.active_role;
+            } else {
+                selectedRole = "正方一辩";
+            }
+            updateDetailPanel();
+        });
+
+        fetchState();
+        setInterval(fetchState, 1000);
+    </script>
+</body>
+</html>"""
+
+@app.get("/bagua")
+async def get_bagua_page():
+    return HTMLResponse(content=HTML_CONTENT)
+
+@app.get("/bagua/api")
+async def get_bagua_api():
+    return DEBATE_STATE
+
+# 将 /status, /bagua, /bagua/api 路由移动到 FastAPI 路由表的最前列，绕过 Chainlit 自带 of 单页应用 (SPA) 兜底通配符
 try:
-    status_route = app.routes.pop()
-    app.routes.insert(0, status_route)
+    target_paths = ["/status", "/bagua/api", "/bagua"]
+    moved_routes = []
+    i = 0
+    while i < len(app.routes):
+        r = app.routes[i]
+        if hasattr(r, "path") and r.path in target_paths:
+            moved_routes.append(app.routes.pop(i))
+        else:
+            i += 1
+    for idx, r in enumerate(moved_routes):
+        app.routes.insert(idx, r)
 except Exception as e:
-    log.error(f"Failed to prioritize status route: {e}")
+    log.error(f"Failed to prioritize custom routes: {e}")
 
 if __name__ == "__main__":
     print("鲲鹏志 v4.6 · chainlit run app.py")
