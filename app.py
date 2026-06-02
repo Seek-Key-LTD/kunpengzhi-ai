@@ -366,7 +366,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     t = TOPICS.get(topic_id, TOPICS["1"])
 
     # 1. 加载原文（本地→GitHub→Vectorize）
-    chapters_data = await BookRetriever().load_relevant_chapters(topic_id)
+    chapters_data = await BookRetriever.load_relevant_chapters(topic_id)
     book_content = BookRetriever.extract_relevant(chapters_data) if chapters_data else ""
 
     # 2. 检索历史辩论数据（Moneyball）
