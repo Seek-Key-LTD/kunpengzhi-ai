@@ -296,9 +296,13 @@ class DebateCoach:
 """
         import openai
         client = openai.AsyncOpenAI(base_url=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"))
-        resp = await client.chat.completions.create(model=DEBATE_MODEL,
-            messages=[{"role": "user", "content": prompt}])
-        return resp.choices[0].message.content
+        try:
+            resp = await client.chat.completions.create(model=DEBATE_MODEL,
+                messages=[{"role": "user", "content": prompt}], timeout=60.0)
+            return resp.choices[0].message.content
+        except Exception as e:
+            log.error(f"generate_pre_strategy failed: {e}")
+            raise e
 
     @staticmethod
     async def generate_whisper(
@@ -379,7 +383,7 @@ async def debate_round(topic_id: str, role: str, stage: str,
     import openai
     client = openai.AsyncOpenAI(base_url=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"))
     return await client.chat.completions.create(
-        model=DEBATE_MODEL, messages=[{"role": "user", "content": prompt}], stream=True)
+        model=DEBATE_MODEL, messages=[{"role": "user", "content": prompt}], stream=True, timeout=30.0)
 
 
 # ─── 议事长 ──────────────────────────────────────
@@ -392,9 +396,13 @@ class Chair:
         prompt = f"辩论归纳：\n辩题：{t['title']}\n上轮：{prev_role}说{prev_text[:500]}\n本轮：{last_role}说{last_text[:500]}\n\n用80字归纳交锋焦点。"
         import openai
         client = openai.AsyncOpenAI(base_url=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"))
-        resp = await client.chat.completions.create(model=DEBATE_MODEL,
-            messages=[{"role": "user", "content": prompt}])
-        return resp.choices[0].message.content
+        try:
+            resp = await client.chat.completions.create(model=DEBATE_MODEL,
+                messages=[{"role": "user", "content": prompt}], timeout=15.0)
+            return resp.choices[0].message.content.strip()
+        except Exception as e:
+            log.warning(f"Chair summary fail: {e}")
+            return f"双方针对辩题展开激烈交锋，【{last_role}】直接反驳了【{prev_role}】的立场。"
 
 
 # ─── 辩论实录存档 ──────────────────────────────
@@ -936,15 +944,13 @@ def auth_callback(username: str, password: str):
 async def start():
     await cl.Message(content="""🦅 **鲲鹏志 · Moneyball 数据驱动辩论**
 
-## 辩题库
-1️⃣ 白貂皮大衣：全球贸易铁证 vs 过度诠释
-2️⃣ 木兰的哥哥：历史真相 vs 叙事虚构
-3️⃣ 产权分割理论：安史之乱的经济学本质
-
-每场辩论实录自动存档，教练通过历史数据迭代进步 📊
-输入数字开始！
+[自动运行模式]: 系统已默认选择 1️⃣ 白貂皮大衣 并自动启动辩论赛，请在两侧终端/看板凝望数据。
 """
     ).send()
+    
+    # 模拟用户输入 "1" 开始辩论
+    msg = cl.Message(content="1")
+    await main(msg)
 
 @cl.on_message
 async def main(message: cl.Message):
