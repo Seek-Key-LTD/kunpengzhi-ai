@@ -26,7 +26,10 @@ class BookRetriever:
     async def fetch_from_github(path: str, branch: str = "main") -> str:
         """从 GitHub raw 拉取内容"""
         import httpx
-        url = f"https://raw.githubusercontent.com/Seek-Key-LTD/kunpengzhi/{branch}/{path}"
+        from urllib.parse import quote
+        # 对路径进行 URL 编码，尤其是处理中文文件名和特殊字符
+        encoded_path = "/".join([quote(p) for p in path.split('/')])
+        url = f"https://raw.githubusercontent.com/Seek-Key-LTD/kunpengzhi/{branch}/{encoded_path}"
         try:
             async with httpx.AsyncClient(timeout=15) as c:
                 r = await c.get(url)
