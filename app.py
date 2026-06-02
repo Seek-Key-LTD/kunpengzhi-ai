@@ -741,10 +741,10 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
     # 2. 【关键优化】立即启动后台生成教练策略（LLM 耗时最长，与前台渲染原文进行并发）
     log.info("🏋️ [运筹学并发] 后台启动双教练赛前策略生成任务...")
-    coach_task = asyncio.create_task(asyncio.gather(
+    coach_task = asyncio.gather(
         DebateCoach.generate_pre_strategy(topic_id, book_content, "pro", past_debates),
         DebateCoach.generate_pre_strategy(topic_id, book_content, "con", past_debates),
-    ))
+    )
 
     # 3. 前台并发渲染原文检索结果（打字机流式展示，不占用 LLM 等待时间）
     if book_content:
