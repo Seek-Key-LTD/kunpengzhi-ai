@@ -615,11 +615,22 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
     # ── 阶段 2/4: 双教练并行 ──
     log.info("🏋️ 教练分析中...")
-    pro_strat, con_strat = await asyncio.gather(
-        DebateCoach.generate_pre_strategy(topic_id, book_content, "pro", past_debates),
-        DebateCoach.generate_pre_strategy(topic_id, book_content, "con", past_debates),
-    )
-    log.info(f"✅ 策略完成: pro={len(pro_strat)}c con={len(con_strat)}c")
+    try:
+        pro_strat, con_strat = await asyncio.gather(
+            DebateCoach.generate_pre_strategy(topic_id, book_content, "pro", past_debates),
+            DebateCoach.generate_pre_strategy(topic_id, book_content, "con", past_debates),
+        )
+        log.info(f"✅ 策略完成: pro={len(pro_strat)}c con={len(con_strat)}c")
+    except Exception as e:
+        error_msg = f"❌ **大模型调用失败 (双教练策略生成错误)**: {str(e)}\n\n" \
+                    f"**当前 API 配置**:\n" \
+                    f"- `DEBATE_MODEL`: `{DEBATE_MODEL}`\n" \
+                    f"- `OPENAI_BASE_URL`: `{os.getenv('OPENAI_BASE_URL', 'http://localhost:4000/v1')}`\n" \
+                    f"- `OPENAI_API_KEY`: `{'已设置' if os.getenv('OPENAI_API_KEY') else '未设置'}`\n\n" \
+                    f"请检查 Heroku Config Vars 中的环境变量是否配置正确，或服务是否正常！"
+        await cl.Message(content=error_msg).send()
+        log.error(f"Coach strategy generation failed: {e}", exc_info=True)
+        return []
 
     # 存储完整策略到 user_session
     cl.user_session.set("pro_strat", pro_strat)
