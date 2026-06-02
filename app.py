@@ -168,66 +168,63 @@ async def main(message: cl.Message):
         title = topic["title"]
         prompt = DebateEngine.build_prompt(topic_id)
 
-    msg = cl.Message(content=f"🎯 **辩题**: {title}\n\n🎤 辩论即将开始...\n")
+    msg = cl.Message(content=f"🎯 **辩题**: {title}\n\n")
 
     if TTS_ENABLED:
-        msg.content += "\n🔊 **语音模式已开启**\n"
+        await msg.stream_token("🔊 **语音模式已开启**\n\n")
 
-    await msg.send()
-
-    # 通过 liteLLM 调用 Vertex AI
+    # 通过 liteLLM 调用 Vertex AI（流式）
     import openai
     client = openai.AsyncOpenAI(
         base_url=os.getenv("OPENAI_BASE_URL", "http://localhost:4000/v1"),
         api_key=os.getenv("OPENAI_API_KEY", "sk-47318"),
     )
 
-    response = await client.chat.completions.create(
+    stream = await client.chat.completions.create(
         model=DEBATE_MODEL,
         messages=[{"role": "user", "content": prompt}],
+        stream=True,
     )
-    debate_text = response.choices[0].message.content
 
     # TTS 引擎
     tts = TTSEngine()
-    tts_tasks = []
 
-    # 逐段解析发言人并输出
+    # 实时流式输出辩论内容
     current_speaker = ""
     speech_buffer = ""
     round_num = 0
 
-    for line in debate_text.split("\n"):
-        text = line.strip()
-        if not text:
+    async for chunk in stream:
+        delta = chunk.choices[0].delta if chunk.choices else None
+        if not delta or not delta.content:
             continue
 
+        text = delta.content
+
+        # 检测发言人切换
         if text.startswith("【"):
             if speech_buffer and current_speaker:
-                display = f"\n\n**{current_speaker}**:\n{speech_buffer}"
-                await msg.stream_token(display)
-
                 if TTS_ENABLED and len(speech_buffer) > 10:
                     audio_file = f"/tmp/debate_{round_num}.mp3"
-                    tts_tasks.append(
-                        asyncio.create_task(tts.speak(speech_buffer, audio_file))
-                    )
+                    asyncio.create_task(tts.speak(speech_buffer, audio_file))
 
             current_speaker = text
             speech_buffer = ""
             round_num += 1
             await msg.stream_token(f"\n\n--- *{current_speaker}* ---\n")
         else:
-            speech_buffer += text + "\n"
+            speech_buffer += text
+            await msg.stream_token(text)
 
-    if speech_buffer and current_speaker:
-        display = f"\n\n**{current_speaker}**:\n{speech_buffer}"
-        await msg.stream_token(display)
+    # 收尾
+    if TTS_ENABLED and len(speech_buffer) > 10:
+        audio_file = f"/tmp/debate_{round_num}.mp3"
+        asyncio.create_task(tts.speak(speech_buffer, audio_file))
 
-    if TTS_ENABLED and tts_tasks:
-        await msg.stream_token("\n\n🔊 **语音生成中...**\n")
-        await asyncio.gather(*tts_tasks, return_exceptions=True)
-        await msg.stream_token("✅ **语音已就绪**\n")
+    await msg.send()
+
+    if TTS_ENABLED:
+        await cl.Message(content="🔊 **语音生成中...**").send()
 
     await msg.stream_token("\n\n---\n✅ **辩论结束** | 使用 `/audio` 查看语音文件")
 
