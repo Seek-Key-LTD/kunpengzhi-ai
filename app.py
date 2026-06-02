@@ -553,8 +553,15 @@ async def show_coach_briefing(action: cl.Action):
 
 @cl.password_auth_callback
 def auth_callback(username: str, password: str):
-    pwd = os.getenv("APP_PASSWORD", "3131")
-    if password == pwd:
+    valid_users = {
+        "84621942@qq.com": "1314",
+        "ben@git4ta.fun": "3131",
+    }
+    env_pwd = os.getenv("APP_PASSWORD")
+    if env_pwd and password == env_pwd:
+        return cl.User(identifier=username)
+        
+    if username in valid_users and valid_users[username] == password:
         return cl.User(identifier=username)
     return None
 
