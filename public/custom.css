@@ -1,0 +1,129 @@
+/* 鲲鹏志 · 宽屏高级视觉定制样式 (自适应主题) */
+
+/* Default: Light theme values */
+:root {
+  --row-bg: rgba(0, 0, 0, 0.02);
+  --row-border: rgba(0, 0, 0, 0.08);
+  --whisper-bg: rgba(0, 0, 0, 0.01);
+  --whisper-border: rgba(0, 0, 0, 0.06);
+  --whisper-text: rgba(0, 0, 0, 0.65);
+  --speech-text-color: #2c3e50;
+  --speech-bg: rgba(0, 0, 0, 0.02);
+}
+
+/* Dark theme overrides */
+.dark, [data-theme='dark'], body.dark-theme {
+  --row-bg: rgba(255, 255, 255, 0.03);
+  --row-border: rgba(255, 255, 255, 0.08);
+  --whisper-bg: rgba(255, 255, 255, 0.02);
+  --whisper-border: rgba(255, 255, 255, 0.06);
+  --whisper-text: rgba(255, 255, 255, 0.6);
+  --speech-text-color: rgba(255, 255, 255, 0.9);
+  --speech-bg: rgba(255, 255, 255, 0.03);
+}
+
+/* 全屏布局优化 */
+.cl-message {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.cl-message-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* 3列布局框架 */
+.debate-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  width: 100%;
+  gap: 24px;
+  margin: 16px 0;
+  font-family: "LXGW WenKai", "Inter", -apple-system, sans-serif;
+}
+
+/* 耳语栏 (Whisper Bar) 样式 */
+.whisper-bar {
+  flex: 0 0 24%;
+  font-size: 0.88em;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--whisper-bg);
+  border: 1px dashed var(--whisper-border);
+  color: var(--whisper-text);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  height: fit-content;
+  align-self: flex-start;
+}
+
+/* 激活状态的耳语栏 */
+.whisper-bar.active {
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
+}
+
+.whisper-bar.left-bar.active {
+  border-left: 4px solid #ef4444; /* 珊瑚红 */
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(255, 255, 255, 0.01));
+  color: var(--speech-text-color);
+}
+
+.whisper-bar.right-bar.active {
+  border-left: 4px solid #3b82f6; /* 冰晶蓝 */
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(255, 255, 255, 0.01));
+  color: var(--speech-text-color);
+}
+
+.whisper-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.left-bar .whisper-title {
+  color: #ef4444;
+}
+
+.right-bar .whisper-title {
+  color: #3b82f6;
+}
+
+.whisper-placeholder {
+  font-style: italic;
+  opacity: 0.4;
+  text-align: center;
+  padding: 12px 0;
+}
+
+/* 辩手发言区 */
+.speech-content {
+  flex: 1;
+  padding: 20px 26px;
+  border-radius: 16px;
+  background: var(--speech-bg);
+  border: 1px solid var(--row-border);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  color: var(--speech-text-color);
+}
+
+.speech-content.pro-side {
+  border-top: 4px solid #ef4444;
+}
+
+.speech-content.con-side {
+  border-top: 4px solid #3b82f6;
+}
+
+.speech-content:hover {
+  border-color: rgba(128, 128, 128, 0.25);
+}

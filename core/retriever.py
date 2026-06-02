@@ -27,8 +27,12 @@ class BookRetriever:
         """从 GitHub raw 拉取内容"""
         import httpx
         from urllib.parse import quote
-        # 对路径进行 URL 编码，尤其是处理中文文件名和特殊字符
-        encoded_path = "/".join([quote(p) for p in path.split('/')])
+        
+        # 假设 path 是 "目录/文件名.md" 格式
+        parts = path.split('/')
+        encoded_parts = [quote(p) for p in parts]
+        encoded_path = '/'.join(encoded_parts)
+        
         url = f"https://raw.githubusercontent.com/Seek-Key-LTD/kunpengzhi/{branch}/{encoded_path}"
         try:
             async with httpx.AsyncClient(timeout=15) as c:

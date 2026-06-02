@@ -261,6 +261,44 @@ class DebateCoach:
             messages=[{"role": "user", "content": prompt}])
         return resp.choices[0].message.content
 
+    @staticmethod
+    async def generate_whisper(
+        topic_id: str,
+        role: str,
+        book_content: str,
+        coach_strategy: str,
+        history: str,
+    ) -> str:
+        """
+        教练针对当前局势，给当前辩手（学生）发送实时耳语指导（teacher model 实时交互）
+        """
+        t = TOPICS.get(topic_id, TOPICS["1"])
+        prompt = f"""
+你是一名资深辩论教练（Teacher Model）。你正在实时指导你的辩手：【{role}】。
+当前辩题：{t['title']}
+当前大局策略：
+{coach_strategy[:1000]}
+
+当前辩论历史：
+{history[-1500:] if history else "辩论刚刚开始，准备第一轮发言。"}
+
+任务：
+请给【{role}】发一条简短、犀利的耳语指导（80字以内），告诉他/她本轮应该抓住对方什么漏洞、引用原文什么证据，或者采取什么战术。
+注意：直接输出耳语内容，语气要像教练在台下悄悄给队员叮嘱，不要任何多余的格式或客套话。
+耳语："""
+        import openai
+        client = openai.AsyncOpenAI(base_url=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"))
+        try:
+            resp = await client.chat.completions.create(
+                model=DEBATE_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                timeout=12,
+            )
+            return resp.choices[0].message.content.strip()
+        except Exception as e:
+            log.warning(f"Whisper generation fail: {e}")
+            return "教练正在观察局势，准备下一轮指导。"
+
 
 # ─── 单轮辩论 ────────────────────────────────────
 
@@ -362,6 +400,180 @@ async def save_and_index_transcript(topic_id: str, history: str, pro_strat: str,
 
 # ─── 主席 Chainlit 流式 ──────────────────────────
 
+async def prefetch_speech(speech_stream_coro) -> asyncio.Queue:
+    queue = asyncio.Queue()
+    async def task_runner():
+        try:
+            stream = await speech_stream_coro
+            async for chunk in stream:
+                delta = chunk.choices[0].delta if chunk.choices else None
+                if delta and delta.content:
+                    await queue.put(delta.content)
+        except Exception as e:
+            log.error(f"Error prefetching speech stream: {e}")
+        finally:
+            await queue.put(None)
+    asyncio.create_task(task_runner())
+    return queue
+
+def make_debate_html(
+    role: str,
+    stage: str,
+    moderator_intro: str,
+    poem: str,
+    speech_text: str,
+    pro_whisper: Optional[str],
+    con_whisper: Optional[str],
+    is_pro: bool,
+) -> str:
+    side_class = "pro-side" if is_pro else "con-side"
+    left_active_class = "active" if is_pro else ""
+    right_active_class = "active" if not is_pro else ""
+    
+    if is_pro:
+        if pro_whisper:
+            left_whisper_html = f"<div>{pro_whisper}</div>"
+        else:
+            left_whisper_html = '<div class="whisper-placeholder">教练正在拟定耳语战术...</div>'
+    else:
+        left_whisper_html = '<div class="whisper-placeholder">教练正在观察局势...</div>'
+        
+    if not is_pro:
+        if con_whisper:
+            right_whisper_html = f"<div>{con_whisper}</div>"
+        else:
+            right_whisper_html = '<div class="whisper-placeholder">教练正在拟定耳语战术...</div>'
+    else:
+        right_whisper_html = '<div class="whisper-placeholder">教练正在观察局势...</div>'
+        
+    speech_html = ""
+    if moderator_intro:
+        speech_html += f'<div class="moderator-intro" style="margin-bottom: 12px; font-weight: 500; opacity: 0.85;">{moderator_intro}</div>'
+    if poem:
+        poem_formatted = poem.replace('\n', '<br/>')
+        speech_html += f'<div class="speaker-poem" style="margin-bottom: 16px; font-style: italic; color: #7f8c8d; line-height: 1.6;">{poem_formatted}</div>'
+    if speech_text:
+        speech_formatted = speech_text.replace('\n\n', '</p><p>').replace('\n', '<br/>')
+        speech_html += f'<div class="speaker-speech" style="line-height: 1.7; font-size: 1.05em;"><p>{speech_formatted}</p></div>'
+        
+    html = f"""
+<div class="debate-row">
+  <div class="whisper-bar left-bar {left_active_class}">
+    <div class="whisper-title">🔴 正方教练耳语</div>
+    {left_whisper_html}
+  </div>
+  
+  <div class="speech-content {side_class}">
+    <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px; border-bottom: 1px solid var(--row-border); padding-bottom: 6px;">
+      {role} ({stage})
+    </div>
+    {speech_html}
+  </div>
+  
+  <div class="whisper-bar right-bar {right_active_class}">
+    <div class="whisper-title">🔵 反方教练耳语</div>
+    {right_whisper_html}
+  </div>
+</div>
+"""
+    return html
+
+async def type_text_in_html(
+    role: str,
+    stage: str,
+    full_intro: str,
+    full_poem: str,
+    speech_queue: asyncio.Queue,
+    whisper_task: asyncio.Task,
+    is_pro: bool,
+    round_msg: cl.Message,
+) -> str:
+    intro_curr = ""
+    poem_curr = ""
+    speech_curr = ""
+    
+    def get_whisper_safe(task: asyncio.Task) -> Optional[str]:
+        if task.done():
+            try:
+                return task.result()
+            except Exception as e:
+                log.warning(f"Whisper task failed: {e}")
+                return "教练正在观察局势，准备下一轮指导。"
+        return None
+
+    # 1. Type Intro
+    if full_intro:
+        chunk_size = 2
+        for i in range(0, len(full_intro), chunk_size):
+            intro_curr += full_intro[i:i+chunk_size]
+            w_val = get_whisper_safe(whisper_task)
+            pro_w = w_val if is_pro else None
+            con_w = w_val if not is_pro else None
+            
+            round_msg.content = make_debate_html(
+                role=role, stage=stage,
+                moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
+                pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
+            )
+            await round_msg.update()
+            await asyncio.sleep((5 / 1000) * chunk_size)
+            
+    # 2. Type Poem
+    if full_poem:
+        for ch in full_poem:
+            poem_curr += ch
+            w_val = get_whisper_safe(whisper_task)
+            pro_w = w_val if is_pro else None
+            con_w = w_val if not is_pro else None
+            
+            round_msg.content = make_debate_html(
+                role=role, stage=stage,
+                moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
+                pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
+            )
+            await round_msg.update()
+            await asyncio.sleep(POEM_SPEED_MS / 1000)
+            
+    # 3. Stream Speech from Queue
+    while True:
+        chunk = await speech_queue.get()
+        if chunk is None:
+            break
+        speech_curr += chunk
+        
+        w_val = get_whisper_safe(whisper_task)
+        pro_w = w_val if is_pro else None
+        con_w = w_val if not is_pro else None
+        
+        round_msg.content = make_debate_html(
+            role=role, stage=stage,
+            moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
+            pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
+        )
+        await round_msg.update()
+        await asyncio.sleep(TYPE_SPEED_MS / 1000 * len(chunk))
+        
+    # Wait for whisper if not done yet
+    if not whisper_task.done():
+        try:
+            w_val = await whisper_task
+        except Exception as e:
+            w_val = "教练正在观察局势，准备下一轮指导。"
+    else:
+        w_val = get_whisper_safe(whisper_task)
+        
+    pro_w = w_val if is_pro else None
+    con_w = w_val if not is_pro else None
+    
+    round_msg.content = make_debate_html(
+        role=role, stage=stage,
+        moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
+        pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
+    )
+    await round_msg.update()
+    
+    return speech_curr
+
 async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     t = TOPICS.get(topic_id, TOPICS["1"])
 
@@ -378,8 +590,6 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
             past_lines = []
             for m in debate_matches:
                 if m.get("source", "").startswith("辩论实录"):
-                    # 原始的 debate full text 存储在 Vectorize 的 text 字段中，这里取出来
-                    # 注意：text[:300] 是索引时的摘要，不是全文
                     past_lines.append(f"- **{m['source'].replace('辩论实录/', '').replace('_', ' ')}** (相似度: {m['score']:.3f})\n  {m.get('text', '')[:300]}")
             if past_lines:
                 past_debates = "\n".join(past_lines)
@@ -393,12 +603,13 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
             await msg.stream_token(ch)
             await asyncio.sleep(8 / 1000) # 原文显示速度稍慢
         await asyncio.sleep(0.5) # 显示完原文停顿
-
     else:
         for ch in "⚠️ **未能从书库或历史辩论中检索到相关原文。请确保书库已索引。**\n\n":
             await msg.stream_token(ch)
             await asyncio.sleep(6 / 1000)
         await asyncio.sleep(0.5)
+
+    await msg.send() # 结束第一个 message
 
     await cl.Message(content="**[进度: 1/4] 原文检索完成，教练正在研读并制定策略...**\n").send()
 
@@ -422,9 +633,10 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     await cl.Message(content="**[进度: 2/4] 教练策略已部署，辩论即将开始...**", actions=actions).send()
 
     # ── 阶段 3/4: 辩论进行中 ──
-    await msg.stream_token("🏛️ **议事长**: 欢迎来到鲲鹏志辩论现场！本场辩论采用罗伯特议事规则。\n"
-                           "每轮发言后麦克风交还议事长，由议事长归纳交锋，确保辩论焦点清晰。\n"
-                           "双方辩手将围绕辩题展开激烈交锋，并引用《鲲鹏志》书库原文。\n\n")
+    welcome_msg = cl.Message(content="🏛️ **议事长**: 欢迎来到鲲鹏志辩论现场！本场辩论采用罗伯特议事规则。\n"
+                                     "每轮发言后麦克风交还议事长，由议事长归纳交锋，确保辩论焦点清晰。\n"
+                                     "双方辩手将围绕辩题展开激烈交锋，并引用《鲲鹏志》书库原文。\n\n")
+    await welcome_msg.send()
     await asyncio.sleep(INTRO_SPEED_MS / 1000 * 30) # 模拟更慢的开场白
 
     history = ""
@@ -436,45 +648,59 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
     for role, stage in DEBATE_ROLES:
         round_idx += 1
-        # 总共 8 轮辩论，加上开场白，可以粗略认为 9 个环节
-        total_stages = len(DEBATE_ROLES) + 1 # +1 for final summary
+        total_stages = len(DEBATE_ROLES) + 1
 
-        # 议事长归纳（非首轮）
+        # 1. 启动异步预取任务 (提前开始)
+        whisper_task = asyncio.create_task(
+            DebateCoach.generate_whisper(
+                topic_id,
+                role,
+                book_content,
+                pro_strat if "正方" in role else con_strat,
+                history
+            )
+        )
+        
+        speech_queue = await prefetch_speech(
+            debate_round(topic_id, role, stage, book_content, pro_strat, con_strat, history)
+        )
+
+        # 2. 议事长归纳（非首轮）
         if round_idx > 1:
             summary = await Chair.summarize(topic_id, last_role, last_text, prev_role, prev_text)
-            for ch in f"\n\n🏛️ **议事长**: {summary}\n":
-                await msg.stream_token(ch)
-                await asyncio.sleep(6 / 1000) # 议事长语速稍慢
+            summary_msg = cl.Message(content="")
+            await summary_msg.send()
+            summary_content = ""
+            for ch in f"🏛️ **议事长**: {summary}":
+                summary_content += ch
+                summary_msg.content = summary_content
+                await summary_msg.update()
+                await asyncio.sleep(6 / 1000)
             await asyncio.sleep(0.5)
 
         if last_role:
             prev_role, prev_text = last_role, last_text
 
-        # 主席传麦
+        # 3. 创建本轮 HTML 消息并发送
+        round_msg = cl.Message(content="")
+        await round_msg.send()
+
+        # 4. 主席传麦文案
         side_color = "🔴" if "正方" in role else "🔵"
-        for ch in f"\n\n🎙️ **主席**: **[进度: {round_idx}/{total_stages}]** {side_color} 有请 {role}（{stage}）——\n":
-            await msg.stream_token(ch)
-            await asyncio.sleep(5 / 1000) # 主席语速
+        moderator_intro = f"🎙️ **主席**: **[进度: {round_idx}/{total_stages}]** {side_color} 有请 {role}（{stage}）——"
+        poem = SPEAKER_POEMS.get(role, "")
 
-        # 八仙定场诗
-        poem = SPEAKER_POEMS.get(role, "") # 使用 SPEAKER_POEMS
-        if poem:
-            for pch in poem:
-                await msg.stream_token(pch)
-                await asyncio.sleep(POEM_SPEED_MS / 1000)
-            await msg.stream_token("\n\n")
-            await asyncio.sleep(0.3)
-
-        # 生成该轮
-        stream = await debate_round(topic_id, role, stage, book_content, pro_strat, con_strat, history)
-        round_text = ""
-        async for chunk in stream:
-            delta = chunk.choices[0].delta if chunk.choices else None
-            if delta and delta.content:
-                round_text += delta.content
-                for ch in delta.content:
-                    await msg.stream_token(ch)
-                    await asyncio.sleep(TYPE_SPEED_MS / 1000)
+        # 5. 打印主席和定场诗，然后流式读取 Queue 中已预取的辩论发言
+        round_text = await type_text_in_html(
+            role=role,
+            stage=stage,
+            full_intro=moderator_intro,
+            full_poem=poem,
+            speech_queue=speech_queue,
+            whisper_task=whisper_task,
+            is_pro="正方" in role,
+            round_msg=round_msg,
+        )
 
         history += f"\n\n【{role}】{round_text.strip()}"
         last_role, last_text = role, round_text.strip()
@@ -491,12 +717,17 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     # 议事长最终总结
     if last_role and last_text:
         final_summary = await Chair.summarize(topic_id, last_role, last_text, prev_role, prev_text)
-        for ch in f"\n\n🏛️ **议事长总结**: {final_summary}\n":
-            await msg.stream_token(ch)
+        final_msg = cl.Message(content="")
+        await final_msg.send()
+        final_content = ""
+        for ch in f"🏛️ **议事长总结**: {final_summary}":
+            final_content += ch
+            final_msg.content = final_content
+            await final_msg.update()
             await asyncio.sleep(6 / 1000)
 
-    await msg.stream_token("\n\n---\n✅ **辩论结束**")
-    await msg.send()
+    end_msg = cl.Message(content="✅ **辩论结束**")
+    await end_msg.send()
 
     # ── 阶段 4/4: 音频处理与存档 ──
     tts_url = None
