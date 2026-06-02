@@ -77,7 +77,7 @@ class BookRetriever:
         elif topic_id == "3":
             # 产权分割/安史之乱相关章节
             for book, ch_name in [
-                ("牧人记", "第01章 玉玺：华夏改朝换代的"止血石".md"),
+                ("牧人记", '第01章 玉玺：华夏改朝换代的"止血石".md'),
             ]:
                 ch = os.path.join(base, book, ch_name)
                 if os.path.exists(ch):
