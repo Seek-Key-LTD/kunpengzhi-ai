@@ -520,6 +520,68 @@ async def debate_generation_pipeline(rounds, topic_id, book_content, pro_strat, 
     asyncio.create_task(run_final_chair(last_role, last_text, prev_role, prev_text))
     return final_summary_future, history
 
+def make_debate_html(
+    role: str,
+    stage: str,
+    moderator_intro: str,
+    poem: str,
+    speech_text: str,
+    pro_whisper: Optional[str],
+    con_whisper: Optional[str],
+    is_pro: bool,
+) -> str:
+    side_class = "pro-side" if is_pro else "con-side"
+    left_active_class = "active" if is_pro else ""
+    right_active_class = "active" if not is_pro else ""
+
+    if is_pro:
+        if pro_whisper:
+            left_whisper_html = f"<div>{pro_whisper}</div>"
+        else:
+            left_whisper_html = '<div class="whisper-placeholder">教练正在拟定耳语战术...</div>'
+    else:
+        left_whisper_html = '<div class="whisper-placeholder">教练正在观察局势...</div>'
+
+    if not is_pro:
+        if con_whisper:
+            right_whisper_html = f"<div>{con_whisper}</div>"
+        else:
+            right_whisper_html = '<div class="whisper-placeholder">教练正在拟定耳语战术...</div>'
+    else:
+        right_whisper_html = '<div class="whisper-placeholder">教练正在观察局势...</div>'
+
+    speech_html = ""
+    if moderator_intro:
+        speech_html += f'<div class="moderator-intro" style="margin-bottom: 12px; font-weight: 500; opacity: 0.85;">{moderator_intro}</div>'
+    if poem:
+        poem_formatted = poem.replace("\n", "<br/>")
+        speech_html += f'<div class="speaker-poem" style="margin-bottom: 16px; font-style: italic; color: #7f8c8d; line-height: 1.6;">{poem_formatted}</div>'
+    if speech_text:
+        speech_formatted = speech_text.replace("\n\n", "</p><p>").replace("\n", "<br/>")
+        speech_html += f'<div class="speaker-speech" style="line-height: 1.7; font-size: 1.05em;"><p>{speech_formatted}</p></div>'
+
+    html = f"""
+<div class="debate-row">
+  <div class="whisper-bar left-bar {left_active_class}">
+    <div class="whisper-title">🔴 正方教练耳语</div>
+    {left_whisper_html}
+  </div>
+
+  <div class="speech-content {side_class}">
+    <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px; border-bottom: 1px solid var(--row-border); padding-bottom: 6px;">
+      {role} ({stage})
+    </div>
+    {speech_html}
+  </div>
+
+  <div class="whisper-bar right-bar {right_active_class}">
+    <div class="whisper-title">🔵 反方教练耳语</div>
+    {right_whisper_html}
+  </div>
+</div>
+"""
+    return html
+
 async def type_text_in_html_from_string(
     role: str,
     stage: str,
