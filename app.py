@@ -227,6 +227,8 @@ DEBATE_STATE = {
     "topic_title": "等待选择辩题开始辩论...",
     "current_round": 0,
     "active_role": "",
+    "book_content": "",
+    "past_debates": "",
     "rounds": {
         role: {
             "status": "pending",
@@ -592,6 +594,12 @@ async def type_text_in_html_from_string(
     is_pro: bool,
     round_msg: cl.Message,
 ) -> str:
+    global DEBATE_STATE
+    DEBATE_STATE["active_role"] = role
+    DEBATE_STATE["rounds"][role]["status"] = "active"
+    DEBATE_STATE["rounds"][role]["speech"] = ""
+    DEBATE_STATE["rounds"][role]["whisper"] = ""
+
     intro_curr = ""
     poem_curr = ""
     speech_curr = ""
@@ -599,7 +607,9 @@ async def type_text_in_html_from_string(
     def get_whisper_val():
         if whisper_future.done():
             try:
-                return whisper_future.result()
+                val = whisper_future.result()
+                DEBATE_STATE["rounds"][role]["whisper"] = val
+                return val
             except Exception:
                 return "教练正在观察局势，准备下一轮指导。"
         return None
@@ -618,6 +628,7 @@ async def type_text_in_html_from_string(
                 moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
                 pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
             )
+            DEBATE_STATE["rounds"][role]["speech"] = speech_curr
             await round_msg.update()
             await asyncio.sleep((5 / 1000) * chunk_size)
             
@@ -634,6 +645,7 @@ async def type_text_in_html_from_string(
                 moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
                 pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
             )
+            DEBATE_STATE["rounds"][role]["speech"] = speech_curr
             await round_msg.update()
             await asyncio.sleep(POEM_SPEED_MS / 1000)
             
@@ -652,6 +664,7 @@ async def type_text_in_html_from_string(
             moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
             pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
         )
+        DEBATE_STATE["rounds"][role]["speech"] = speech_curr
         await round_msg.update()
         await asyncio.sleep(TYPE_SPEED_MS / 1000 * chunk_size)
         
@@ -659,6 +672,10 @@ async def type_text_in_html_from_string(
     w_val = await whisper_future
     pro_w = w_val if is_pro else None
     con_w = w_val if not is_pro else None
+    
+    DEBATE_STATE["rounds"][role]["whisper"] = w_val
+    DEBATE_STATE["rounds"][role]["speech"] = speech_text
+    DEBATE_STATE["rounds"][role]["status"] = "completed"
     
     round_msg.content = make_debate_html(
         role=role, stage=stage,
@@ -670,7 +687,22 @@ async def type_text_in_html_from_string(
     return speech_text
 
 async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
+    global DEBATE_STATE
     t = TOPICS.get(topic_id, TOPICS["1"])
+    
+    # 重置全局状态
+    DEBATE_STATE["topic_title"] = t["title"]
+    DEBATE_STATE["current_round"] = 0
+    DEBATE_STATE["active_role"] = ""
+    DEBATE_STATE["book_content"] = ""
+    DEBATE_STATE["past_debates"] = ""
+    DEBATE_STATE["rounds"] = {
+        role: {
+            "status": "pending",
+            "speech": "",
+            "whisper": ""
+        } for role, _ in DEBATE_ROLES
+    }
 
     # 1. 并行加载原文与检索历史辩论数据（优化网络延迟）
     log.info("🔍 并行加载原文与检索历史辩论...")
@@ -694,6 +726,10 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
         if past_lines:
             past_debates = "\n".join(past_lines)
             log.info(f"📊 Moneyball: 找到 {len(past_lines)} 条历史辩论")
+
+    # 写入全局状态
+    DEBATE_STATE["book_content"] = book_content
+    DEBATE_STATE["past_debates"] = past_debates
 
     # 2. 【关键优化】立即启动后台生成教练策略（LLM 耗时最长，与前台渲染原文进行并发）
     log.info("🏋️ [运筹学并发] 后台启动双教练赛前策略生成任务...")
@@ -768,6 +804,12 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
         round_idx = idx + 1
         total_stages = len(DEBATE_ROLES) + 1
 
+        # 更新全局状态中的当前轮次，并标记之前的辩手为 completed
+        DEBATE_STATE["current_round"] = round_idx
+        for prev_idx in range(idx):
+            prev_role = DEBATE_ROLES[prev_idx][0]
+            DEBATE_STATE["rounds"][prev_role]["status"] = "completed"
+
         # 1. 议事长归纳（非首轮，等待后台生成完毕并显示）
         if round_idx > 1:
             summary = await r.chair_summary_future
@@ -807,6 +849,10 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
     # 议事长最终总结
     final_summary = await final_summary_future
+    DEBATE_STATE["current_round"] = 9
+    for role, _ in DEBATE_ROLES:
+        DEBATE_STATE["rounds"][role]["status"] = "completed"
+
     final_msg = cl.Message(content="")
     await final_msg.send()
     final_content = ""
@@ -1752,13 +1798,335 @@ HTML_CONTENT = r"""<!DOCTYPE html>
 async def get_bagua_page():
     return HTMLResponse(content=HTML_CONTENT)
 
+LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鲲鹏志 · 系统监控与原文检索</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent-color: #3b82f6; /* Blue */
+            --neon-green: #10b981; /* Emerald Green */
+            --neon-cyan: #06b6d4; /* Cyan */
+            --terminal-bg: #05070c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: "Outfit", "Noto Sans SC", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        /* CRT Scanline & Screen effect */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 9999;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.8rem;
+            margin-bottom: 1.2rem;
+        }
+
+        h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            font-size: 0.75rem;
+            color: var(--neon-green);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--neon-green);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-header {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.4rem;
+        }
+
+        .panel-icon {
+            font-size: 0.95rem;
+        }
+
+        .rag-content {
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 0.3rem;
+            white-space: pre-wrap;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        .rag-content strong {
+            color: var(--text-primary);
+        }
+
+        .terminal-container {
+            flex: 1;
+            background: var(--terminal-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: "Share Tech Mono", monospace;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: #38bdf8; /* light blue */
+            overflow-y: auto;
+            min-height: 200px;
+            max-height: 320px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        .log-entry {
+            margin-bottom: 0.25rem;
+            word-break: break-all;
+        }
+
+        .log-entry.info { color: #38bdf8; }
+        .log-entry.warn { color: #fbbf24; }
+        .log-entry.error { color: #f87171; }
+        .log-entry.success { color: var(--neon-green); }
+
+        .placeholder {
+            font-style: italic;
+            opacity: 0.5;
+            text-align: center;
+            padding: 1.5rem 0;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><span>📡</span> 监控 & 检索面板</h1>
+        <div class="status-badge">
+            <span class="status-dot"></span>
+            <span>系统联机</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-icon">📖</span>
+                <span>书库原文检索 (RAG)</span>
+            </div>
+            <div class="rag-content" id="rag-book-content">
+                <div class="placeholder">等待检索关联原文...</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-icon">📊</span>
+                <span>历史辩论关联线索</span>
+            </div>
+            <div class="rag-content" id="rag-past-content">
+                <div class="placeholder">等待检索历史关联数据...</div>
+            </div>
+        </div>
+
+        <div class="panel" style="flex: 1;">
+            <div class="panel-header">
+                <span class="panel-icon">💻</span>
+                <span>后台运行实时日志</span>
+            </div>
+            <div class="terminal-container" id="terminal-logs">
+                <div class="log-entry success">[SYSTEM] Terminal initialized. Waiting for incoming log streams...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lastLogs = [];
+
+        async function pollStateAndLogs() {
+            // 1. 获取原文/辩论检索状态
+            try {
+                const res = await fetch('/bagua/api');
+                if (res.ok) {
+                    const state = await res.json();
+                    
+                    // 更新原文检索
+                    const bookEl = document.getElementById('rag-book-content');
+                    if (state.book_content && state.book_content.trim() !== "") {
+                        bookEl.innerHTML = state.book_content.replace(/\n/g, '<br>');
+                    } else {
+                        bookEl.innerHTML = '<div class="placeholder">等待检索关联原文...</div>';
+                    }
+
+                    // 更新历史关联
+                    const pastEl = document.getElementById('rag-past-content');
+                    if (state.past_debates && state.past_debates.trim() !== "") {
+                        let formatted = state.past_debates
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\n/g, '<br>');
+                        pastEl.innerHTML = formatted;
+                    } else {
+                        pastEl.innerHTML = '<div class="placeholder">等待检索历史关联数据...</div>';
+                    }
+                }
+            } catch (err) {
+                console.error("Error polling debate api:", err);
+            }
+
+            // 2. 获取实时日志
+            try {
+                const res = await fetch('/status');
+                if (res.ok) {
+                    const statusData = await res.json();
+                    const logs = statusData.logs || [];
+                    
+                    if (logs.length > 0 && JSON.stringify(logs) !== JSON.stringify(lastLogs)) {
+                        lastLogs = [...logs];
+                        const termEl = document.getElementById('terminal-logs');
+                        termEl.innerHTML = '';
+                        
+                        logs.forEach(log => {
+                            const entry = document.createElement('div');
+                            entry.className = 'log-entry';
+                            
+                            if (log.includes('ERROR') || log.includes('Exception') || log.includes('fail')) {
+                                entry.classList.add('error');
+                            } else if (log.includes('WARNING') || log.includes('warn')) {
+                                entry.classList.add('warn');
+                            } else if (log.includes('✅') || log.includes('success') || log.includes('完成')) {
+                                entry.classList.add('success');
+                            } else {
+                                entry.classList.add('info');
+                            }
+                            
+                            entry.textContent = log;
+                            termEl.appendChild(entry);
+                        });
+                        
+                        termEl.scrollTop = termEl.scrollHeight;
+                    }
+                }
+            } catch (err) {
+                console.error("Error polling system status logs:", err);
+            }
+        }
+
+        pollStateAndLogs();
+        setInterval(pollStateAndLogs, 1500);
+    </script>
+</body>
+</html>
+"""
+
+@app.get("/left-board")
+async def get_left_board_page():
+    return HTMLResponse(content=LEFT_BOARD_CONTENT)
+
 @app.get("/bagua/api")
 async def get_bagua_api():
     return DEBATE_STATE
 
-# 将 /status, /bagua, /bagua/api 路由移动到 FastAPI 路由表的最前列，绕过 Chainlit 自带 of 单页应用 (SPA) 兜底通配符
+# 将 /status, /bagua, /bagua/api, /left-board 路由移动到 FastAPI 路由表的最前列，绕过 Chainlit 自带 of 单页应用 (SPA) 兜底通配符
 try:
-    target_paths = ["/status", "/bagua/api", "/bagua"]
+    target_paths = ["/status", "/bagua/api", "/bagua", "/left-board"]
     moved_routes = []
     i = 0
     while i < len(app.routes):
