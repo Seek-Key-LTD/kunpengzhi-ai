@@ -1,10 +1,15 @@
 """
-鲲鹏志 · 内容驱动辩论系统 v4.0
+鲲鹏志 · 内容驱动辩论系统 v4.5
 ====================================
 Moneyball 数据驱动辩论：
 - Vectorize RAG: 原文 + 历史辩论实录
 - 双教练通过历史数据迭代进步
 - 每场辩论后自动归档
+- 罗伯特议事规则，议事长归纳交锋
+- 书面语转口头语，TTS 缝合播放
+- 霞鹜文楷字体
+- 教练策略在 UI 上按需显示
+- 显示 RAG 检索到的原文
 """
 
 import chainlit as cl
@@ -14,7 +19,7 @@ import json
 import logging
 import uuid
 import re
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -33,15 +38,17 @@ CLOUDFLARE_ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
 CLOUDFLARE_API_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "")
 R2_BUCKET = os.getenv("R2_BUCKET", "kunpengzhi-tts")
 R2_PUBLIC_BASE = os.getenv("R2_PUBLIC_BASE", "https://kunpengzhi-debate.seekkey.eu.org")
-TYPE_SPEED_MS = int(os.getenv("TYPE_SPEED_MS", "50"))
-SIGIL_SPEED_MS = 80
+
+TYPE_SPEED_MS = int(os.getenv("TYPE_SPEED_MS", "50")) # 正文打字速度
+POEM_SPEED_MS = 80 # 定场诗慢推速度
+INTRO_SPEED_MS = 100 # 引子更慢
 
 
 # ─── 内容检索 ────────────────────────────────────
 from core.retriever import BookRetriever
 
 
-# ─── R2 ──────────────────────────────────────────
+# ─── R2 存储 ─────────────────────────────────────
 
 class R2Store:
     @staticmethod
@@ -78,13 +85,15 @@ class TTSEngine:
         text = text.replace('【', '').replace('】', '')
         text = re.sub(r'`([^`]+)`', r'\1', text)
         text = re.sub(r'\[([^]]+)]\([^)]+\)', r'\1', text)
+        text = re.sub(r'^>\s*', '', text, flags=re.MULTILINE)
+        text = re.sub(r'\n{3,}', '\n\n', text)
         return text.strip()
 
     async def to_oral(self, text: str) -> str:
         if len(text) < 20:
             return text
         try:
-            prompt = f"请把以下文字改写成自然的口头语。\n要求：长句拆短句，加语气词（啊、吧、呢、嘛），去掉书面套话，**不要任何格式符号**，纯文字。\n\n原文：\n{text[:1800]}\n\n改写："
+            prompt = f"请把以下辩论书面稿改写成自然的口头语，就像人在正常说话。\n要求：长句拆短句，加语气词（啊、吧、呢、嘛），去掉书面套话，不要任何格式符号，纯文字。\n直接输出改写结果，不要加说明。\n\n原文：\n{text[:1800]}\n\n改写："
             import openai
             client = openai.AsyncOpenAI(base_url=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"))
             resp = await client.chat.completions.create(model=DEBATE_MODEL,
@@ -168,12 +177,19 @@ TOPICS = {
           "abstract": "公元755年安禄山起兵范阳。节度使制度制造了代理人困境。"},
 }
 
-SPEAKER_SIGILS = {
-    "正方一辩": "☰ 吕洞宾·纯阳剑·道心点破鹊桥边", "反方一辩": "☷ 何仙姑·碧水莲·一缕香风归去瑶华",
-    "正方二辩": "☶ 张果老·渔鼓·古今多少事盲眼看虚无", "反方二辩": "☱ 韩湘子·紫金箫·一曲横吹截断江河水",
-    "正方三辩": "☲ 汉钟离·芭蕉扇·任他樱桃红透老了仙翁", "反方三辩": "☵ 蓝采和·花竹板·贫贱与公侯南柯一梦",
-    "正方四辩": "☳ 曹国舅·云阳笏·洗净满身浮毒白云归", "反方四辩": "☴ 铁拐李·太极葫·待到悬壶济世散作山前雾",
+SPEAKER_POEMS = {
+    "正方一辩": """【乾 ☰ · 吕洞宾 —— 鹊桥仙】\n一柄纯阳宝剑，寒芒乍现，辞却九重天阙。人间自古情难尽，斩不绝、红尘恩怨。醉扶吕祖，清吟太白，试问纯阳生灭。道心点破鹊桥边，化作了、清风明月。""",
+    "反方一辩": """【坤 ☷ · 何仙姑 —— 卷珠帘】\n手执碧水青莲步玉沙。云散处、现仙家。不染红尘半点，珠帘高卷，缥缈看流霞。弱水三千空浪迹。心似月、净无瑕。一缕香风归去，高唐梦醒，独坐守瑶华。""",
+    "正方二辩": """【艮 ☶ · 张果老 —— 临江仙】\n倒骑毛驴江渚上，朝行碧海苍梧。手扣通玄渔鼓道情孤。古今多少事，盲眼看虚无。莫问老翁年几许，曾陪尧舜双枯。冷眼公卿尽泥涂。乾坤装入壳，一杖任徐驱。""",
+    "反方一辩": """【兑 ☱ · 韩湘子 —— 苏幕遮】\n紫金箫，清怨起。声振灵樾，音动微茫里。碧海苍梧飞仙履。一曲横吹，截断江河水。少年郎，心不死。踏遍群山，笑看红尘死。万古沧桑皆入耳。渔鼓声沉，唯有仙音在。""",
+    "正方三辩": """【离 ☲ · 汉钟离 —— 一剪梅】\n手摇芭蕉宝扇夜气清。急鼓初催，乐奏公卿。满堂金翠转头空，大汉将军，解甲归蓬。一展神风雾隐腾。莫问流光，冷眼输赢。任他樱桃红透时，几度春风，老了仙翁。""",
+    "反方三辩": """【坎 ☵ · 蓝采和 —— 西江月】\n手执叠板花篮，盛来满槛春风。竹板声声戏顽童，醉倒长街乱冢。几点山前疏雨，半宵稻海鸣虫。算来贫贱与公侯，都是南柯一梦。""",
+    "正方四辩": """【震 ☳ · 曹国舅 —— 虞美人】\n掌中云阳玉笏何时了？权柄如罂粟。满城开遍美人花，谁解红衣妖艳、是鸩家。雕栏玉砌生尸骨，大梦惊吞吐。老夫脱却大朝衣，洗净满身浮毒、白云归。""",
+    "反方四辩": """【巽 ☴ · 铁拐李 —— 卜算子】\n背负太极葫芦落红尘，拐杖惊风雨。莫笑形骸至贱躯，壶里乾坤寓。酒肉任穿肠，不肯栖寒树。待到悬壶济世时，散作山前雾。""",
 }
+
+POEM_SPEED_MS = 80   # ms/字
+INTRO_SPEED_MS = 100  # 引子更慢
 
 DEBATE_ROLES = [
     ("正方一辩", "开篇立论"), ("反方一辩", "开篇立论"),
@@ -193,9 +209,14 @@ from core.vectorize import get_relevant_chunks, index_sources, vectorize_query, 
 class DebateCoach:
     @staticmethod
     async def generate_pre_strategy(
-        topic_id: str, book_content: str, side: str,
+        topic_id: str,
+        book_content: str,
+        side: str,  # "pro" or "con"
         past_debates: str = "",
     ) -> str:
+        """
+        教练阅读原文 + 历史辩论记录（Moneyball 数据驱动），输出赛前策略
+        """
         t = TOPICS.get(topic_id, TOPICS["1"])
         stance_label = f"正方（支持：{t['pro']}）" if side == "pro" else f"反方（反对：{t['con']}）"
 
@@ -223,14 +244,15 @@ class DebateCoach:
 {past_section}
 
 ## 任务
-输出 pre-flight check：
+请输出一份 pre-flight check 和战略分析，包含：
 
-1. **核心论据** — 每条标注原文出处
-2. **对方可能的攻击点** — 如何防守？
-3. **历史教训** — 如果之前有人辩过类似论点，哪些策略有效、哪些被反方破过？
-4. **战术布置** — 四个辩手各自侧重什么？
+1. **辩题深度解析** — 阐述这个辩题在《鲲鹏志》的整个宏大叙事中处于什么关键节点？为什么要辩论它？有何重要意义？
+2. **核心论据** — 原文中哪些段落/证据可以支撑你的立场？每一条论据都要标注原文出处。
+3. **对方可能的攻击点** — 对方可能会引用哪些段落攻击你？如何防守？
+4. **历史教训** — 如果之前有人辩过类似论点，哪些策略有效、哪些被反方破过？
+5. **战术布置** — 四个辩手各自应该侧重什么？一辩立论应引用什么？二辩驳论应针对什么？三辩自由辩论应抓住什么？四辩总结应升华什么？
 
-要求：每条论据都要有原文引用。
+要求：每条论据都要有原文引用。教练的分析必须深刻，有战略高度。
 """
         import openai
         client = openai.AsyncOpenAI(base_url=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"))
@@ -255,7 +277,7 @@ async def debate_round(topic_id: str, role: str, stage: str,
         last_section = f"\n## 上一位发言\n{history.strip()[-2000:]}\n⚠️ 必须直接回应上一位发言者的核心论点。\n"
 
     prompt = f"""
-你是一名 4v4 辩论赛辩手。
+你是一名 4v4 辩论赛的辩手。
 
 ## 你是谁
 - 角色: {role}（{stage}） 阵营: {side} 立场: {stance} 对手: {opponent}
@@ -300,12 +322,16 @@ class Chair:
 # ─── 辩论实录存档 ──────────────────────────────
 
 async def save_and_index_transcript(topic_id: str, history: str, pro_strat: str, con_strat: str):
-    """辩论结束后：保存到 R2 + 索引到 Vectorize"""
+    """
+    辩论结束后：保存到 R2 (md 文件) + 索引到 Vectorize
+    Moneyball: 策略和辩论实录都索引进去，供教练未来学习
+    """
     try:
         t = TOPICS.get(topic_id, TOPICS["1"])
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        # 保存全文到 R2
-        transcript = f"""# 🦅 鲲鹏志 · 辩论实录
+        title_safe = re.sub(r'[^a-zA-Z0-9_一-龥]', '', t['title'][:20])
+
+        transcript_md = f"""# 🦅 鲲鹏志 · 辩论实录
 
 辩题: {t['title']}
 时间: {ts}
@@ -320,11 +346,13 @@ async def save_and_index_transcript(topic_id: str, history: str, pro_strat: str,
 ## 辩论全文
 {history}
 """
-        key = f"debates/辩论实录_{t['title'][:12]}_{ts}.md"
-        await R2Store.upload(key, transcript.encode())
+        key = f"debates/辩论实录_{title_safe}_{ts}.md"
+        await R2Store.upload(key, transcript_md.encode())
 
         # 索引到 Vectorize
-        await index_sources({f"辩论实录/{ts}": history[:5000] + "\n\n## 正方策略\n" + pro_strat[:2000] + "\n\n## 反方策略\n" + con_strat[:2000]},
+        # 索引内容: 辩论全文 + 双方策略
+        index_text = history[:5000] + "\n\n## 正方策略\n" + pro_strat[:2000] + "\n\n## 反方策略\n" + con_strat[:2000]
+        await index_sources({f"辩论实录/{title_safe}_{ts}": index_text},
                            source_type="debate")
         log.info(f"📝 辩论已归档: {key}")
     except Exception as e:
@@ -336,12 +364,11 @@ async def save_and_index_transcript(topic_id: str, history: str, pro_strat: str,
 async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     t = TOPICS.get(topic_id, TOPICS["1"])
 
-    # 1. 加载原文（本地→GitHub→Vectorize）
-    retriever = BookRetriever()
-    chapters = await retriever.load_relevant_chapters(topic_id)
-    book_content = retriever.extract_relevant(chapters) if chapters else ""
+    # 1. 加载原文（本地→GitHub）
+    chapters_data = await BookRetriever().load_relevant_chapters(topic_id)
+    book_content = BookRetriever.extract_relevant(chapters_data) if chapters_data else ""
 
-    # 2. 查历史辩论数据（Moneyball）
+    # 2. 检索历史辩论数据（Moneyball）
     past_debates = ""
     try:
         debate_matches = await vectorize_query(t["title"], top_k=5)
@@ -349,23 +376,27 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
             past_lines = []
             for m in debate_matches:
                 if m.get("source", "").startswith("辩论实录"):
-                    past_lines.append(f"- [{m['source']}] (匹配度: {m['score']:.3f})\n  {m.get('text', '')[:300]}")
+                    # 原始的 debate full text 存储在 Vectorize 的 text 字段中，这里取出来
+                    # 注意：text[:300] 是索引时的摘要，不是全文
+                    past_lines.append(f"- **{m['source'].replace('辩论实录/', '').replace('_', ' ')}** (相似度: {m['score']:.3f})\n  {m.get('text', '')[:300]}")
             if past_lines:
                 past_debates = "\n".join(past_lines)
-                log.info(f"📊 Moneyball: {len(past_lines)} 条历史辩论")
+                log.info(f"📊 Moneyball: 找到 {len(past_lines)} 条历史辩论")
     except Exception as e:
         log.warning(f"Moneyball query fail: {e}")
 
-    # ── 原文梗概 ──
-    if chapters:
-        synopsis = f"已加载 {len(chapters)} 份相关材料"
-        for s_ch in f"📖 **原文**: {synopsis}\n\n":
-            await msg.stream_token(s_ch)
-            await asyncio.sleep(6 / 1000)
+    # ── 原文检索结果显示 ──
+    if book_content:
+        for ch in f"📖 **原文检索结果**:\n\n{book_content}\n\n---\n\n":
+            await msg.stream_token(ch)
+            await asyncio.sleep(8 / 1000) # 原文显示速度稍慢
+        await asyncio.sleep(0.5) # 显示完原文停顿
+
     else:
-        for s_ch in "⚠️ **未加载到原文，请先索引书库**\n\n":
-            await msg.stream_token(s_ch)
+        for ch in "⚠️ **未能从书库或历史辩论中检索到相关原文。请确保书库已索引。**\n\n":
+            await msg.stream_token(ch)
             await asyncio.sleep(6 / 1000)
+        await asyncio.sleep(0.5)
 
     # ── 双教练并行 ──
     log.info("🏋️ 教练分析中...")
@@ -375,15 +406,22 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     )
     log.info(f"✅ 策略完成: pro={len(pro_strat)}c con={len(con_strat)}c")
 
-    # 显示教练策略摘要
-    await msg.stream_token(f"\n🏛️ **正方教练策略**: {pro_strat[:150]}...\n")
-    await asyncio.sleep(0.3)
-    await msg.stream_token(f"🏛️ **反方教练策略**: {con_strat[:150]}...\n\n")
-    await asyncio.sleep(0.3)
+    # 存储完整策略到 user_session
+    cl.user_session.set("pro_strat", pro_strat)
+    cl.user_session.set("con_strat", con_strat)
+    cl.user_session.set("topic_title", t["title"])
 
-    # ── 辩论开始 ──
-    await msg.stream_token("🎙️ **辩论开始（罗伯特议事规则）**\n\n")
-    await asyncio.sleep(0.5)
+    # 显示教练策略摘要 + 查看按钮
+    actions = [
+        cl.Action(name="show_coach_briefing", value="show_briefing", label="📊 查看教练策略")
+    ]
+    await cl.Message(content="教练已完成策略部署。", actions=actions).send()
+
+    # ── 辩论开始（罗伯特议事规则） ──
+    await msg.stream_token("🏛️ **议事长**: 欢迎来到鲲鹏志辩论现场！本场辩论采用罗伯特议事规则。\n"
+                           "每轮发言后麦克风交还议事长，由议事长归纳交锋，确保辩论焦点清晰。\n"
+                           "双方辩手将围绕辩题展开激烈交锋，并引用《鲲鹏志》书库原文。\n\n")
+    await asyncio.sleep(INTRO_SPEED_MS / 1000 * 30) # 模拟更慢的开场白
 
     history = ""
     last_role, last_text = "", ""
@@ -395,30 +433,31 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     for role, stage in DEBATE_ROLES:
         round_idx += 1
 
-        # 议事长归纳
-        if prev_role and prev_text and last_role and last_text:
+        # 议事长归纳（非首轮）
+        if round_idx > 1:
             summary = await Chair.summarize(topic_id, last_role, last_text, prev_role, prev_text)
             for ch in f"\n\n🏛️ **议事长**: {summary}\n":
                 await msg.stream_token(ch)
-                await asyncio.sleep(5 / 1000)
-            await asyncio.sleep(0.3)
+                await asyncio.sleep(6 / 1000) # 议事长语速稍慢
+            await asyncio.sleep(0.5)
 
         if last_role:
             prev_role, prev_text = last_role, last_text
 
         # 主席传麦
         side_color = "🔴" if "正方" in role else "🔵"
-        for ch in f"\n\n🎙️ **主席**: {side_color} 请 {role}（{stage}）\n":
+        for ch in f"\n\n🎙️ **主席**: {side_color} 有请 {role}（{stage}）——\n":
             await msg.stream_token(ch)
-            await asyncio.sleep(4 / 1000)
+            await asyncio.sleep(5 / 1000) # 主席语速
 
-        sigil = SPEAKER_SIGILS.get(role, "")
-        if sigil:
-            for sch in sigil:
-                await msg.stream_token(sch)
-                await asyncio.sleep(SIGIL_SPEED_MS / 1000)
+        # 八仙定场诗
+        poem = SPEAKER_POEMS.get(role, "") # 使用 SPEAKER_POEMS
+        if poem:
+            for pch in poem:
+                await msg.stream_token(pch)
+                await asyncio.sleep(POEM_SPEED_MS / 1000)
             await msg.stream_token("\n\n")
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.3)
 
         # 生成该轮
         stream = await debate_round(topic_id, role, stage, book_content, pro_strat, con_strat, history)
@@ -435,7 +474,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
         last_role, last_text = role, round_text.strip()
 
         if round_text.strip():
-            await asyncio.sleep(0.4)
+            await asyncio.sleep(0.5)
             if TTS_ENABLED:
                 t = asyncio.ensure_future(
                     TTSEngine().generate(
@@ -443,15 +482,16 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
                         role, round_idx, tmp_paths))
                 tts_tasks.append(t)
 
-    # 议事长最终
+    # 议事长最终总结
     if last_role and last_text:
         final_summary = await Chair.summarize(topic_id, last_role, last_text, prev_role, prev_text)
-        await msg.stream_token(f"\n\n🏛️ **议事长总结**: {final_summary}")
+        for ch in f"\n\n🏛️ **议事长总结**: {final_summary}\n":
+            await msg.stream_token(ch)
+            await asyncio.sleep(6 / 1000)
 
     await msg.stream_token("\n\n---\n✅ **辩论结束**")
     await msg.send()
 
-    # ─ TTS ─
     tts_url = None
     if tts_tasks:
         log.info(f"⏳ 等待 {len(tts_tasks)} 段 TTS...")
@@ -461,12 +501,43 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
             tts_url = stitched
             await cl.Message(content=f"## 🎧 完整辩论录音\n\n<audio controls src='{stitched}' style='width:100%'></audio>").send()
         else:
-            await cl.Message(content="ℹ️ 语音合成跳过").send()
+            await cl.Message(content="ℹ️ 语音合成失败，跳过。").send()
+    else:
+        await cl.Message(content="ℹ️ 语音生成跳过（TTS 未开启或内容过短）。").send()
 
-    # ─ 存档 + 索引 ─
+    # 存档 + 索引 (现在 Vectorize 已经支持)
     asyncio.ensure_future(save_and_index_transcript(topic_id, history, pro_strat, con_strat))
 
     return [tts_url] if tts_url else []
+
+
+@cl.action_callback("show_coach_briefing")
+async def show_coach_briefing(action: cl.Action):
+    log.info("Coach briefing button clicked")
+    pro_strat = cl.user_session.get("pro_strat")
+    con_strat = cl.user_session.get("con_strat")
+    topic_title = cl.user_session.get("topic_title")
+
+    if not pro_strat or not con_strat:
+        await cl.Message(content="教练策略未找到，请重试辩论。").send()
+        return
+
+    await cl.Message(content=f"""
+## 🕵️ **教练策略全貌：{topic_title}**
+
+---
+
+### 🔴 **正方教练：战略部署**
+{pro_strat}
+
+---
+
+### 🔵 **反方教练：战略部署**
+{con_strat}
+
+""").send()
+
+    await action.remove() # 移除点击过的按钮
 
 
 # ─── Chainlit ─────────────────────────────────────
@@ -489,7 +560,8 @@ async def start():
 
 每场辩论实录自动存档，教练通过历史数据迭代进步 📊
 输入数字开始！
-""").send()
+"""
+    ).send()
 
 @cl.on_message
 async def main(message: cl.Message):
@@ -504,6 +576,7 @@ async def main(message: cl.Message):
         for ch in f"📖 **背景**: {topic['abstract']}\n\n":
             await msg.stream_token(ch)
             await asyncio.sleep(8 / 1000)
+
     if TTS_ENABLED:
         for ch in "🔊 **语音模式已开启**\n\n":
             await msg.stream_token(ch)
@@ -514,4 +587,4 @@ async def main(message: cl.Message):
     log.info(f"✅ 完成: {topic['title']}")
 
 if __name__ == "__main__":
-    print("鲲鹏志 v4.0 · chainlit run app.py")
+    print("鲲鹏志 v4.5 · chainlit run app.py")
