@@ -530,6 +530,49 @@ async def debate_generation_pipeline(rounds, topic_id, book_content, pro_strat, 
     asyncio.create_task(run_final_chair(last_role, last_text, prev_role, prev_text))
     return final_summary_future, history
 
+def parse_markdown(text: str) -> str:
+    if not text:
+        return ""
+    # 1. Bold: **text** -> <strong>text</strong>
+    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+    # 2. Italic: *text* -> <em>text</em>
+    text = re.sub(r'\*(.*?)\*', r'<em>\1</em>', text)
+    # 3. Inline code: `code` -> <code>code</code>
+    text = re.sub(r'`(.*?)`', r'<code>\1</code>', text)
+    
+    # 4. Headers
+    text = re.sub(r'^### (.*?)$', r'<h4>\1</h4>', text, flags=re.MULTILINE)
+    text = re.sub(r'^## (.*?)$', r'<h3>\1</h3>', text, flags=re.MULTILINE)
+    
+    # 5. Paragraphs and Lists
+    paragraphs = text.strip().split('\n\n')
+    parsed_paragraphs = []
+    for para in paragraphs:
+        lines = para.split('\n')
+        list_items = []
+        is_list = True
+        for line in lines:
+            line_str = line.strip()
+            if line_str.startswith('- ') or line_str.startswith('* '):
+                list_items.append(f"<li>{line_str[2:]}</li>")
+            elif line_str.startswith('1. ') or line_str.startswith('2. ') or line_str.startswith('3. ') or line_str.startswith('4. '):
+                idx = line_str.find(' ')
+                list_items.append(f"<li>{line_str[idx+1:]}</li>")
+            else:
+                is_list = False
+                break
+        
+        if is_list and list_items:
+            if lines[0].strip().startswith(('- ', '* ')):
+                parsed_paragraphs.append(f"<ul>{''.join(list_items)}</ul>")
+            else:
+                parsed_paragraphs.append(f"<ol>{''.join(list_items)}</ol>")
+        else:
+            para_html = para.replace('\n', '<br/>')
+            parsed_paragraphs.append(f"<p>{para_html}</p>")
+            
+    return "".join(parsed_paragraphs)
+
 def make_debate_html(
     role: str,
     stage: str,
@@ -546,7 +589,7 @@ def make_debate_html(
 
     if is_pro:
         if pro_whisper:
-            left_whisper_html = f"<div>{pro_whisper}</div>"
+            left_whisper_html = f"<div>{parse_markdown(pro_whisper)}</div>"
         else:
             left_whisper_html = '<div class="whisper-placeholder">教练正在拟定耳语战术...</div>'
     else:
@@ -554,7 +597,7 @@ def make_debate_html(
 
     if not is_pro:
         if con_whisper:
-            right_whisper_html = f"<div>{con_whisper}</div>"
+            right_whisper_html = f"<div>{parse_markdown(con_whisper)}</div>"
         else:
             right_whisper_html = '<div class="whisper-placeholder">教练正在拟定耳语战术...</div>'
     else:
@@ -567,8 +610,8 @@ def make_debate_html(
         poem_formatted = poem.replace("\n", "<br/>")
         speech_html += f'<div class="speaker-poem" style="margin-bottom: 16px; font-style: italic; color: #7f8c8d; line-height: 1.6;">{poem_formatted}</div>'
     if speech_text:
-        speech_formatted = speech_text.replace("\n\n", "</p><p>").replace("\n", "<br/>")
-        speech_html += f'<div class="speaker-speech" style="line-height: 1.7; font-size: 1.05em;"><p>{speech_formatted}</p></div>'
+        speech_formatted = parse_markdown(speech_text)
+        speech_html += f'<div class="speaker-speech" style="line-height: 1.7; font-size: 1.05em;">{speech_formatted}</div>'
 
     html = f"""
 <div class="debate-row">
