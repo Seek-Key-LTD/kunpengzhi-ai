@@ -1,7 +1,7 @@
 {
   "agent:main:feishu:default:direct:ou_2f92a7aebdf35e672c28652e21aa4460": {
     "sessionId": "ed9041f1-0415-4352-b95c-0f9218d231ff",
-    "updatedAt": 1780467548194,
+    "updatedAt": 1780496558763,
     "systemSent": true,
     "abortedLastRun": false,
     "chatType": "direct",
@@ -195,7 +195,7 @@
           "requiredEnv": []
         }
       ],
-      "version": 1780465813718,
+      "version": 1780496487859,
       "promptRef": {
         "version": 1,
         "algorithm": "sha256",
@@ -203,14 +203,14 @@
         "bytes": 23543
       }
     },
-    "status": "done",
-    "startedAt": 1780467519403,
+    "status": "running",
+    "startedAt": 1780496558487,
     "modelProvider": "freellm",
     "model": "auto",
     "contextTokens": 200000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1780467518376,
+      "generatedAt": 1780496441068,
       "sessionId": "ed9041f1-0415-4352-b95c-0f9218d231ff",
       "sessionKey": "agent:main:feishu:default:direct:ou_2f92a7aebdf35e672c28652e21aa4460",
       "provider": "freellm",
@@ -230,10 +230,10 @@
         "sandboxed": false
       },
       "systemPrompt": {
-        "chars": 38305,
-        "hash": "d90f0a67ce1b8a1e483c953bd37523e526340128795e74b0b87853912b25eb29",
+        "chars": 38322,
+        "hash": "0ca3616f9d4f50c7239bf8a8ab8cc747638fe00b3351e96a7015bbe488a4ef28",
         "projectContextChars": 9450,
-        "nonProjectContextChars": 28855
+        "nonProjectContextChars": 28872
       },
       "injectedWorkspaceFiles": [
         {
@@ -517,7 +517,7 @@
       },
       "tools": {
         "listChars": 0,
-        "schemaChars": 39837,
+        "schemaChars": 41879,
         "entries": [
           {
             "name": "read",
@@ -592,6 +592,14 @@
             "propertiesCount": 16
           },
           {
+            "name": "video_generate",
+            "summaryChars": 231,
+            "summaryHash": "5687c06e790e0aa0dc7b14d72f33407b8c6443da755aaf7b68902253fb83cb3e",
+            "schemaChars": 2042,
+            "schemaHash": "ec3a2b299579c1c85d5cb3d5b18e1185c6bb62ca128aa508692098174393cb35",
+            "propertiesCount": 18
+          },
+          {
             "name": "gateway",
             "summaryChars": 377,
             "summaryHash": "61f7e422103698365bb389c00ae4c46b9630840b16971cd141e91ac8f486029d",
@@ -802,8 +810,9 @@
         ]
       },
       "currentTurn": {
-        "promptChars": 642,
-        "runtimeContextChars": 132
+        "kind": "user_request",
+        "promptChars": 690,
+        "runtimeContextChars": 0
       }
     },
     "estimatedCostUsd": 0,
@@ -816,7 +825,7 @@
       }
     },
     "sessionStartedAt": 1780122347984,
-    "lastInteractionAt": 1780467516733,
+    "lastInteractionAt": 1780496554974,
     "compactionCheckpoints": [
       {
         "checkpointId": "4c30321d-6e05-416f-b26f-09656646089e",
@@ -840,16 +849,14 @@
         }
       }
     ],
-    "inputTokens": 207490,
-    "outputTokens": 1720,
+    "inputTokens": 5604,
+    "outputTokens": 1416,
     "cacheRead": 0,
-    "cacheWrite": 0,
-    "endedAt": 1780467546894,
-    "runtimeMs": 27491
+    "cacheWrite": 0
   },
   "agent:main:main": {
     "sessionId": "88ffbece-1244-4e00-9ec8-46a6d33ae1ee",
-    "updatedAt": 1780465828853,
+    "updatedAt": 1780494861286,
     "systemSent": true,
     "abortedLastRun": false,
     "chatType": "direct",
@@ -868,7 +875,7 @@
     "model": "auto",
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1780465826205,
+      "generatedAt": 1780494836584,
       "sessionId": "88ffbece-1244-4e00-9ec8-46a6d33ae1ee",
       "sessionKey": "agent:main:main",
       "provider": "freellm",
@@ -888,10 +895,10 @@
         "sandboxed": false
       },
       "systemPrompt": {
-        "chars": 39360,
-        "hash": "9287202ff285faf169ff6a08ed7ab0391e43dda9778abe98fcd8393a57c6a73a",
+        "chars": 39377,
+        "hash": "b12ad2f302138fa5d85ad4bb9d5bdd64949c27684677eaa691171dc219cb32f1",
         "projectContextChars": 9450,
-        "nonProjectContextChars": 29910
+        "nonProjectContextChars": 29927
       },
       "injectedWorkspaceFiles": [
         {
@@ -1175,7 +1182,7 @@
       },
       "tools": {
         "listChars": 0,
-        "schemaChars": 38712,
+        "schemaChars": 40754,
         "entries": [
           {
             "name": "read",
@@ -1248,6 +1255,14 @@
             "schemaChars": 2264,
             "schemaHash": "1ff0d91a2a16769e27d71721f3307059944254c0567f9db718fe90e1665b088d",
             "propertiesCount": 16
+          },
+          {
+            "name": "video_generate",
+            "summaryChars": 231,
+            "summaryHash": "5687c06e790e0aa0dc7b14d72f33407b8c6443da755aaf7b68902253fb83cb3e",
+            "schemaChars": 2042,
+            "schemaHash": "ec3a2b299579c1c85d5cb3d5b18e1185c6bb62ca128aa508692098174393cb35",
+            "propertiesCount": 18
           },
           {
             "name": "gateway",
@@ -1460,18 +1475,18 @@
         ]
       },
       "currentTurn": {
-        "promptChars": 39,
+        "promptChars": 64,
         "runtimeContextChars": 0
       }
     },
-    "cacheRead": 0,
+    "cacheRead": 30976,
     "cacheWrite": 0,
     "totalTokensFresh": true,
     "route": {
       "channel": "webchat"
     },
     "sessionStartedAt": 1780463799758,
-    "lastInteractionAt": 1780465825847,
+    "lastInteractionAt": 1780494835125,
     "usageFamilyKey": "agent:main:main",
     "usageFamilySessionIds": [
       "5d2b5088-6261-48f6-926b-f74827c8421f",
@@ -1648,7 +1663,7 @@
           "requiredEnv": []
         }
       ],
-      "version": 1780465813718,
+      "version": 1780494424586,
       "promptRef": {
         "version": 1,
         "algorithm": "sha256",
@@ -1657,9 +1672,13 @@
       }
     },
     "status": "done",
-    "startedAt": 1780465826370,
+    "startedAt": 1780494837313,
     "contextTokens": 200000,
-    "endedAt": 1780465828675,
-    "runtimeMs": 2305
+    "inputTokens": 571,
+    "outputTokens": 413,
+    "estimatedCostUsd": 0,
+    "totalTokens": 31547,
+    "endedAt": 1780494860589,
+    "runtimeMs": 23276
   }
 }

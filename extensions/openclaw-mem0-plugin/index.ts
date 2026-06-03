@@ -21,7 +21,7 @@ import { definePluginEntry, type OpenClawPluginApi } from "openclaw/plugin-sdk/p
 // Types
 // ============================================================================
 
-type Mem0Mode = "platform" | "open-source";
+type Mem0Mode = "platform" | "open-source" | "mongodb";
 
 type Mem0Config = {
   mode: Mem0Mode;
@@ -205,6 +205,163 @@ class PlatformProvider implements Mem0Provider {
 }
 
 
+
+// ============================================================================
+// MongoDB Provider (self-hosted MongoDB with Voyage embeddings)
+// ============================================================================
+
+function docToMemoryItem(doc: any): MemoryItem {
+  return normalizeMemoryItem({
+    id: doc.id || doc._id?.toString?.() || "",
+    memory: doc.payload?.data || doc.memory || "",
+    user_id: doc.payload?.user_id,
+    categories: doc.payload?.source ? [doc.payload.source] : undefined,
+    metadata: doc.payload ? { agent_id: doc.payload.agent_id } : undefined,
+    created_at: doc.payload?.created_at,
+  });
+}
+
+class MongoDBProvider implements Mem0Provider {
+  private client: any = null;
+  private db: any = null;
+  private initPromise: Promise<void> | null = null;
+
+  private mongodbUrl(): string {
+    return process.env.MEM0_MONGODB_URL || "";
+  }
+
+  private voyageApiKey(): string {
+    return process.env.VOYAGE_API_KEY || "";
+  }
+
+  private async ensureClient(): Promise<void> {
+    if (this.client) return;
+    if (this.initPromise) return this.initPromise;
+    this.initPromise = this._init();
+    return this.initPromise;
+  }
+
+  private async _init(): Promise<void> {
+    const url = this.mongodbUrl();
+    if (!url) throw new Error("MEM0_MONGODB_URL environment variable is required for mongodb mode");
+    const { MongoClient } = await import("mongodb");
+    this.client = new MongoClient(url);
+    await this.client.connect();
+    this.db = this.client.db("agent_memory");
+    await this.db.collection("memories").createIndex({ "payload.user_id": 1 });
+  }
+
+  private async embed(text: string): Promise<number[]> {
+    const apiKey = this.voyageApiKey();
+    if (!apiKey) throw new Error("VOYAGE_API_KEY environment variable is required for mongodb mode");
+    const response = await fetch("https://api.voyageai.com/v1/embeddings", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ input: [text], model: "voyage-2" }),
+    });
+    if (!response.ok) {
+      throw new Error(`Voyage API error: ${response.status} ${await response.text()}`);
+    }
+    const data = await response.json() as any;
+    return data.data[0].embedding;
+  }
+
+  private cosineSimilarity(a: number[], b: number[]): number {
+    let dot = 0, na = 0, nb = 0;
+    for (let i = 0; i < a.length; i++) {
+      dot += a[i] * b[i];
+      na += a[i] * a[i];
+      nb += b[i] * b[i];
+    }
+    return dot / (Math.sqrt(na) * Math.sqrt(nb));
+  }
+
+  async add(
+    messages: Array<{ role: string; content: string }>,
+    options: AddOptions,
+  ): Promise<AddResult> {
+    await this.ensureClient();
+    const text = messages.map(m => m.content).join("\n");
+    const embedding = await this.embed(text);
+    const memoryId = crypto.randomUUID();
+
+    const doc = {
+      id: memoryId,
+      memory: text,
+      embedding,
+      payload: {
+        user_id: options.user_id,
+        agent_id: options.agent_id || undefined,
+        data: text,
+        source: options.custom_categories
+          ? Object.keys(options.custom_categories[0] || {})[0] || "USER_MEMORY"
+          : "USER_MEMORY",
+        created_at: new Date().toISOString(),
+      },
+    };
+
+    await this.db.collection("memories").insertOne(doc);
+
+    return {
+      results: [{ id: memoryId, memory: text, event: "ADD" as const }],
+    };
+  }
+
+  async search(query: string, options: SearchOptions): Promise<MemoryItem[]> {
+    await this.ensureClient();
+    const queryEmbedding = await this.embed(query);
+    const limit = options.top_k || 5;
+    const threshold = options.threshold ?? 0.5;
+
+    const filter: Record<string, unknown> = { "payload.user_id": options.user_id };
+    if (options.run_id) filter["payload.run_id"] = options.run_id;
+
+    const docs = await this.db.collection("memories").find(filter).toArray();
+
+    const scored = docs.map((doc: any) => ({
+      item: docToMemoryItem(doc),
+      score: this.cosineSimilarity(queryEmbedding, doc.embedding),
+    }));
+
+    const filtered = scored.filter(s => s.score >= threshold);
+    filtered.sort((a, b) => b.score - a.score);
+
+    return filtered.slice(0, limit).map(s => ({ ...s.item, score: s.score }));
+  }
+
+  async get(memoryId: string): Promise<MemoryItem> {
+    await this.ensureClient();
+    const doc = await this.db.collection("memories").findOne({
+      $or: [{ id: memoryId }, { memory_id: memoryId }, { _id: memoryId } as any],
+    });
+    if (!doc) throw new Error(`Memory ${memoryId} not found`);
+    return docToMemoryItem(doc);
+  }
+
+  async getAll(options: ListOptions): Promise<MemoryItem[]> {
+    await this.ensureClient();
+    const filter: Record<string, unknown> = { "payload.user_id": options.user_id };
+    if (options.run_id) filter["payload.run_id"] = options.run_id;
+
+    const docs = await this.db.collection("memories")
+      .find(filter)
+      .sort({ _id: -1 as any })
+      .limit(options.page_size || 50)
+      .toArray();
+
+    return docs.map((doc: any) => docToMemoryItem(doc));
+  }
+
+  async delete(memoryId: string): Promise<void> {
+    await this.ensureClient();
+    await this.db.collection("memories").deleteOne({
+      $or: [{ id: memoryId }, { memory_id: memoryId }, { _id: memoryId } as any],
+    });
+  }
+}
 
 // ============================================================================
 // Result Normalizers
@@ -425,9 +582,13 @@ const mem0ConfigSchema = {
     const cfg = value as Record<string, unknown>;
     assertAllowedKeys(cfg, ALLOWED_KEYS, "openclaw-mem0-plugin config");
 
-    // Accept both "open-source" and legacy "oss" as open-source mode; everything else is platform
+    // Accept "open-source"/"oss" as open-source mode, "mongodb" as MongoDB mode; everything else is platform
     const mode: Mem0Mode =
-      cfg.mode === "oss" || cfg.mode === "open-source" ? "open-source" : "platform";
+      cfg.mode === "oss" || cfg.mode === "open-source"
+        ? "open-source"
+        : cfg.mode === "mongodb"
+          ? "mongodb"
+          : "platform";
 
     // Platform mode requires apiKey
     if (mode === "platform") {
@@ -493,6 +654,10 @@ function createProvider(
     return new OSSProvider(cfg.oss, cfg.customPrompt, (p) =>
       api.resolvePath(p),
     );
+  }
+
+  if (cfg.mode === "mongodb") {
+    return new MongoDBProvider();
   }
 
   return new PlatformProvider(cfg.apiKey!, cfg.orgId, cfg.projectId, cfg.host);
@@ -650,6 +815,10 @@ const memoryPlugin = {
         opts.custom_categories = categoriesToArray(cfg.customCategories);
         opts.enable_graph = cfg.enableGraph;
         opts.output_format = "v1.1";
+      }
+      if (cfg.mode === "mongodb") {
+        opts.custom_instructions = cfg.customInstructions;
+        opts.custom_categories = categoriesToArray(cfg.customCategories);
       }
       return opts;
     }

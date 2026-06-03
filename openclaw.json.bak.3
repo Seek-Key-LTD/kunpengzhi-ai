@@ -1,7 +1,7 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.4.11",
-    "lastTouchedAt": "2026-05-30T06:05:06.160Z"
+    "lastTouchedAt": "2026-06-03T03:08:51.394Z"
   },
   "wizard": {
     "lastRunAt": "2026-05-29T09:33:43.460Z",
@@ -198,6 +198,30 @@
             "api": "openai-completions"
           }
         ]
+      },
+      "freellm": {
+        "baseUrl": "https://freellmapi.git4ta.fun/v1",
+        "apiKey": "freellmapi-7304d343a34f8e4d2b7d4c7e33348fcc5ceca361f8cc422f",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "auto",
+            "name": "auto",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 200000,
+            "maxTokens": 8192,
+            "api": "openai-completions"
+          }
+        ]
       }
     }
   },
@@ -234,6 +258,9 @@
         },
         "miaoda/qwen-3.6-plus": {
           "alias": "Qwen 3.6"
+        },
+        "freellm/auto": {
+          "alias": "auto"
         }
       },
       "workspace": "/home/gem/workspace/agent/workspace",

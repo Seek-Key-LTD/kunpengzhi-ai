@@ -1,7 +1,7 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.5.28",
-    "lastTouchedAt": "2026-06-03T03:30:15.461Z"
+    "lastTouchedAt": "2026-06-03T03:32:18.887Z"
   },
   "wizard": {
     "lastRunAt": "2026-06-03T03:30:15.067Z",
@@ -414,12 +414,7 @@
           "enabled": true
         }
       },
-      "streaming": true,
-      "threadSession": true,
-      "footer": {
-        "elapsed": false,
-        "status": false
-      }
+      "streaming": true
     }
   },
   "discovery": {
@@ -637,6 +632,9 @@
       "openclaw-mem0-plugin": {
         "enabled": true,
         "config": {}
+      },
+      "feishu": {
+        "enabled": true
       }
     },
     "slots": {
