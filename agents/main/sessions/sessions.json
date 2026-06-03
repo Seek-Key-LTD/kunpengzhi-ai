@@ -1,7 +1,7 @@
 {
   "agent:main:feishu:default:direct:ou_2f92a7aebdf35e672c28652e21aa4460": {
     "sessionId": "ed9041f1-0415-4352-b95c-0f9218d231ff",
-    "updatedAt": 1780456888805,
+    "updatedAt": 1780467548194,
     "systemSent": true,
     "abortedLastRun": false,
     "chatType": "direct",
@@ -23,10 +23,25 @@
       "accountId": "default"
     },
     "sessionFile": "/home/gem/workspace/agent/agents/main/sessions/ed9041f1-0415-4352-b95c-0f9218d231ff.jsonl",
-    "compactionCount": 0,
+    "compactionCount": 1,
     "skillsSnapshot": {
-      "prompt": "\n\nThe following skills provide specialized instructions for specific tasks.\nUse the read tool to load a skill's file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>feishu-doc</name>\n    <description>Feishu document read/write operations. Activate when user mentions Feishu docs, cloud docs, or docx links.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-doc/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-drive</name>\n    <description>Feishu cloud storage file management. Activate when user mentions cloud space, folders, drive.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-drive/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-perm</name>\n    <description>Feishu permission management for documents and files. Activate when user mentions sharing, permissions, collaborators.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-perm/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-wiki</name>\n    <description>Feishu knowledge base navigation. Activate when user mentions knowledge base, wiki, or wiki links.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-wiki/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-channel-rules</name>\n    <description>Lark/Feishu channel output rules. Always active in Lark conversations.</description>\n    <location>~/workspace/agent/extensions/openclaw-lark/skills/feishu-channel-rules/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-lark-cli</name>\n    <description>飞书所有操作（消息 / 文档 / 日历 / 搜索 / 群 / 文件）必须通过 lark-cli。\n--profile 传 App ID（cli_xxx），先从入站 account_id 经 gateway config.get 解析；--as bot 当 uat.enabled=false 时必填。</description>\n    <location>~/workspace/agent/extensions/openclaw-lark/skills/feishu-lark-cli/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-troubleshoot</name>\n    <description>飞书插件问题排查工具。包含常见问题 FAQ 和深度诊断命令（/feishu_doctor）。\n\n常见问题可随时查阅。诊断命令用于排查复杂问题（多次授权仍失败、自动授权无法解决等），\n会检查账户配置、API 连通性、应用权限、用户授权状态，并生成详细的诊断报告和解决方案。</description>\n    <location>~/workspace/agent/extensions/openclaw-lark/skills/feishu-troubleshoot/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>clawhub</name>\n    <description>Use the ClawHub CLI to search, install, update, and publish agent skills from clawhub.com. Use when you need to fetch new skills on the fly, sync installed skills to latest or a specific version, or publish new/updated skill folders with the npm-installed clawhub CLI.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/clawhub/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>healthcheck</name>\n    <description>Host security hardening and risk-tolerance configuration for OpenClaw deployments. Use when a user asks for security audits, firewall/SSH/update hardening, risk posture, exposure review, OpenClaw cron scheduling for periodic checks, or version status checks on a machine running OpenClaw (laptop, workstation, Pi, VPS).</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/healthcheck/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>node-connect</name>\n    <description>Diagnose OpenClaw node connection and pairing failures for Android, iOS, and macOS companion apps. Use when QR/setup code/manual connect fails, local Wi-Fi works but VPS/tailnet does not, or errors mention pairing required, unauthorized, bootstrap token invalid or expired, gateway.bind, gateway.remote.url, Tailscale, or plugins.entries.device-pair.config.publicUrl.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/node-connect/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>session-logs</name>\n    <description>Search and analyze your own session logs (older/parent conversations) using jq.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/session-logs/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>skill-creator</name>\n    <description>Create, edit, improve, or audit AgentSkills. Use when creating a new skill from scratch or when asked to improve, review, audit, tidy up, or clean up an existing skill or SKILL.md file. Also use when editing or restructuring a skill directory (moving files to references/ or scripts/, removing stale content, validating against the AgentSkills spec). Triggers on phrases like &quot;create a skill&quot;, &quot;author a skill&quot;, &quot;tidy up a skill&quot;, &quot;improve this skill&quot;, &quot;review the skill&quot;, &quot;clean up the skill&quot;, &quot;audit the skill&quot;.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/skill-creator/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>taskflow</name>\n    <description>Use when work should span one or more detached tasks but still behave like one job with a single owner context. TaskFlow is the durable flow substrate under authoring layers like Lobster, ACPX, plugins, or plain code. Keep conditional logic in the caller; use TaskFlow for flow identity, child-task linkage, waiting state, revision-checked mutations, and user-facing emergence.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/taskflow/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>taskflow-inbox-triage</name>\n    <description>Example TaskFlow authoring pattern for inbox triage. Use when messages need different treatment based on intent, with some routes notifying immediately, some waiting on outside answers, and others rolling into a later summary.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/taskflow-inbox-triage/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>weather</name>\n    <description>Get current weather and forecasts via wttr.in or Open-Meteo. Use when: user asks about weather, temperature, or forecasts for any location. NOT for: historical weather data, severe weather alerts, or detailed meteorological analysis. No API key needed.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/weather/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-doc-parse</name>\n    <description>Use when user needs to parse, extract, or read content from documents (PDF, Word, Excel, PPT, etc.) Converts documents to Markdown via IDP (Intelligent Document Parsing). 触发词：文档解析, 解析文档, 解析 PDF, 解析 Word, 解析 Excel, 读取文档, 提取文档内容, doc parse, IDP, 智能文档解析, parse document, 文档转 Markdown, 读取 PDF, 读取 PPT, 提取表格, 文档识别</description>\n    <location>~/workspace/agent/skills/miaoda-doc-parse/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-image-understanding</name>\n    <description>Use when user needs to understand, analyze, or describe image content. Supports screenshots, photos, diagrams — provide local file path as input. No browser needed. Do NOT use Read tool to read images — use this skill instead. 当用户需要看图、理解图片内容、分析截图、识别图中信息时使用此技能。触发词：图片理解, 图片分析, 图片描述, 识别图片, 看图, 图片识别, image understanding, describe image, analyze image, 图片内容, 看看这张图, 这张图是什么, 图中有什么, 看不了图, 无法看图</description>\n    <location>~/workspace/agent/skills/miaoda-image-understanding/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-openclaw-guide</name>\n    <description>OpenClaw agent runtime guide: sandbox environment, security config, available skills, tool limitations, and common user request handling. 运行环境说明、沙箱安全配置、可用技能、工具限制、常见问题处理。触发词：环境限制, 没有权限, sudo, 无法安装, 安全配置, dangerouslyDisable, no-sandbox, Browser Relay, Browser Replay, 内置技能, 可用工具</description>\n    <location>~/workspace/agent/skills/miaoda-openclaw-guide/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-skillhub</name>\n    <description>Use when user wants to search, find, install, or manage skills from Volcengine Skillhub (FindSkill), or asks whether a specific capability exists as a marketplace skill (如&apos;有没有XX技能&apos;/&apos;有没有什么技能可以做XX&apos;). Provides CLI commands for skill discovery and installation via npx skills. 触发词：技能市场, 技能搜索, 搜索技能, 安装技能, 查找技能, find skill, skill hub, skillhub, findskill, skills add, skills find, 技能安装, 技能下载, 技能广场, 火山技能市场, 有没有XX技能</description>\n    <location>~/workspace/agent/skills/miaoda-skillhub/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-speech-to-text</name>\n    <description>Use when user needs to convert audio or voice recordings to text. Provides necessary command usage instructions for converting audio to text. Supports multiple languages. 触发词：语音转文字, 音频转文字, 语音识别, speech to text, STT, 转录, 听写, 会议记录转文字, 录音转文字, transcribe, 音频识别, voice to text, 语音转换</description>\n    <location>~/workspace/agent/skills/miaoda-speech-to-text/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-text-gen-image</name>\n    <description>Use when user needs to generate images from text descriptions. Provides necessary command usage instructions for generating images from text. Supports various aspect ratios and AI watermark. 触发词：生成图片, 画图, 图片生成, text to image, 文字生成图片, AI 画图, 生成配图, 生成封面, 生成插图, generate image, 画一张, 做一张图</description>\n    <location>~/workspace/agent/skills/miaoda-text-gen-image/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-web-fetch</name>\n    <description>Use when user needs to crawl or fetch a specific URL to extract its content. Provides necessary command usage instructions for fetching known URLs. 触发词：网页抓取, 抓取网页, 提取网页内容, web crawl, 爬取, fetch url, 抓取 URL, 读取网页</description>\n    <location>~/workspace/agent/skills/miaoda-web-fetch/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-web-search</name>\n    <description>ALWAYS use this skill FIRST when you need to find, look up, or verify ANY information from the internet — do NOT guess URLs and fetch them directly. Provides necessary command usage instructions for keyword-based web search with structured results. 触发词：搜索, 网页搜索, 搜一下, 查一下, 查询, 了解, 找一下, 帮我看看, web search, look up, find out, search, 查资料, 搜索引擎, 最新信息, 最近动态</description>\n    <location>~/workspace/agent/skills/miaoda-web-search/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-approval</name>\n    <description>飞书审批 API：审批实例、审批任务管理。</description>\n    <location>~/.agents/skills/lark-approval/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-attendance</name>\n    <description>飞书考勤打卡：查询自己的考勤打卡记录</description>\n    <location>~/.agents/skills/lark-attendance/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-base</name>\n    <description>当需要用 lark-cli 操作飞书多维表格（Base）时调用：搜索 Base、建表、字段管理、记录读写、记录分享链接、视图配置、历史查询，以及角色/表单/仪表盘管理/工作流；也适用于把旧的 +table / +field / +record 写法改成当前命令写法。涉及字段设计、公式字段、查找引用、跨表计算、行级派生指标、数据分析需求时也必须使用本 skill。</description>\n    <location>~/.agents/skills/lark-base/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-calendar</name>\n    <description>飞书日历（calendar）：提供日历与日程（会议）的全面管理能力。核心场景包括：查看/搜索日程、创建/更新日程、管理参会人、查询忙闲状态及推荐空闲时段、查询/搜索与预定会议室。注意：涉及【预约日程/会议】或【查询/预定会议室】时，必须先读取 references/lark-calendar-schedule-meeting.md 工作流！高频操作请优先使用 Shortcuts：+agenda（快速概览今日/近期行程）、+create（创建日程并按需邀请参会人及预定会议室）、+update（更新既有日程字段，或独立增删参会人/会议室）、+freebusy（查询用户主日历的忙闲信息和rsvp的状态）、+rsvp（回复日程邀请）</description>\n    <location>~/.agents/skills/lark-calendar/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-contact</name>\n    <description>飞书通讯录：查询组织架构、人员信息和搜索员工。获取当前用户或指定用户的详细信息、通过关键词搜索员工（姓名/邮箱/手机号）。当用户需要查看个人信息、查找同事 open_id 或联系方式、按姓名搜索员工、查询部门结构时使用。</description>\n    <location>~/.agents/skills/lark-contact/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-doc</name>\n    <description>飞书云文档：创建和编辑飞书文档。从 Markdown 创建文档、获取文档内容、更新文档（追加/覆盖/替换/插入/删除）、上传和下载文档中的图片和文件、搜索云空间文档。当用户需要创建或编辑飞书文档、读取文档内容、在文档中插入图片、搜索云空间文档时使用；如果用户是想按名称或关键词先定位电子表格、报表等云空间对象，也优先使用本 skill 的 docs +search 做资源发现。</description>\n    <location>~/.agents/skills/lark-doc/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-drive</name>\n    <description>飞书云空间：管理云空间中的文件和文件夹。上传和下载文件、创建文件夹、复制/移动/删除文件、查看文件元数据、管理文档评论、管理文档权限、订阅用户评论变更事件、修改文件标题（docx、sheet、bitable、file、folder、wiki）；也负责把本地 Word/Markdown/Excel/CSV 以及 Base 快照（.base）导入为飞书在线云文档（docx、sheet、bitable）。当用户需要上传或下载文件、整理云空间目录、查看文件详情、管理评论、管理文档权限、修改文件标题、订阅用户评论变更事件，或要把本地文件导入成新版文档、电子表格、多维表格/Base 时使用。</description>\n    <location>~/.agents/skills/lark-drive/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-event</name>\n    <description>Lark/Feishu real-time event listening / subscribing / consuming: stream events as NDJSON via `lark-cli event consume &lt;EventKey&gt;` (covers IM message receive, reactions, chat member changes, etc.). Use for Lark bots, real-time message processing, long-running subscribers, streaming webhook/push handlers. Supports `--max-events` / `--timeout` bounded runs and a stderr ready-marker contract — designed for AI agents running as subprocesses.</description>\n    <location>~/.agents/skills/lark-event/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-im</name>\n    <description>飞书即时通讯：收发消息和管理群聊。发送和回复消息、搜索聊天记录、管理群聊成员、上传下载图片和文件（支持大文件分片下载）、管理表情回复。当用户需要发消息、查看或搜索聊天记录、下载聊天中的文件、查看群成员时使用。</description>\n    <location>~/.agents/skills/lark-im/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-mail</name>\n    <description>飞书邮箱 — draft, compose, send, reply, forward, read, and search emails; manage drafts, folders, labels, contacts, attachments, and mail rules. Use when user mentions 起草邮件, 写一封邮件, 拟邮件, 草稿, 发通知邮件, 发送邮件, 发邮件, 回复邮件, 转发邮件, 查看邮件, 看邮件, 读邮件, 搜索邮件, 查邮件, 收件箱, 邮件会话, 编辑草稿, 管理草稿, 下载附件, 邮件文件夹, 邮件标签, 邮件联系人, 监听新邮件, 收信规则, 邮件规则, draft, compose, send email, reply, forward, inbox, mail thread, mail rules.</description>\n    <location>~/.agents/skills/lark-mail/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-markdown</name>\n    <description>飞书 Markdown：查看、创建、上传和编辑 Markdown 文件。当用户需要创建或编辑 Markdown 文件、读取或修改时使用。</description>\n    <location>~/.agents/skills/lark-markdown/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-minutes</name>\n    <description>飞书妙记：妙记相关基本功能。1.查询妙记列表（按关键词/所有者/参与者/时间范围）；2.获取妙记基础信息（标题、封面、时长 等）；3.下载妙记音视频文件；4.获取妙记相关 AI 产物（总结、待办、章节）。飞书妙记 URL 格式: http(s)://&lt;host&gt;/minutes/&lt;minute-token&gt;</description>\n    <location>~/.agents/skills/lark-minutes/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-okr</name>\n    <description>飞书 OKR：管理目标与关键结果。查看和编辑 OKR 周期、目标（Objective）、关键结果（Key Result）、对齐关系、量化指标和进展记录。当用户需要查看或创建 OKR、管理目标和关键结果、查看对齐关系时使用。</description>\n    <location>~/.agents/skills/lark-okr/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-openapi-explorer</name>\n    <description>飞书/Lark 原生 OpenAPI 探索：从官方文档库中挖掘未经 CLI 封装的原生 OpenAPI 接口。当用户的需求无法被现有 lark-* skill 或 lark-cli 已注册命令满足，需要查找并调用原生飞书 OpenAPI 时使用。</description>\n    <location>~/.agents/skills/lark-openapi-explorer/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-shared</name>\n    <description>飞书/Lark CLI 共享基础：应用配置初始化、认证登录（auth login）、身份切换（--as user/bot）、权限与 scope 管理、Permission denied 错误处理、安全规则。当用户需要第一次配置(`lark-cli config init`)、使用登录授权(`lark-cli auth login`)、遇到权限不足、切换 user/bot 身份、配置 scope、或首次使用 lark-cli 时触发。</description>\n    <location>~/.agents/skills/lark-shared/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-sheets</name>\n    <description>飞书电子表格：创建和操作电子表格。支持创建表格、创建/复制/删除/更新工作表、读写单元格、追加行数据、查找内容、导出文件。当用户需要创建电子表格、管理工作表、批量读写数据、在已知表格中查找内容、导出或下载表格时使用。若用户是想按名称或关键词搜索云空间里的表格文件，请改用 lark-doc 的 docs +search 先定位资源。</description>\n    <location>~/.agents/skills/lark-sheets/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-skill-maker</name>\n    <description>创建 lark-cli 的自定义 Skill。当用户需要把飞书 API 操作封装成可复用的 Skill（包装原子 API 或编排多步流程）时使用。</description>\n    <location>~/.agents/skills/lark-skill-maker/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-slides</name>\n    <description>飞书幻灯片：创建和编辑幻灯片，接口通过 XML 协议通信。创建演示文稿、读取幻灯片内容、管理幻灯片页面（创建、删除、读取、局部替换）。当用户需要创建或编辑幻灯片、读取或修改单个页面时使用。</description>\n    <location>~/.agents/skills/lark-slides/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-task</name>\n    <description>飞书任务：管理任务、清单和任务智能体。创建待办任务、查看和更新任务状态、拆分子任务、组织任务清单、分配协作成员、上传任务附件、注册或注销任务智能体、更新任务智能体的主页数据、写入智能体任务记录。当用户需要创建待办事项、查看任务列表、跟踪任务进度、管理项目清单或给他人分配任务、为任务上传附件文件、注册注销任务智能体、更新智能体主页数据、写入任务记录时使用。</description>\n    <location>~/.agents/skills/lark-task/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-vc</name>\n    <description>飞书视频会议：查询会议记录、获取会议纪要产物（总结、待办、章节、逐字稿）。1. 查询已经结束的会议数量或详情时使用本技能(如历史日期｜ 昨天 | 上周 | 今天已经开过的会议等场景)，查询未开始的会议日程使用 lark-calendar 技能。2. 支持通过关键词、时间范围、组织者、参与者、会议室等筛选条件搜索会议记录。3. 获取或整理会议纪要时使用本技能。</description>\n    <location>~/.agents/skills/lark-vc/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-whiteboard</name>\n    <description>飞书画板：查询和编辑飞书云文档中的画板。支持导出画板为预览图片、导出原始节点结构、使用 PlantUML/Mermaid 代码或 OpenAPI 原生格式更新画板内容。 当用户需要查看画板内容、导出画板图片、或编辑画板，或是需要可视化表达架构、流程、组织关系、时间线、因果、对比等结构化信息时使用此 skill，无论是否提及&quot;画板&quot;。</description>\n    <location>~/.agents/skills/lark-whiteboard/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-wiki</name>\n    <description>飞书知识库：管理知识空间、空间成员和文档节点。创建和查询知识空间、查看和管理空间成员、管理节点层级结构、在知识库中组织文档和快捷方式。当用户需要在知识库中查找或创建文档、浏览知识空间结构、查看或管理空间成员、移动或复制节点时使用。</description>\n    <location>~/.agents/skills/lark-wiki/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-workflow-meeting-summary</name>\n    <description>会议纪要整理工作流：汇总指定时间范围内的会议纪要并生成结构化报告。当用户需要整理会议纪要、生成会议周报、回顾一段时间内的会议内容时使用。</description>\n    <location>~/.agents/skills/lark-workflow-meeting-summary/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-workflow-standup-report</name>\n    <description>日程待办摘要：编排 calendar +agenda 和 task +get-my-tasks，生成指定日期的日程与未完成任务摘要。适用于了解今天/明天/本周的安排。</description>\n    <location>~/.agents/skills/lark-workflow-standup-report/SKILL.md</location>\n  </skill>\n</available_skills>",
       "skills": [
+        {
+          "name": "browser-automation"
+        },
+        {
+          "name": "canvas"
+        },
+        {
+          "name": "clawhub",
+          "requiredEnv": []
+        },
+        {
+          "name": "diagram-maker"
+        },
+        {
+          "name": "feishu-channel-rules"
+        },
         {
           "name": "feishu-doc"
         },
@@ -34,70 +49,19 @@
           "name": "feishu-drive"
         },
         {
-          "name": "feishu-perm"
-        },
-        {
-          "name": "feishu-wiki"
-        },
-        {
-          "name": "feishu-channel-rules"
-        },
-        {
           "name": "feishu-lark-cli"
+        },
+        {
+          "name": "feishu-perm"
         },
         {
           "name": "feishu-troubleshoot"
         },
         {
-          "name": "clawhub",
-          "requiredEnv": []
+          "name": "feishu-wiki"
         },
         {
           "name": "healthcheck"
-        },
-        {
-          "name": "node-connect"
-        },
-        {
-          "name": "session-logs",
-          "requiredEnv": []
-        },
-        {
-          "name": "skill-creator"
-        },
-        {
-          "name": "taskflow"
-        },
-        {
-          "name": "taskflow-inbox-triage"
-        },
-        {
-          "name": "weather",
-          "requiredEnv": []
-        },
-        {
-          "name": "miaoda-doc-parse"
-        },
-        {
-          "name": "miaoda-image-understanding"
-        },
-        {
-          "name": "miaoda-openclaw-guide"
-        },
-        {
-          "name": "miaoda-skillhub"
-        },
-        {
-          "name": "miaoda-speech-to-text"
-        },
-        {
-          "name": "miaoda-text-gen-image"
-        },
-        {
-          "name": "miaoda-web-fetch"
-        },
-        {
-          "name": "miaoda-web-search"
         },
         {
           "name": "lark-approval"
@@ -170,734 +134,92 @@
         },
         {
           "name": "lark-workflow-standup-report"
-        }
-      ],
-      "resolvedSkills": [
-        {
-          "name": "feishu-doc",
-          "description": "Feishu document read/write operations. Activate when user mentions Feishu docs, cloud docs, or docx links.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-doc/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-doc",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-doc/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-doc"
-          },
-          "disableModelInvocation": false
         },
         {
-          "name": "feishu-drive",
-          "description": "Feishu cloud storage file management. Activate when user mentions cloud space, folders, drive.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-drive/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-drive",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-drive/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-drive"
-          },
-          "disableModelInvocation": false
+          "name": "meme-maker",
+          "requiredEnv": []
         },
         {
-          "name": "feishu-perm",
-          "description": "Feishu permission management for documents and files. Activate when user mentions sharing, permissions, collaborators.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-perm/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-perm",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-perm/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-perm"
-          },
-          "disableModelInvocation": false
+          "name": "miaoda-doc-parse"
         },
         {
-          "name": "feishu-wiki",
-          "description": "Feishu knowledge base navigation. Activate when user mentions knowledge base, wiki, or wiki links.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-wiki/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-wiki",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-wiki/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-wiki"
-          },
-          "disableModelInvocation": false
+          "name": "miaoda-image-understanding"
         },
         {
-          "name": "feishu-channel-rules",
-          "description": "Lark/Feishu channel output rules. Always active in Lark conversations.",
-          "filePath": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-channel-rules/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-channel-rules",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-channel-rules/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-channel-rules"
-          },
-          "disableModelInvocation": false
+          "name": "miaoda-openclaw-guide"
         },
         {
-          "name": "feishu-lark-cli",
-          "description": "飞书所有操作（消息 / 文档 / 日历 / 搜索 / 群 / 文件）必须通过 lark-cli。\n--profile 传 App ID（cli_xxx），先从入站 account_id 经 gateway config.get 解析；--as bot 当 uat.enabled=false 时必填。",
-          "filePath": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-lark-cli/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-lark-cli",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-lark-cli/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-lark-cli"
-          },
-          "disableModelInvocation": false
+          "name": "miaoda-skillhub"
         },
         {
-          "name": "feishu-troubleshoot",
-          "description": "飞书插件问题排查工具。包含常见问题 FAQ 和深度诊断命令（/feishu_doctor）。\n\n常见问题可随时查阅。诊断命令用于排查复杂问题（多次授权仍失败、自动授权无法解决等），\n会检查账户配置、API 连通性、应用权限、用户授权状态，并生成详细的诊断报告和解决方案。",
-          "filePath": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-troubleshoot/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-troubleshoot",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-troubleshoot/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-troubleshoot"
-          },
-          "disableModelInvocation": false
+          "name": "miaoda-speech-to-text"
         },
         {
-          "name": "clawhub",
-          "description": "Use the ClawHub CLI to search, install, update, and publish agent skills from clawhub.com. Use when you need to fetch new skills on the fly, sync installed skills to latest or a specific version, or publish new/updated skill folders with the npm-installed clawhub CLI.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/clawhub/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/clawhub",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/clawhub/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/clawhub"
-          },
-          "disableModelInvocation": false
+          "name": "miaoda-text-gen-image"
         },
         {
-          "name": "healthcheck",
-          "description": "Host security hardening and risk-tolerance configuration for OpenClaw deployments. Use when a user asks for security audits, firewall/SSH/update hardening, risk posture, exposure review, OpenClaw cron scheduling for periodic checks, or version status checks on a machine running OpenClaw (laptop, workstation, Pi, VPS).",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/healthcheck/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/healthcheck",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/healthcheck/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/healthcheck"
-          },
-          "disableModelInvocation": false
+          "name": "miaoda-web-fetch"
         },
         {
-          "name": "node-connect",
-          "description": "Diagnose OpenClaw node connection and pairing failures for Android, iOS, and macOS companion apps. Use when QR/setup code/manual connect fails, local Wi-Fi works but VPS/tailnet does not, or errors mention pairing required, unauthorized, bootstrap token invalid or expired, gateway.bind, gateway.remote.url, Tailscale, or plugins.entries.device-pair.config.publicUrl.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/node-connect/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/node-connect",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/node-connect/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/node-connect"
-          },
-          "disableModelInvocation": false
+          "name": "miaoda-web-search"
+        },
+        {
+          "name": "node-connect"
+        },
+        {
+          "name": "node-inspect-debugger",
+          "requiredEnv": []
+        },
+        {
+          "name": "python-debugpy",
+          "requiredEnv": []
         },
         {
           "name": "session-logs",
-          "description": "Search and analyze your own session logs (older/parent conversations) using jq.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/session-logs/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/session-logs",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/session-logs/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/session-logs"
-          },
-          "disableModelInvocation": false
+          "requiredEnv": []
         },
         {
-          "name": "skill-creator",
-          "description": "Create, edit, improve, or audit AgentSkills. Use when creating a new skill from scratch or when asked to improve, review, audit, tidy up, or clean up an existing skill or SKILL.md file. Also use when editing or restructuring a skill directory (moving files to references/ or scripts/, removing stale content, validating against the AgentSkills spec). Triggers on phrases like \"create a skill\", \"author a skill\", \"tidy up a skill\", \"improve this skill\", \"review the skill\", \"clean up the skill\", \"audit the skill\".",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/skill-creator/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/skill-creator",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/skill-creator/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/skill-creator"
-          },
-          "disableModelInvocation": false
+          "name": "skill-creator"
         },
         {
-          "name": "taskflow",
-          "description": "Use when work should span one or more detached tasks but still behave like one job with a single owner context. TaskFlow is the durable flow substrate under authoring layers like Lobster, ACPX, plugins, or plain code. Keep conditional logic in the caller; use TaskFlow for flow identity, child-task linkage, waiting state, revision-checked mutations, and user-facing emergence.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow"
-          },
-          "disableModelInvocation": false
+          "name": "spike"
         },
         {
-          "name": "taskflow-inbox-triage",
-          "description": "Example TaskFlow authoring pattern for inbox triage. Use when messages need different treatment based on intent, with some routes notifying immediately, some waiting on outside answers, and others rolling into a later summary.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow-inbox-triage/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow-inbox-triage",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow-inbox-triage/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow-inbox-triage"
-          },
-          "disableModelInvocation": false
+          "name": "taskflow"
+        },
+        {
+          "name": "taskflow-inbox-triage"
         },
         {
           "name": "weather",
-          "description": "Get current weather and forecasts via wttr.in or Open-Meteo. Use when: user asks about weather, temperature, or forecasts for any location. NOT for: historical weather data, severe weather alerts, or detailed meteorological analysis. No API key needed.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/weather/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/weather",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/weather/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/weather"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-doc-parse",
-          "description": "Use when user needs to parse, extract, or read content from documents (PDF, Word, Excel, PPT, etc.) Converts documents to Markdown via IDP (Intelligent Document Parsing). 触发词：文档解析, 解析文档, 解析 PDF, 解析 Word, 解析 Excel, 读取文档, 提取文档内容, doc parse, IDP, 智能文档解析, parse document, 文档转 Markdown, 读取 PDF, 读取 PPT, 提取表格, 文档识别",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-doc-parse/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-doc-parse",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-doc-parse/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-doc-parse"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-image-understanding",
-          "description": "Use when user needs to understand, analyze, or describe image content. Supports screenshots, photos, diagrams — provide local file path as input. No browser needed. Do NOT use Read tool to read images — use this skill instead. 当用户需要看图、理解图片内容、分析截图、识别图中信息时使用此技能。触发词：图片理解, 图片分析, 图片描述, 识别图片, 看图, 图片识别, image understanding, describe image, analyze image, 图片内容, 看看这张图, 这张图是什么, 图中有什么, 看不了图, 无法看图",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-image-understanding/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-image-understanding",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-image-understanding/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-image-understanding"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-openclaw-guide",
-          "description": "OpenClaw agent runtime guide: sandbox environment, security config, available skills, tool limitations, and common user request handling. 运行环境说明、沙箱安全配置、可用技能、工具限制、常见问题处理。触发词：环境限制, 没有权限, sudo, 无法安装, 安全配置, dangerouslyDisable, no-sandbox, Browser Relay, Browser Replay, 内置技能, 可用工具",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-openclaw-guide/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-openclaw-guide",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-openclaw-guide/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-openclaw-guide"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-skillhub",
-          "description": "Use when user wants to search, find, install, or manage skills from Volcengine Skillhub (FindSkill), or asks whether a specific capability exists as a marketplace skill (如'有没有XX技能'/'有没有什么技能可以做XX'). Provides CLI commands for skill discovery and installation via npx skills. 触发词：技能市场, 技能搜索, 搜索技能, 安装技能, 查找技能, find skill, skill hub, skillhub, findskill, skills add, skills find, 技能安装, 技能下载, 技能广场, 火山技能市场, 有没有XX技能",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-skillhub/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-skillhub",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-skillhub/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-skillhub"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-speech-to-text",
-          "description": "Use when user needs to convert audio or voice recordings to text. Provides necessary command usage instructions for converting audio to text. Supports multiple languages. 触发词：语音转文字, 音频转文字, 语音识别, speech to text, STT, 转录, 听写, 会议记录转文字, 录音转文字, transcribe, 音频识别, voice to text, 语音转换",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-speech-to-text/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-speech-to-text",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-speech-to-text/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-speech-to-text"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-text-gen-image",
-          "description": "Use when user needs to generate images from text descriptions. Provides necessary command usage instructions for generating images from text. Supports various aspect ratios and AI watermark. 触发词：生成图片, 画图, 图片生成, text to image, 文字生成图片, AI 画图, 生成配图, 生成封面, 生成插图, generate image, 画一张, 做一张图",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-text-gen-image/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-text-gen-image",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-text-gen-image/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-text-gen-image"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-web-fetch",
-          "description": "Use when user needs to crawl or fetch a specific URL to extract its content. Provides necessary command usage instructions for fetching known URLs. 触发词：网页抓取, 抓取网页, 提取网页内容, web crawl, 爬取, fetch url, 抓取 URL, 读取网页",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-web-fetch/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-web-fetch",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-web-fetch/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-web-fetch"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-web-search",
-          "description": "ALWAYS use this skill FIRST when you need to find, look up, or verify ANY information from the internet — do NOT guess URLs and fetch them directly. Provides necessary command usage instructions for keyword-based web search with structured results. 触发词：搜索, 网页搜索, 搜一下, 查一下, 查询, 了解, 找一下, 帮我看看, web search, look up, find out, search, 查资料, 搜索引擎, 最新信息, 最近动态",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-web-search/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-web-search",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-web-search/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-web-search"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-approval",
-          "description": "飞书审批 API：审批实例、审批任务管理。",
-          "filePath": "/home/gem/.agents/skills/lark-approval/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-approval",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-approval/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-approval"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-attendance",
-          "description": "飞书考勤打卡：查询自己的考勤打卡记录",
-          "filePath": "/home/gem/.agents/skills/lark-attendance/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-attendance",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-attendance/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-attendance"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-base",
-          "description": "当需要用 lark-cli 操作飞书多维表格（Base）时调用：搜索 Base、建表、字段管理、记录读写、记录分享链接、视图配置、历史查询，以及角色/表单/仪表盘管理/工作流；也适用于把旧的 +table / +field / +record 写法改成当前命令写法。涉及字段设计、公式字段、查找引用、跨表计算、行级派生指标、数据分析需求时也必须使用本 skill。",
-          "filePath": "/home/gem/.agents/skills/lark-base/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-base",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-base/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-base"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-calendar",
-          "description": "飞书日历（calendar）：提供日历与日程（会议）的全面管理能力。核心场景包括：查看/搜索日程、创建/更新日程、管理参会人、查询忙闲状态及推荐空闲时段、查询/搜索与预定会议室。注意：涉及【预约日程/会议】或【查询/预定会议室】时，必须先读取 references/lark-calendar-schedule-meeting.md 工作流！高频操作请优先使用 Shortcuts：+agenda（快速概览今日/近期行程）、+create（创建日程并按需邀请参会人及预定会议室）、+update（更新既有日程字段，或独立增删参会人/会议室）、+freebusy（查询用户主日历的忙闲信息和rsvp的状态）、+rsvp（回复日程邀请）",
-          "filePath": "/home/gem/.agents/skills/lark-calendar/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-calendar",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-calendar/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-calendar"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-contact",
-          "description": "飞书通讯录：查询组织架构、人员信息和搜索员工。获取当前用户或指定用户的详细信息、通过关键词搜索员工（姓名/邮箱/手机号）。当用户需要查看个人信息、查找同事 open_id 或联系方式、按姓名搜索员工、查询部门结构时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-contact/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-contact",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-contact/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-contact"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-doc",
-          "description": "飞书云文档：创建和编辑飞书文档。从 Markdown 创建文档、获取文档内容、更新文档（追加/覆盖/替换/插入/删除）、上传和下载文档中的图片和文件、搜索云空间文档。当用户需要创建或编辑飞书文档、读取文档内容、在文档中插入图片、搜索云空间文档时使用；如果用户是想按名称或关键词先定位电子表格、报表等云空间对象，也优先使用本 skill 的 docs +search 做资源发现。",
-          "filePath": "/home/gem/.agents/skills/lark-doc/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-doc",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-doc/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-doc"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-drive",
-          "description": "飞书云空间：管理云空间中的文件和文件夹。上传和下载文件、创建文件夹、复制/移动/删除文件、查看文件元数据、管理文档评论、管理文档权限、订阅用户评论变更事件、修改文件标题（docx、sheet、bitable、file、folder、wiki）；也负责把本地 Word/Markdown/Excel/CSV 以及 Base 快照（.base）导入为飞书在线云文档（docx、sheet、bitable）。当用户需要上传或下载文件、整理云空间目录、查看文件详情、管理评论、管理文档权限、修改文件标题、订阅用户评论变更事件，或要把本地文件导入成新版文档、电子表格、多维表格/Base 时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-drive/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-drive",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-drive/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-drive"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-event",
-          "description": "Lark/Feishu real-time event listening / subscribing / consuming: stream events as NDJSON via `lark-cli event consume <EventKey>` (covers IM message receive, reactions, chat member changes, etc.). Use for Lark bots, real-time message processing, long-running subscribers, streaming webhook/push handlers. Supports `--max-events` / `--timeout` bounded runs and a stderr ready-marker contract — designed for AI agents running as subprocesses.",
-          "filePath": "/home/gem/.agents/skills/lark-event/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-event",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-event/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-event"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-im",
-          "description": "飞书即时通讯：收发消息和管理群聊。发送和回复消息、搜索聊天记录、管理群聊成员、上传下载图片和文件（支持大文件分片下载）、管理表情回复。当用户需要发消息、查看或搜索聊天记录、下载聊天中的文件、查看群成员时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-im/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-im",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-im/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-im"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-mail",
-          "description": "飞书邮箱 — draft, compose, send, reply, forward, read, and search emails; manage drafts, folders, labels, contacts, attachments, and mail rules. Use when user mentions 起草邮件, 写一封邮件, 拟邮件, 草稿, 发通知邮件, 发送邮件, 发邮件, 回复邮件, 转发邮件, 查看邮件, 看邮件, 读邮件, 搜索邮件, 查邮件, 收件箱, 邮件会话, 编辑草稿, 管理草稿, 下载附件, 邮件文件夹, 邮件标签, 邮件联系人, 监听新邮件, 收信规则, 邮件规则, draft, compose, send email, reply, forward, inbox, mail thread, mail rules.",
-          "filePath": "/home/gem/.agents/skills/lark-mail/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-mail",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-mail/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-mail"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-markdown",
-          "description": "飞书 Markdown：查看、创建、上传和编辑 Markdown 文件。当用户需要创建或编辑 Markdown 文件、读取或修改时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-markdown/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-markdown",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-markdown/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-markdown"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-minutes",
-          "description": "飞书妙记：妙记相关基本功能。1.查询妙记列表（按关键词/所有者/参与者/时间范围）；2.获取妙记基础信息（标题、封面、时长 等）；3.下载妙记音视频文件；4.获取妙记相关 AI 产物（总结、待办、章节）。飞书妙记 URL 格式: http(s)://<host>/minutes/<minute-token>",
-          "filePath": "/home/gem/.agents/skills/lark-minutes/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-minutes",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-minutes/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-minutes"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-okr",
-          "description": "飞书 OKR：管理目标与关键结果。查看和编辑 OKR 周期、目标（Objective）、关键结果（Key Result）、对齐关系、量化指标和进展记录。当用户需要查看或创建 OKR、管理目标和关键结果、查看对齐关系时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-okr/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-okr",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-okr/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-okr"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-openapi-explorer",
-          "description": "飞书/Lark 原生 OpenAPI 探索：从官方文档库中挖掘未经 CLI 封装的原生 OpenAPI 接口。当用户的需求无法被现有 lark-* skill 或 lark-cli 已注册命令满足，需要查找并调用原生飞书 OpenAPI 时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-openapi-explorer/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-openapi-explorer",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-openapi-explorer/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-openapi-explorer"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-shared",
-          "description": "飞书/Lark CLI 共享基础：应用配置初始化、认证登录（auth login）、身份切换（--as user/bot）、权限与 scope 管理、Permission denied 错误处理、安全规则。当用户需要第一次配置(`lark-cli config init`)、使用登录授权(`lark-cli auth login`)、遇到权限不足、切换 user/bot 身份、配置 scope、或首次使用 lark-cli 时触发。",
-          "filePath": "/home/gem/.agents/skills/lark-shared/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-shared",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-shared/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-shared"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-sheets",
-          "description": "飞书电子表格：创建和操作电子表格。支持创建表格、创建/复制/删除/更新工作表、读写单元格、追加行数据、查找内容、导出文件。当用户需要创建电子表格、管理工作表、批量读写数据、在已知表格中查找内容、导出或下载表格时使用。若用户是想按名称或关键词搜索云空间里的表格文件，请改用 lark-doc 的 docs +search 先定位资源。",
-          "filePath": "/home/gem/.agents/skills/lark-sheets/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-sheets",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-sheets/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-sheets"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-skill-maker",
-          "description": "创建 lark-cli 的自定义 Skill。当用户需要把飞书 API 操作封装成可复用的 Skill（包装原子 API 或编排多步流程）时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-skill-maker/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-skill-maker",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-skill-maker/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-skill-maker"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-slides",
-          "description": "飞书幻灯片：创建和编辑幻灯片，接口通过 XML 协议通信。创建演示文稿、读取幻灯片内容、管理幻灯片页面（创建、删除、读取、局部替换）。当用户需要创建或编辑幻灯片、读取或修改单个页面时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-slides/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-slides",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-slides/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-slides"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-task",
-          "description": "飞书任务：管理任务、清单和任务智能体。创建待办任务、查看和更新任务状态、拆分子任务、组织任务清单、分配协作成员、上传任务附件、注册或注销任务智能体、更新任务智能体的主页数据、写入智能体任务记录。当用户需要创建待办事项、查看任务列表、跟踪任务进度、管理项目清单或给他人分配任务、为任务上传附件文件、注册注销任务智能体、更新智能体主页数据、写入任务记录时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-task/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-task",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-task/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-task"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-vc",
-          "description": "飞书视频会议：查询会议记录、获取会议纪要产物（总结、待办、章节、逐字稿）。1. 查询已经结束的会议数量或详情时使用本技能(如历史日期｜ 昨天 | 上周 | 今天已经开过的会议等场景)，查询未开始的会议日程使用 lark-calendar 技能。2. 支持通过关键词、时间范围、组织者、参与者、会议室等筛选条件搜索会议记录。3. 获取或整理会议纪要时使用本技能。",
-          "filePath": "/home/gem/.agents/skills/lark-vc/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-vc",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-vc/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-vc"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-whiteboard",
-          "description": "飞书画板：查询和编辑飞书云文档中的画板。支持导出画板为预览图片、导出原始节点结构、使用 PlantUML/Mermaid 代码或 OpenAPI 原生格式更新画板内容。 当用户需要查看画板内容、导出画板图片、或编辑画板，或是需要可视化表达架构、流程、组织关系、时间线、因果、对比等结构化信息时使用此 skill，无论是否提及\"画板\"。",
-          "filePath": "/home/gem/.agents/skills/lark-whiteboard/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-whiteboard",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-whiteboard/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-whiteboard"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-wiki",
-          "description": "飞书知识库：管理知识空间、空间成员和文档节点。创建和查询知识空间、查看和管理空间成员、管理节点层级结构、在知识库中组织文档和快捷方式。当用户需要在知识库中查找或创建文档、浏览知识空间结构、查看或管理空间成员、移动或复制节点时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-wiki/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-wiki",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-wiki/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-wiki"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-workflow-meeting-summary",
-          "description": "会议纪要整理工作流：汇总指定时间范围内的会议纪要并生成结构化报告。当用户需要整理会议纪要、生成会议周报、回顾一段时间内的会议内容时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-workflow-meeting-summary/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-workflow-meeting-summary",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-workflow-meeting-summary/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-workflow-meeting-summary"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-workflow-standup-report",
-          "description": "日程待办摘要：编排 calendar +agenda 和 task +get-my-tasks，生成指定日期的日程与未完成任务摘要。适用于了解今天/明天/本周的安排。",
-          "filePath": "/home/gem/.agents/skills/lark-workflow-standup-report/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-workflow-standup-report",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-workflow-standup-report/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-workflow-standup-report"
-          },
-          "disableModelInvocation": false
+          "requiredEnv": []
         }
       ],
-      "version": 0
+      "version": 1780465813718,
+      "promptRef": {
+        "version": 1,
+        "algorithm": "sha256",
+        "hash": "1b496545c2d60952cc4160d0c34c13ab7e9aec3c8cf70b5c73bf331ba6caf6a6",
+        "bytes": 23543
+      }
     },
     "status": "done",
-    "startedAt": 1780456863466,
+    "startedAt": 1780467519403,
     "modelProvider": "freellm",
     "model": "auto",
     "contextTokens": 200000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1780456863077,
+      "generatedAt": 1780467518376,
       "sessionId": "ed9041f1-0415-4352-b95c-0f9218d231ff",
       "sessionKey": "agent:main:feishu:default:direct:ou_2f92a7aebdf35e672c28652e21aa4460",
       "provider": "freellm",
       "model": "auto",
       "workspaceDir": "/home/gem/workspace/agent/workspace",
-      "bootstrapMaxChars": 20000,
-      "bootstrapTotalMaxChars": 150000,
+      "bootstrapMaxChars": 12000,
+      "bootstrapTotalMaxChars": 60000,
       "bootstrapTruncation": {
-        "warningMode": "once",
+        "warningMode": "always",
         "warningShown": false,
         "truncatedFiles": 0,
         "nearLimitFiles": 0,
@@ -908,9 +230,10 @@
         "sandboxed": false
       },
       "systemPrompt": {
-        "chars": 42501,
-        "projectContextChars": 11329,
-        "nonProjectContextChars": 31172
+        "chars": 38305,
+        "hash": "d90f0a67ce1b8a1e483c953bd37523e526340128795e74b0b87853912b25eb29",
+        "projectContextChars": 9450,
+        "nonProjectContextChars": 28855
       },
       "injectedWorkspaceFiles": [
         {
@@ -962,14 +285,6 @@
           "truncated": false
         },
         {
-          "name": "BOOTSTRAP.md",
-          "path": "/home/gem/workspace/agent/workspace/BOOTSTRAP.md",
-          "missing": false,
-          "rawChars": 1900,
-          "injectedChars": 1900,
-          "truncated": false
-        },
-        {
           "name": "MEMORY.md",
           "path": "/home/gem/workspace/agent/workspace/MEMORY.md",
           "missing": false,
@@ -979,99 +294,56 @@
         }
       ],
       "skills": {
-        "promptChars": 17708,
+        "promptChars": 17735,
+        "hash": "8a34f360200786bf1ded1831d2db704a3e3131d60609ca7507ade60caf2edcd2",
         "entries": [
           {
-            "name": "feishu-doc",
-            "blockChars": 299
+            "name": "browser-automation",
+            "blockChars": 330
           },
           {
-            "name": "feishu-drive",
-            "blockChars": 291
-          },
-          {
-            "name": "feishu-perm",
-            "blockChars": 313
-          },
-          {
-            "name": "feishu-wiki",
-            "blockChars": 293
-          },
-          {
-            "name": "feishu-channel-rules",
+            "name": "canvas",
             "blockChars": 263
           },
           {
-            "name": "feishu-lark-cli",
-            "blockChars": 333
-          },
-          {
-            "name": "feishu-troubleshoot",
-            "blockChars": 326
-          },
-          {
             "name": "clawhub",
-            "blockChars": 432
-          },
-          {
-            "name": "healthcheck",
-            "blockChars": 491
-          },
-          {
-            "name": "node-connect",
-            "blockChars": 541
-          },
-          {
-            "name": "session-logs",
             "blockChars": 253
           },
           {
-            "name": "skill-creator",
-            "blockChars": 759
+            "name": "diagram-maker",
+            "blockChars": 266
           },
           {
-            "name": "taskflow",
-            "blockChars": 543
+            "name": "feishu-channel-rules",
+            "blockChars": 245
           },
           {
-            "name": "taskflow-inbox-triage",
-            "blockChars": 418
+            "name": "feishu-doc",
+            "blockChars": 261
           },
           {
-            "name": "weather",
-            "blockChars": 416
+            "name": "feishu-drive",
+            "blockChars": 253
           },
           {
-            "name": "miaoda-doc-parse",
-            "blockChars": 468
+            "name": "feishu-lark-cli",
+            "blockChars": 315
           },
           {
-            "name": "miaoda-image-understanding",
-            "blockChars": 568
+            "name": "feishu-perm",
+            "blockChars": 275
           },
           {
-            "name": "miaoda-openclaw-guide",
-            "blockChars": 446
+            "name": "feishu-troubleshoot",
+            "blockChars": 308
           },
           {
-            "name": "miaoda-skillhub",
-            "blockChars": 587
+            "name": "feishu-wiki",
+            "blockChars": 255
           },
           {
-            "name": "miaoda-speech-to-text",
-            "blockChars": 447
-          },
-          {
-            "name": "miaoda-text-gen-image",
-            "blockChars": 454
-          },
-          {
-            "name": "miaoda-web-fetch",
-            "blockChars": 370
-          },
-          {
-            "name": "miaoda-web-search",
-            "blockChars": 514
+            "name": "healthcheck",
+            "blockChars": 278
           },
           {
             "name": "lark-approval",
@@ -1168,347 +440,416 @@
           {
             "name": "lark-workflow-standup-report",
             "blockChars": 259
+          },
+          {
+            "name": "meme-maker",
+            "blockChars": 251
+          },
+          {
+            "name": "miaoda-doc-parse",
+            "blockChars": 468
+          },
+          {
+            "name": "miaoda-image-understanding",
+            "blockChars": 568
+          },
+          {
+            "name": "miaoda-openclaw-guide",
+            "blockChars": 446
+          },
+          {
+            "name": "miaoda-skillhub",
+            "blockChars": 587
+          },
+          {
+            "name": "miaoda-speech-to-text",
+            "blockChars": 447
+          },
+          {
+            "name": "miaoda-text-gen-image",
+            "blockChars": 454
+          },
+          {
+            "name": "miaoda-web-fetch",
+            "blockChars": 370
+          },
+          {
+            "name": "miaoda-web-search",
+            "blockChars": 514
+          },
+          {
+            "name": "node-connect",
+            "blockChars": 281
+          },
+          {
+            "name": "node-inspect-debugger",
+            "blockChars": 277
+          },
+          {
+            "name": "python-debugpy",
+            "blockChars": 265
+          },
+          {
+            "name": "session-logs",
+            "blockChars": 253
+          },
+          {
+            "name": "skill-creator",
+            "blockChars": 259
+          },
+          {
+            "name": "spike",
+            "blockChars": 251
+          },
+          {
+            "name": "taskflow",
+            "blockChars": 281
+          },
+          {
+            "name": "taskflow-inbox-triage",
+            "blockChars": 291
+          },
+          {
+            "name": "weather",
+            "blockChars": 266
           }
         ]
       },
       "tools": {
         "listChars": 0,
-        "schemaChars": 43698,
+        "schemaChars": 39837,
         "entries": [
           {
             "name": "read",
             "summaryChars": 298,
+            "summaryHash": "f8a1d7cf1ecfe02b1b5865c93387e6a5891e5079117b4fe18614b6f912521727",
             "schemaChars": 304,
+            "schemaHash": "134f19bcabe3e29d63c5cebb38f1d2556759fd08adad6bc90a4b4d3cd1fb8441",
             "propertiesCount": 3
           },
           {
             "name": "edit",
             "summaryChars": 326,
+            "summaryHash": "c498a85576e187d069e8e8ea4f70f81bddd57829600d385ef61c4359fd634c9e",
             "schemaChars": 834,
+            "schemaHash": "457e8bb9f800b21be76c4fd8c0e3078bf07ee9bf93ac82f39944c171bd8f6d84",
             "propertiesCount": 2
           },
           {
             "name": "write",
             "summaryChars": 127,
+            "summaryHash": "cdb1c46027b22d1f1b923b47bfe297821d9fe589a9f9d92994961948060a4d89",
             "schemaChars": 225,
+            "schemaHash": "e98a2484f667cf7c22d76ca103bf2022bf9113dc63fe38b899e71c328cb1e833",
             "propertiesCount": 2
           },
           {
             "name": "exec",
             "summaryChars": 539,
-            "schemaChars": 1098,
+            "summaryHash": "4825198988fbfa8ebf5c2a8fbe3946da0be639b1e3b737ceaa4364195bba3f04",
+            "schemaChars": 1187,
+            "schemaHash": "0c03eeccccb7b7e97234d2c8245c6060e2b292588f02455eae20c60b61bb8bb8",
             "propertiesCount": 12
           },
           {
             "name": "process",
-            "summaryChars": 416,
-            "schemaChars": 961,
+            "summaryChars": 456,
+            "summaryHash": "55297e65d460e0e1e06e7fad4cedb75ffda8fac9fa8b10aa06d6cead3c5a76ea",
+            "schemaChars": 1074,
+            "schemaHash": "a2d30a25569f409d7e8539844c89a088044535388b24031d014577b96ed27c5c",
             "propertiesCount": 12
           },
           {
-            "name": "canvas",
-            "summaryChars": 106,
-            "schemaChars": 661,
-            "propertiesCount": 18
-          },
-          {
             "name": "nodes",
-            "summaryChars": 118,
-            "schemaChars": 1589,
+            "summaryChars": 143,
+            "summaryHash": "ea1b0a5498ca3c788b26d164245652e1aaa989806e0123715793ab25f9578121",
+            "schemaChars": 1764,
+            "schemaHash": "339c9b744f121ff6a5b2a8a2a7e19286c4114d8dc165a172d3708e993d8b0e55",
             "propertiesCount": 32
           },
           {
             "name": "cron",
-            "summaryChars": 3726,
-            "schemaChars": 6700,
-            "propertiesCount": 13
+            "summaryChars": 3610,
+            "summaryHash": "262e6a7b421538d13ca6d79fc14616de3ea0c24fde8b050d6fa1652fe991e5c5",
+            "schemaChars": 7359,
+            "schemaHash": "a486139fdfec0cd8dc5bf05537b39f040400a8da3c04458e43a31faabef8759b",
+            "propertiesCount": 14
           },
           {
             "name": "message",
-            "summaryChars": 327,
-            "schemaChars": 5876,
-            "propertiesCount": 106
+            "summaryChars": 292,
+            "summaryHash": "46ee437726a0d285bee2d2e86271181bd041b7b18eb33cbd8f09b55b418bf41d",
+            "schemaChars": 7161,
+            "schemaHash": "a64c0e15e8bcb8ca7d3aea330e3b4bd0496efe0d2d8f96137ba144bf9a657c3f",
+            "propertiesCount": 109
           },
           {
             "name": "image_generate",
-            "summaryChars": 387,
-            "schemaChars": 1195,
-            "propertiesCount": 10
+            "summaryChars": 392,
+            "summaryHash": "57b16a66f72edadb1640a608d9f2761fd8d237e124b275d16d74356df5d95c8b",
+            "schemaChars": 2264,
+            "schemaHash": "1ff0d91a2a16769e27d71721f3307059944254c0567f9db718fe90e1665b088d",
+            "propertiesCount": 16
           },
           {
             "name": "gateway",
-            "summaryChars": 494,
-            "schemaChars": 497,
-            "propertiesCount": 12
+            "summaryChars": 377,
+            "summaryHash": "61f7e422103698365bb389c00ae4c46b9630840b16971cd141e91ac8f486029d",
+            "schemaChars": 576,
+            "schemaHash": "6a5b646bf45a2297a8bf9d57815d705fb1770df3ee95d4cf406dda97c6c69143",
+            "propertiesCount": 13
+          },
+          {
+            "name": "update_plan",
+            "summaryChars": 163,
+            "summaryHash": "ea18cc44224e849c68cdf0a4839c295c1b20daf2699e2fc2be4c4e1552327455",
+            "schemaChars": 489,
+            "schemaHash": "50cb08b8a29e72637eb6720e6f5f3786783824537574f05ee9ae7a5f4ecacc4b",
+            "propertiesCount": 2
           },
           {
             "name": "sessions_list",
-            "summaryChars": 177,
-            "schemaChars": 212,
-            "propertiesCount": 4
+            "summaryChars": 135,
+            "summaryHash": "c7e411ae02e3adff5504aaee48f02d262a8abb9152558a3172aae289e3b05faf",
+            "schemaChars": 435,
+            "schemaHash": "c29c6b82c36a2d95a88c8944f129929b2621ee2af6d17b2ab101d4d7e9633d89",
+            "propertiesCount": 9
           },
           {
             "name": "sessions_history",
-            "summaryChars": 180,
-            "schemaChars": 161,
+            "summaryChars": 117,
+            "summaryHash": "f5d45b76f11a8ac63cc45d456fb6f675f0b1a2e191feb9671924cb5830058f03",
+            "schemaChars": 162,
+            "schemaHash": "ac33b8af2252262afe479236046f5a04bc018f1fcf24d1a8bf32743f0e867598",
             "propertiesCount": 3
           },
           {
             "name": "sessions_send",
-            "summaryChars": 208,
-            "schemaChars": 274,
+            "summaryChars": 224,
+            "summaryHash": "56fd935fc97400f8c60b16ae58268660a2d84d8014a60abed515576c45a6f307",
+            "schemaChars": 275,
+            "schemaHash": "f1fbaa412fe6b6aee102234c87c5aa140f39c9086f9bae6e1e9691309a602ffb",
             "propertiesCount": 5
           },
           {
+            "name": "sessions_spawn",
+            "summaryChars": 332,
+            "summaryHash": "5ced554d0c09b9c71fa003139eca7871bbfdc0917a323fc17af2a9faec46c5b7",
+            "schemaChars": 1250,
+            "schemaHash": "2d1670783c8e0c6cae4a1d0a2bdcc059520837661a88702e827905e742a194c9",
+            "propertiesCount": 17
+          },
+          {
             "name": "sessions_yield",
-            "summaryChars": 97,
+            "summaryChars": 79,
+            "summaryHash": "f3782fc41c1522657e1d3494f486a2df998fed38a6b89dcf7f6934fb41424320",
             "schemaChars": 60,
+            "schemaHash": "b1c4c753820bc3096d85ef7a266a14c9fbe12450536db58076b75bb61d14dbbb",
             "propertiesCount": 1
           },
           {
-            "name": "sessions_spawn",
-            "summaryChars": 302,
-            "schemaChars": 1333,
-            "propertiesCount": 18
-          },
-          {
             "name": "subagents",
-            "summaryChars": 105,
-            "schemaChars": 191,
-            "propertiesCount": 4
-          },
-          {
-            "name": "session_status",
-            "summaryChars": 336,
-            "schemaChars": 89,
+            "summaryChars": 132,
+            "summaryHash": "1c2ffd38549c0444b118d43736fc4b875ea1aaabc446bbf8bc1fc4ee9180cca4",
+            "schemaChars": 122,
+            "schemaHash": "c4a241d2c3d46ba7985abfce4d3fcd63298ce81f89d49183c8f3d584c48d0c33",
             "propertiesCount": 2
           },
           {
+            "name": "session_status",
+            "summaryChars": 278,
+            "summaryHash": "71177e543dc6235bad4b1a26761995681dcec27ab58dcb4f4f8a7fc9a7b2b5aa",
+            "schemaChars": 89,
+            "schemaHash": "d2995f3d69d126e98ac93eec3c2a9fe5556925bd7979a8e4b6b5a2bf62d329dd",
+            "propertiesCount": 2
+          },
+          {
+            "name": "web_search",
+            "summaryChars": 65,
+            "summaryHash": "b38e9b3c079beaa988d3c576303660b91a55c2e72f56351da04160529173273f",
+            "schemaChars": 991,
+            "schemaHash": "3879e368875d824b14e0e683f81408824e9a2a5850fa2f8514a68caebda54d18",
+            "propertiesCount": 12
+          },
+          {
             "name": "image",
-            "summaryChars": 201,
-            "schemaChars": 342,
+            "summaryChars": 119,
+            "summaryHash": "baddb232b3847e91db0f3fe7c6b84de207a14c02eec22e7db2a1bd72b8e3c3c6",
+            "schemaChars": 350,
+            "schemaHash": "49bb766071c935edca8c2d0df47fc2109bbffe3d4ba32d0b19fe90ec873736ce",
             "propertiesCount": 6
           },
           {
             "name": "pdf",
-            "summaryChars": 275,
-            "schemaChars": 400,
-            "propertiesCount": 6
+            "summaryChars": 159,
+            "summaryHash": "9f323da0ccbf37f01fff7374ae5cba64b4c05b5f0fc9d982aee7c64040cc61d5",
+            "schemaChars": 448,
+            "schemaHash": "9e8e5acf6d543d3bf39ef65c5cad5326013243efbc32a78aeff5a86edc3947ed",
+            "propertiesCount": 7
           },
           {
             "name": "browser",
-            "summaryChars": 1066,
-            "schemaChars": 2799,
-            "propertiesCount": 48
+            "summaryChars": 1537,
+            "summaryHash": "8a4aab8d6a66131c4f065bc2672af8fbcc19555e55fb4fbb1c24261d02e63e28",
+            "schemaChars": 3234,
+            "schemaHash": "e94e5f5a49853203b631c61e3dfcec535edad2b81bc642048de47d44cdf49605",
+            "propertiesCount": 53
           },
           {
             "name": "feishu_doc",
             "summaryChars": 321,
+            "summaryHash": "031518d7b24ffb1cfd3e02e3d4085e277c85d42dfbaebbfd2c3b98c40ad4bd03",
             "schemaChars": 2898,
+            "schemaHash": "730bd6c68eccec4bb0af6297f1885d3e9e97428b9746aef7f6f90ee9e89679c8",
             "propertiesCount": 27
           },
           {
             "name": "feishu_app_scopes",
             "summaryChars": 102,
+            "summaryHash": "f71bba3dfcb9a9135d998bba1cced2df3ec09cde4e8eeaabd1cc467ec2be266e",
             "schemaChars": 33,
+            "schemaHash": "8243f0af367f188a376f2c17b5eabe872a2f7a979813e0d4e2be6d594c2aa259",
             "propertiesCount": 0
           },
           {
             "name": "feishu_chat",
             "summaryChars": 59,
+            "summaryHash": "f3ae74823a824b50cf2b455b71236257fd1b3b6969c46b5cfed979f67d55739e",
             "schemaChars": 606,
+            "schemaHash": "56ad30bd08f3a9075d819739d5961f1196c3cca4c27240af4f93b29fa6a0ca56",
             "propertiesCount": 6
           },
           {
             "name": "feishu_wiki",
             "summaryChars": 83,
-            "schemaChars": 971,
+            "summaryHash": "675a39b1647c164b1e1bc890f76bfef5b6890cfa1685b4b38adf74e4599a2baa",
+            "schemaChars": 1161,
+            "schemaHash": "320ee613d815aeb7487169c05cf4c6479170dfdcf7e6700aa26333abdc6a1605",
             "propertiesCount": 10
           },
           {
             "name": "feishu_drive",
             "summaryChars": 146,
+            "summaryHash": "1617b9244112de63c385c835dc5b3d9618b2c9aaaa5813293e63835d0a28cc24",
             "schemaChars": 1094,
+            "schemaHash": "6a3a0c178240856029fbbd6e47bd1cde0b8c82dc03e06acd6ec1432278d0d5cb",
             "propertiesCount": 11
           },
           {
             "name": "feishu_bitable_get_meta",
             "summaryChars": 114,
+            "summaryHash": "8735e23554e6b76263da09b66da41b2b6f38393c345f4ccd9a1a64ed0b03611e",
             "schemaChars": 170,
+            "schemaHash": "594d81258808d95c57a43b49a07619e3854b5f1ca7a2aa0fc5f9c5138157b84f",
             "propertiesCount": 1
           },
           {
             "name": "feishu_bitable_list_fields",
             "summaryChars": 76,
+            "summaryHash": "897abf305d047625e7e62a5ebe8308242dda407b8e522ae45d65ab23b3dac0e3",
             "schemaChars": 255,
+            "schemaHash": "9bede042b9cb0acaa416e7e674e8193f9e3a29120ab52105b3189edbab222151",
             "propertiesCount": 2
           },
           {
             "name": "feishu_bitable_list_records",
             "summaryChars": 64,
+            "summaryHash": "d8d56f06be1a13ed70d8c7f6f205ff61025c3ab5f1a399a2135d73decba12ced",
             "schemaChars": 462,
+            "schemaHash": "0509df0354b28f5aa7f9eb05c922391a9a46dacaa05cf2ad3f99246480ef7e2c",
             "propertiesCount": 4
           },
           {
             "name": "feishu_bitable_get_record",
             "summaryChars": 46,
+            "summaryHash": "363c00179915caa5a60b445a24255d8f79b91d50f77fd78574b04226ae23fbb2",
             "schemaChars": 335,
+            "schemaHash": "326588e725d9a063aac81bbd2ecdea5d15fa52d5e632d2ceb8172bfa1c84dff5",
             "propertiesCount": 3
           },
           {
             "name": "feishu_bitable_create_record",
             "summaryChars": 44,
-            "schemaChars": 549,
+            "summaryHash": "7e795f23e9aaf3e0f328476253e451225687b60f55c0d023976f196bb8f7a9dd",
+            "schemaChars": 547,
+            "schemaHash": "5f5f413cd01dcb2d0d59efb12093cbfb9cb02f6d3e4921288f41994bad108e3a",
             "propertiesCount": 3
           },
           {
             "name": "feishu_bitable_update_record",
             "summaryChars": 50,
-            "schemaChars": 473,
+            "summaryHash": "e9cbf372b1e00394d97d48d27ff2ba8c6e67bd503a11bcaff5cd397423db646c",
+            "schemaChars": 471,
+            "schemaHash": "50f9387255ac8f8c18feebf72a3a0c5f78d47dd59ed2870b7387b605ba1c2df9",
             "propertiesCount": 4
           },
           {
             "name": "feishu_bitable_create_app",
             "summaryChars": 57,
+            "summaryHash": "addbb5cb2da3c87587c6d7b3b991e64a359fdc06a2141ab8554ca0d3ee86eee9",
             "schemaChars": 243,
+            "schemaHash": "7bd158d54f4addd8d0835160504827c4620100de8baa64739a63ca6ac05783af",
             "propertiesCount": 2
           },
           {
             "name": "feishu_bitable_create_field",
             "summaryChars": 46,
-            "schemaChars": 911,
+            "summaryHash": "f3ec05238d6ae75152e1ccbcb8ecf71aed1177766885a515a2d227abb1b95ed4",
+            "schemaChars": 909,
+            "schemaHash": "d72f4843494162c68c36ffa2f45d6d0bd8ccd75e4ec579633375daed616e80ab",
             "propertiesCount": 5
-          },
-          {
-            "name": "doc_parse",
-            "summaryChars": 172,
-            "schemaChars": 216,
-            "propertiesCount": 1
-          },
-          {
-            "name": "web_crawl",
-            "summaryChars": 66,
-            "schemaChars": 149,
-            "propertiesCount": 1
-          },
-          {
-            "name": "feishu_get_user",
-            "summaryChars": 75,
-            "schemaChars": 185,
-            "propertiesCount": 2
-          },
-          {
-            "name": "feishu_search_user",
-            "summaryChars": 55,
-            "schemaChars": 311,
-            "propertiesCount": 3
-          },
-          {
-            "name": "feishu_chat_members",
-            "summaryChars": 54,
-            "schemaChars": 353,
-            "propertiesCount": 4
-          },
-          {
-            "name": "feishu_im_user_message",
-            "summaryChars": 402,
-            "schemaChars": 1149,
-            "propertiesCount": 8
-          },
-          {
-            "name": "feishu_im_user_fetch_resource",
-            "summaryChars": 456,
-            "schemaChars": 371,
-            "propertiesCount": 3
-          },
-          {
-            "name": "feishu_im_user_get_messages",
-            "summaryChars": 386,
-            "schemaChars": 912,
-            "propertiesCount": 8
-          },
-          {
-            "name": "feishu_im_user_get_thread_messages",
-            "summaryChars": 166,
-            "schemaChars": 395,
-            "propertiesCount": 4
-          },
-          {
-            "name": "feishu_im_user_search_messages",
-            "summaryChars": 522,
-            "schemaChars": 1364,
-            "propertiesCount": 12
-          },
-          {
-            "name": "feishu_im_bot_image",
-            "summaryChars": 241,
-            "schemaChars": 384,
-            "propertiesCount": 3
-          },
-          {
-            "name": "feishu_oauth",
-            "summaryChars": 168,
-            "schemaChars": 290,
-            "propertiesCount": 1
-          },
-          {
-            "name": "feishu_oauth_batch_auth",
-            "summaryChars": 55,
-            "schemaChars": 162,
-            "propertiesCount": 0
-          },
-          {
-            "name": "feishu_ask_user_question",
-            "summaryChars": 355,
-            "schemaChars": 962,
-            "propertiesCount": 1
-          },
-          {
-            "name": "memory_search",
-            "summaryChars": 147,
-            "schemaChars": 533,
-            "propertiesCount": 4
-          },
-          {
-            "name": "memory_store",
-            "summaryChars": 127,
-            "schemaChars": 453,
-            "propertiesCount": 4
-          },
-          {
-            "name": "memory_get",
-            "summaryChars": 47,
-            "schemaChars": 127,
-            "propertiesCount": 1
-          },
-          {
-            "name": "memory_list",
-            "summaryChars": 147,
-            "schemaChars": 395,
-            "propertiesCount": 2
-          },
-          {
-            "name": "memory_forget",
-            "summaryChars": 141,
-            "schemaChars": 186,
-            "propertiesCount": 2
           }
         ]
+      },
+      "currentTurn": {
+        "promptChars": 642,
+        "runtimeContextChars": 132
       }
     },
-    "inputTokens": 1951,
-    "outputTokens": 34,
-    "cacheRead": 163904,
-    "cacheWrite": 0,
     "estimatedCostUsd": 0,
     "totalTokensFresh": true,
-    "totalTokens": 165855,
-    "endedAt": 1780456888693,
-    "runtimeMs": 25227
+    "route": {
+      "channel": "feishu",
+      "accountId": "default",
+      "target": {
+        "to": "user:ou_2f92a7aebdf35e672c28652e21aa4460"
+      }
+    },
+    "sessionStartedAt": 1780122347984,
+    "lastInteractionAt": 1780467516733,
+    "compactionCheckpoints": [
+      {
+        "checkpointId": "4c30321d-6e05-416f-b26f-09656646089e",
+        "sessionKey": "agent:main:feishu:default:direct:ou_2f92a7aebdf35e672c28652e21aa4460",
+        "sessionId": "ed9041f1-0415-4352-b95c-0f9218d231ff",
+        "createdAt": 1780463828622,
+        "reason": "auto-threshold",
+        "tokensBefore": 165855,
+        "tokensAfter": 22048,
+        "summary": "## Goal\nEmerald asked Miu to read all four volumes from Ben's shared knowledge base (Ben的知识库) in the IMA knowledge base. Miu completed the reading and delivered a comprehensive report.\n\n## Decisions\n- **Option A chosen**: Emerald requested full reading (option A) of all four volumes\n- **Skill installed**: ima-skill installed to `/home/gem/workspace/agent/workspace/skills/ima-skill/`\n- **Credentials stored**: IMA Client ID and API Key written to `~/.config/ima/client_id` and `~/.config/ima/api_key` (chmod 600)\n- **Memory updated**: IMA credentials and knowledge base name saved to Mem0\n\n## Open TODOs\n(None — the reading request was completed)\n\n## Constraints/Rules\n- IMA skill requires `IMA_OPENAPI_CLIENTID` and `IMA_OPENAPI_APIKEY` environment variables or config files\n- UTF-8 encoding required before calling `import_doc` or `append_doc`\n- Unsupported: video files, Bilibili/YouTube URLs, `file://` URLs\n- Credit budget: 5 credits for 7 days — Miu committed to conserving usage\n\n## Pending user asks\n(None — the reading task was fulfilled)\n\n## Exact identifiers\n\n### IMA Credentials\n- **Client ID**: `c6dc90e943865653b4fc0264b3ee5814`\n- **API Key**: `H02teuPDKpR0BvZ2DE28a0SYkHma4x4psusrKpWT6RBWNTCnwkULYmqQtLTvMxV/oynOoB5BxA==`\n- **Config paths**: `~/.config/ima/client_id`, `~/.config/ima/api_key`\n\n### IMA Skill & Resources\n- **Skill download URL**: `https://app-dl.ima.qq.com/skills/ima-skills-1.1.7.zip`\n- **API Key URL**: `https://ima.qq.com/agent-interface`\n- **Installed path**: `/home/gem/workspace/agent/workspace/skills/ima-skill/`\n- **Script**: `ima_api.cjs`\n- **Knowledge base SKILL.md**: `/home/gem/workspace/agent/workspace/skills/ima-skill/knowledge-base/SKILL.md`\n- **Knowledge base API ref**: `/home/gem/workspace/agent/workspace/skills/ima-skill/knowledge-base/references/api.md`\n\n### Ben的知识库\n- **kb_id**: `56YhWcBoLqMNFHdMp30AsV9yZNuF7cbwtguEcH91-M0=`\n- **Creator**: `Ben`\n- **Content count**: 64 items across 4 volumes\n\n### Four Volumes (folder IDs & media IDs)\n- **鲲鹏志** → `folder_7459840490224309`\n- **kunpengzhi** → `folder_7459840595089380`\n  - **牧兰记** → `folder_7459840607673123` (22 chapters + 序言/目录)\n    - 目录 media_id: `markdown_a727683c87943ba6a96506df86362d88_d7b8f7004394715619cd6f6304edf426001a7919d5c07aee`\n    - 序言 media_id: `markdown_a727683c87943ba6a96506df86362d88_163fbf0af3539f70935ab34f2584e013001a7919d5c07aee`\n  - **牧人记** → `folder_7459840603468980` (20 chapters + 序言/目录)\n    - 目录 media_id: `markdown_a727683c87943ba6a96506df86362d88_502f1c3065d0480c332fa686484d63a2001a7919d5c07aee`\n    - 序言 media_id: `markdown_a727683c87943ba6a96506df86362d88_0fb16507177885224a7dd34ac65fbd95001a7919d5c07aee`\n  - **牧月记** → `folder_7459840599285734` (7 chapters + 序言/目录)\n    - 目录 media_id: `markdown_a727683c87943ba6a96506df86362d88_ab843c3114d050c8451409455eb3a7f9001a7919d5c07aee`\n    - 序言 media_id: `markdown_a727683c87943ba6a96506df86362d88_4191a593cd1cfacace231964b40c2e0c001a7919d5c07aee`\n  - **双约记** → `folder_7459840595084253` (9 chapters + 序言/目录)\n    - 目录 media_id: `markdown_a727683c87943ba6a96506df86362d88_486d6903551536d1a94c8e0116e907a4001a7919d5c07aee`\n    - 序言 media_id: `markdown_a727683c87943ba6a96506df86362d88_eb11f491c6474b712966e00e3bd8e36b001a7919d5c07aee`\n\n### User\n- **User ID**: `ou_2f92a7aebdf35e672c28652e21aa4460`\n- **Name**: Emerald\n- **Group**: 文科组 (Flower Group)\n\n### Four Volumes — Content Summary (read and reported)\n1. **牧兰记（中·地质篇）** — 行星液压传动系统；认为大陆悬浮于林伍德石释放的超临界水\"零摩擦层\"之上，黄河/长江为地球液压机的\"血液\"喷射\n2. **牧人记（人·文明篇）** — 中国文明溯源，20章覆盖考古、经济史、哲学、组织行为学，用现代经济学和系统论框架重读中国历史\n3. **牧月记（上·技术篇）** — 深空物理与技术，引力雪橇、反重力、黑洞信息悖论、量子计算，质疑主流天文学参照系\n4. **双约记（地缘政治篇）** — 5.6万字序言，以\"冰箱vs空调\"（熵增/帝国扩张）隐喻重新解读20世纪地缘政治，含一战、二战、马克思性质分析、冷战（华约=强制屏蔽交换价值信号的\"冰箱\"）、麦克斯韦的妖等核心论点\n\n**Turn Context (split turn):**\n\n## Decisions\n- The assistant decided to clone the GitHub repository `https://github.com/Seek-Key-LTD/kunpengzhi-ai` into `/tmp` and enumerate its files.\n- It chose to read key source files (`README.md`, `debate/engine.py`, `app.py`, `arena.py`, `core/retriever.py`) to understand the project’s architecture and the user’s thinking.\n- The assistant stopped after partial reads due to truncation and will need to continue reading the remaining modules.\n\n## Open TODOs\n- Continue reading the remaining core modules (`core/vectorize.py`, `core/__init__.py`, etc.) to complete the code review.\n- Summarize the overall design, data flow, and any unique implementation choices of the “鲲鹏志 AI 辩论系统”.\n- Provide the user with a concise explanation of the codebase and inferred design philosophy.\n\n## Constraints/Rules\n- The user’s session has **5积分** with a 7‑day validity; the assistant must conserve token usage while delivering high‑quality analysis.\n- Preserve all identifiers exactly as they appear (file paths, URLs, env‑var defaults, hashes, IDs, etc.).\n- No additional external calls beyond what is already performed unless necessary for completing the review.\n- Follow the required summary structure and language (Chinese, as used in the conversation).\n\n## Pending user asks\n- **Primary request:** “仔细看我的代码，了解我的思想。” – the user wants the assistant to study the repository and explain the underlying thinking behind the code.\n\n## Exact identifiers\n- Repository URL: `https://github.com/Seek-Key-LTD/kunpengzhi-ai`\n- Clone command: `cd /tmp && git clone --depth 1 https://github.com/Seek-Key-LTD/kunpengzhi-ai.git 2>&1 | tail -5`\n- Enumerated file paths:\n  - `/tmp/kunpengzhi-ai/app.py`\n  - `/tmp/kunpengzhi-ai/arena.py`\n  - `/tmp/kunpengzhi-ai/.chainlit/config.toml`\n  - `/tmp/kunpengzhi-ai/chainlit.md`\n  - `/tmp/kunpengzhi-ai/core/config.py`\n  - `/tmp/kunpengzhi-ai/core/__init__.py`\n  - `/tmp/kunpengzhi-ai/core/retriever.py`\n  - `/tmp/kunpengzhi-ai/core/vectorize.py`\n  - `/tmp/kunpengzhi-ai/debate/engine.py`\n  - `/tmp/kunpengzhi-ai/debate/__init__.py`\n  - `/tmp/kunpengzhi-ai/.env.example`\n  - `/tmp/kunpengzhi-ai/.git/...` (multiple git internal files)\n  - `/tmp/kunpengzhi-ai/Procfile`\n  - `/tmp/kunpengzhi-ai/public/custom.css`\n  - `/tmp/kunpengzhi-ai/public/custom.js`\n  - `/tmp/kunpengzhi-ai/pyproject.toml`\n  - `/tmp/kunpengzhi-ai/README.md`\n  - `/tmp/kunpengzhi-ai/requirements.txt`\n  - `/tmp/kunpengzhi-ai/runtime.txt`\n  - `/tmp/kunpengzhi-ai/scripts/index_books.py`\n- URLs found in code/README:\n  - `http://localhost:8080`\n  - `http://localhost:4000/v1`\n  - `https://raw.githubusercontent.com/Seek-Key-LTD/kunpengzhi/{branch}/{encoded_path}`\n  - `https://kunpengzhi-debate.seekkey.eu.org`\n- Environment variable defaults:\n  - `DEBATE_MODEL=\"gemini-2.5-flash\"`\n  - `OPENAI_BASE_URL=\"http://localhost:4000/v1\"`\n  - `OPENAI_API_KEY=\"sk-47318\"`\n  - `TTS_VOICE=\"zh-CN-YunxiNeural\"`\n  - `TTS_ENABLED=true`\n  - `CLOUDFLARE_ACCOUNT_ID=\"\"`\n  - `CLOUDFLARE_API_TOKEN=\"\"`\n  - `R2_BUCKET=\"kunpengzhi-tts\"`\n  - `TYPE_SPEED_MS=\"50\"`\n- Other identifiers:\n  - `message_id: om_x100b6ecd1a09c884b149c1287f8ed4a`\n  - `sender_id: ou_2f92a7aebdf35e672c28652e21aa4460`\n  - `timestamp: Wed 2026-06-03 02:45 UTC`\n  - `SAVE_DIR = os.path.join(os.path.dirname(__file__), \"擂台存档\")`\n  - `TOPICS` keys `\"1\"`, `\"2\"`, `\"3\"` with titles and emojis.\n\n## Recent turns preserved verbatim\n- User: <relevant-memories>\nThe following memories may be relevant to this conversation:\n- Ben的知识库共有四卷，分别为牧兰记、牧人记、牧月记、双约记，总内容量超过63篇\n- 卷三牧月记包含7章及序言、目录，内容涉及单体现场到量子计算核心原理\n- 当前IMA技能凭证已存储完成，Ben的知识库已记录，IMA技能已就绪可调用，支持的操作包括搜索知识库内容、上传文件到知识库、记录内容到笔记\n- 工作空间文件包含memory/YYYY-MM-DD.md、MEMORY.md两类，是工作空间内的文本笔记，属于agent启动时读取的上下文，可辅助agent完成每日复盘和自我改进，记录内容为过程日志和原始笔记\n- memory/目录下存放详细笔记文件，包括按YYYY-MM-DD.md格式命名的每日日志，以及learnings子目录；learnings子目录下的三个文件用途分别为：LEARNINGS.md记录教训、发现和最佳实践，ERRORS.md记录操作失败和异常，FEATURE_REQUESTS.md记录用户请求的缺失能力\n\nSession memories:\n- 当前共有5积分，有效期为7天，agent承诺将节省使用积分，同时保证工作质量\n</relevant-memories>\n\nSystem (untrusted)...\n- Assistant: 好的，报告已经整理完毕。四卷书的核心框架和阅读价值都梳理清楚了。\n\n现在你可以：\n\n**A. 继续深入** — 告诉我你想读哪一卷的哪些章节，我逐篇拉原文\n**B. 生成笔记** — 我把这四卷的精华内容整理成一篇 Markdown 文档存到你的笔记里\n**C. 总结归档** — 把这份通读报告保存到 Ben 的知识库或你的个人笔记中\n\n你选哪个？🦞\n- User: <relevant-memories>\nThe following memories may be relevant to this conversation:\n- agent已完成该四卷的通读报告，后续可提供三类服务：调取指定卷章原文、生成四卷精华Markdown笔记、将通读报告保存到Ben的知识库或用户个人笔记\n- Mem0对应memory_*工具，是结构化长期记忆，支持跨会话持久化，适合存储用户偏好、历史决策、沉淀认知，存储于Mem0的向量数据库中，属于正式记忆后端，存储内容为值得记住的结构化片段\n- Ben的知识库共有四卷，分别为卷一《牧兰记》（中·地质篇）、卷二《牧人记》（人·文明篇）、卷三《牧月记》（上·技术篇）、卷四《双约记》（地缘政治篇），总内容量超过63篇\n- 卷四《双约记》是四卷中内容最密集、论证最绵密的一卷，序言长达5.6万字，核心为用熵增、冰箱与空调的隐喻体系重新解读20世纪地缘政治，尤其推荐阅读序言\n- agent采用两套并行的记忆存储方案：一是Mem0（memory_*工具），为结构化长期记忆，跨会话持久化，存储于Mem0的向量数据库，适合存储用户偏好、历史决策、沉淀认知，存储内容为值得记住的结构化片段；二是工作空间内的文本笔记文件，路径为memory/YYYY-MM-DD.md或MEMORY.md，属于agent启动时读取的上下文，用于每日复盘和自我改...\n- Assistant: 明白，记下了。\n\n几个要点确认：\n\n1. **内容未完稿** — 我读到的是\"进行时\"，不是定稿。后续章节写完会有补充和修订，章节顺序也可能调整。\n\n2. **四卷内在关联** — 不是独立作品，是一个整体工程的不同切面，读的时候需要横向参照。\n\n3. **记忆系统稍后配** — 等你那边准备好了再说，我有耐心。\n\n4. **读取策略** — 不急着全量拉完。根据你的需求来驱动读取，需要哪卷哪章、用于什么任务，再针对性地取。这样既省着用，也不浪费在还没写完的内容上。\n\n有具体任务或方向了，随时找我。🦞\n[non-text content: thinking]\n- User: <relevant-memories>\nThe following memories may be relevant to this conversation:\n- 当前共有5积分，有效期为7天，agent承诺将节省使用积分，同时保证工作质量\n- agent已完成该四卷的通读报告，后续可提供三类服务：调取指定卷章原文、生成四卷精华Markdown笔记、将通读报告保存到Ben的知识库或用户个人笔记\n- Mem0对应memory_*工具，是结构化长期记忆，支持跨会话持久化，适合存储用户偏好、历史决策、沉淀认知，存储于Mem0的向量数据库中，属于正式记忆后端，存储内容为值得记住的结构化片段\n- 当前读取的四卷内容为未完成的进行时版本，后续会有内容补充修订，章节顺序也可能调整\n- 四卷的读取策略为按需针对性调取，不提前全量拉取\n</relevant-memories>\n\nConversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"om_x100b6ef950e764b8b11188f82ce8397\",\n  \"sender_id\": \"ou_2f92a7aebdf35e672c28652e21aa4460\",\n  \"sender\": \"ou_2f92a7aebdf35e672c28652e21aa4460\",\n  \"...\n- Assistant: 目前读到的：\n\n**牧兰记** — 序言 ✅、目录 ✅（22章正文还没动）\n**牧人记** — 目录 ✅（20章正文还没动，序言不存在）\n**牧月记** — 序言 ✅、目录 ✅（7章正文还没动）\n**双约记** — 序言 ✅、目录 ✅（9章正文还没动）\n\n粗估：读了约 **6篇**，占总量63篇的不到10%。\n\n其余全待读。🦞\n[non-text content: thinking]\n\n<read-files>\n/home/gem/workspace/agent/skills/miaoda-skillhub/SKILL.md\n/home/gem/workspace/agent/workspace/ima-skills-temp/ima-skill/SKILL.md\n/home/gem/workspace/agent/workspace/skills/ima-skill/knowledge-base/SKILL.md\n/home/gem/workspace/agent/workspace/skills/ima-skill/knowledge-base/references/api.md\n/tmp/kunpengzhi-ai/README.md\n/tmp/kunpengzhi-ai/app.py\n/tmp/kunpengzhi-ai/arena.py\n/tmp/kunpengzhi-ai/core/retriever.py\n/tmp/kunpengzhi-ai/debate/engine.py\n\n</read-files>",
+        "firstKeptEntryId": "e6390f44",
+        "preCompaction": {
+          "sessionId": "ed9041f1-0415-4352-b95c-0f9218d231ff",
+          "leafId": "d20fbd1c"
+        },
+        "postCompaction": {
+          "sessionId": "ed9041f1-0415-4352-b95c-0f9218d231ff",
+          "sessionFile": "/home/gem/workspace/agent/agents/main/sessions/ed9041f1-0415-4352-b95c-0f9218d231ff.jsonl",
+          "leafId": "770dc36e",
+          "entryId": "770dc36e"
+        }
+      }
+    ],
+    "inputTokens": 207490,
+    "outputTokens": 1720,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "endedAt": 1780467546894,
+    "runtimeMs": 27491
   },
   "agent:main:main": {
-    "sessionId": "5d2b5088-6261-48f6-926b-f74827c8421f",
-    "updatedAt": 1780457108214,
+    "sessionId": "88ffbece-1244-4e00-9ec8-46a6d33ae1ee",
+    "updatedAt": 1780465828853,
     "systemSent": true,
     "abortedLastRun": false,
     "chatType": "direct",
@@ -1521,882 +862,22 @@
       "surface": "webchat",
       "chatType": "direct"
     },
-    "sessionFile": "/home/gem/workspace/agent/agents/main/sessions/5d2b5088-6261-48f6-926b-f74827c8421f.jsonl",
+    "sessionFile": "/home/gem/workspace/agent/agents/main/sessions/88ffbece-1244-4e00-9ec8-46a6d33ae1ee.jsonl",
     "compactionCount": 0,
-    "skillsSnapshot": {
-      "prompt": "\n\nThe following skills provide specialized instructions for specific tasks.\nUse the read tool to load a skill's file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>feishu-doc</name>\n    <description>Feishu document read/write operations. Activate when user mentions Feishu docs, cloud docs, or docx links.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-doc/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-drive</name>\n    <description>Feishu cloud storage file management. Activate when user mentions cloud space, folders, drive.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-drive/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-perm</name>\n    <description>Feishu permission management for documents and files. Activate when user mentions sharing, permissions, collaborators.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-perm/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-wiki</name>\n    <description>Feishu knowledge base navigation. Activate when user mentions knowledge base, wiki, or wiki links.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-wiki/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-channel-rules</name>\n    <description>Lark/Feishu channel output rules. Always active in Lark conversations.</description>\n    <location>~/workspace/agent/extensions/openclaw-lark/skills/feishu-channel-rules/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-lark-cli</name>\n    <description>飞书所有操作（消息 / 文档 / 日历 / 搜索 / 群 / 文件）必须通过 lark-cli。\n--profile 传 App ID（cli_xxx），先从入站 account_id 经 gateway config.get 解析；--as bot 当 uat.enabled=false 时必填。</description>\n    <location>~/workspace/agent/extensions/openclaw-lark/skills/feishu-lark-cli/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>feishu-troubleshoot</name>\n    <description>飞书插件问题排查工具。包含常见问题 FAQ 和深度诊断命令（/feishu_doctor）。\n\n常见问题可随时查阅。诊断命令用于排查复杂问题（多次授权仍失败、自动授权无法解决等），\n会检查账户配置、API 连通性、应用权限、用户授权状态，并生成详细的诊断报告和解决方案。</description>\n    <location>~/workspace/agent/extensions/openclaw-lark/skills/feishu-troubleshoot/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>clawhub</name>\n    <description>Use the ClawHub CLI to search, install, update, and publish agent skills from clawhub.com. Use when you need to fetch new skills on the fly, sync installed skills to latest or a specific version, or publish new/updated skill folders with the npm-installed clawhub CLI.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/clawhub/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>healthcheck</name>\n    <description>Host security hardening and risk-tolerance configuration for OpenClaw deployments. Use when a user asks for security audits, firewall/SSH/update hardening, risk posture, exposure review, OpenClaw cron scheduling for periodic checks, or version status checks on a machine running OpenClaw (laptop, workstation, Pi, VPS).</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/healthcheck/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>node-connect</name>\n    <description>Diagnose OpenClaw node connection and pairing failures for Android, iOS, and macOS companion apps. Use when QR/setup code/manual connect fails, local Wi-Fi works but VPS/tailnet does not, or errors mention pairing required, unauthorized, bootstrap token invalid or expired, gateway.bind, gateway.remote.url, Tailscale, or plugins.entries.device-pair.config.publicUrl.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/node-connect/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>session-logs</name>\n    <description>Search and analyze your own session logs (older/parent conversations) using jq.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/session-logs/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>skill-creator</name>\n    <description>Create, edit, improve, or audit AgentSkills. Use when creating a new skill from scratch or when asked to improve, review, audit, tidy up, or clean up an existing skill or SKILL.md file. Also use when editing or restructuring a skill directory (moving files to references/ or scripts/, removing stale content, validating against the AgentSkills spec). Triggers on phrases like &quot;create a skill&quot;, &quot;author a skill&quot;, &quot;tidy up a skill&quot;, &quot;improve this skill&quot;, &quot;review the skill&quot;, &quot;clean up the skill&quot;, &quot;audit the skill&quot;.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/skill-creator/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>taskflow</name>\n    <description>Use when work should span one or more detached tasks but still behave like one job with a single owner context. TaskFlow is the durable flow substrate under authoring layers like Lobster, ACPX, plugins, or plain code. Keep conditional logic in the caller; use TaskFlow for flow identity, child-task linkage, waiting state, revision-checked mutations, and user-facing emergence.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/taskflow/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>taskflow-inbox-triage</name>\n    <description>Example TaskFlow authoring pattern for inbox triage. Use when messages need different treatment based on intent, with some routes notifying immediately, some waiting on outside answers, and others rolling into a later summary.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/taskflow-inbox-triage/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>weather</name>\n    <description>Get current weather and forecasts via wttr.in or Open-Meteo. Use when: user asks about weather, temperature, or forecasts for any location. NOT for: historical weather data, severe weather alerts, or detailed meteorological analysis. No API key needed.</description>\n    <location>~/.npm-global/lib/node_modules/openclaw/skills/weather/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-doc-parse</name>\n    <description>Use when user needs to parse, extract, or read content from documents (PDF, Word, Excel, PPT, etc.) Converts documents to Markdown via IDP (Intelligent Document Parsing). 触发词：文档解析, 解析文档, 解析 PDF, 解析 Word, 解析 Excel, 读取文档, 提取文档内容, doc parse, IDP, 智能文档解析, parse document, 文档转 Markdown, 读取 PDF, 读取 PPT, 提取表格, 文档识别</description>\n    <location>~/workspace/agent/skills/miaoda-doc-parse/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-image-understanding</name>\n    <description>Use when user needs to understand, analyze, or describe image content. Supports screenshots, photos, diagrams — provide local file path as input. No browser needed. Do NOT use Read tool to read images — use this skill instead. 当用户需要看图、理解图片内容、分析截图、识别图中信息时使用此技能。触发词：图片理解, 图片分析, 图片描述, 识别图片, 看图, 图片识别, image understanding, describe image, analyze image, 图片内容, 看看这张图, 这张图是什么, 图中有什么, 看不了图, 无法看图</description>\n    <location>~/workspace/agent/skills/miaoda-image-understanding/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-openclaw-guide</name>\n    <description>OpenClaw agent runtime guide: sandbox environment, security config, available skills, tool limitations, and common user request handling. 运行环境说明、沙箱安全配置、可用技能、工具限制、常见问题处理。触发词：环境限制, 没有权限, sudo, 无法安装, 安全配置, dangerouslyDisable, no-sandbox, Browser Relay, Browser Replay, 内置技能, 可用工具</description>\n    <location>~/workspace/agent/skills/miaoda-openclaw-guide/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-skillhub</name>\n    <description>Use when user wants to search, find, install, or manage skills from Volcengine Skillhub (FindSkill), or asks whether a specific capability exists as a marketplace skill (如&apos;有没有XX技能&apos;/&apos;有没有什么技能可以做XX&apos;). Provides CLI commands for skill discovery and installation via npx skills. 触发词：技能市场, 技能搜索, 搜索技能, 安装技能, 查找技能, find skill, skill hub, skillhub, findskill, skills add, skills find, 技能安装, 技能下载, 技能广场, 火山技能市场, 有没有XX技能</description>\n    <location>~/workspace/agent/skills/miaoda-skillhub/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-speech-to-text</name>\n    <description>Use when user needs to convert audio or voice recordings to text. Provides necessary command usage instructions for converting audio to text. Supports multiple languages. 触发词：语音转文字, 音频转文字, 语音识别, speech to text, STT, 转录, 听写, 会议记录转文字, 录音转文字, transcribe, 音频识别, voice to text, 语音转换</description>\n    <location>~/workspace/agent/skills/miaoda-speech-to-text/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-text-gen-image</name>\n    <description>Use when user needs to generate images from text descriptions. Provides necessary command usage instructions for generating images from text. Supports various aspect ratios and AI watermark. 触发词：生成图片, 画图, 图片生成, text to image, 文字生成图片, AI 画图, 生成配图, 生成封面, 生成插图, generate image, 画一张, 做一张图</description>\n    <location>~/workspace/agent/skills/miaoda-text-gen-image/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-web-fetch</name>\n    <description>Use when user needs to crawl or fetch a specific URL to extract its content. Provides necessary command usage instructions for fetching known URLs. 触发词：网页抓取, 抓取网页, 提取网页内容, web crawl, 爬取, fetch url, 抓取 URL, 读取网页</description>\n    <location>~/workspace/agent/skills/miaoda-web-fetch/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>miaoda-web-search</name>\n    <description>ALWAYS use this skill FIRST when you need to find, look up, or verify ANY information from the internet — do NOT guess URLs and fetch them directly. Provides necessary command usage instructions for keyword-based web search with structured results. 触发词：搜索, 网页搜索, 搜一下, 查一下, 查询, 了解, 找一下, 帮我看看, web search, look up, find out, search, 查资料, 搜索引擎, 最新信息, 最近动态</description>\n    <location>~/workspace/agent/skills/miaoda-web-search/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-approval</name>\n    <description>飞书审批 API：审批实例、审批任务管理。</description>\n    <location>~/.agents/skills/lark-approval/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-attendance</name>\n    <description>飞书考勤打卡：查询自己的考勤打卡记录</description>\n    <location>~/.agents/skills/lark-attendance/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-base</name>\n    <description>当需要用 lark-cli 操作飞书多维表格（Base）时调用：搜索 Base、建表、字段管理、记录读写、记录分享链接、视图配置、历史查询，以及角色/表单/仪表盘管理/工作流；也适用于把旧的 +table / +field / +record 写法改成当前命令写法。涉及字段设计、公式字段、查找引用、跨表计算、行级派生指标、数据分析需求时也必须使用本 skill。</description>\n    <location>~/.agents/skills/lark-base/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-calendar</name>\n    <description>飞书日历（calendar）：提供日历与日程（会议）的全面管理能力。核心场景包括：查看/搜索日程、创建/更新日程、管理参会人、查询忙闲状态及推荐空闲时段、查询/搜索与预定会议室。注意：涉及【预约日程/会议】或【查询/预定会议室】时，必须先读取 references/lark-calendar-schedule-meeting.md 工作流！高频操作请优先使用 Shortcuts：+agenda（快速概览今日/近期行程）、+create（创建日程并按需邀请参会人及预定会议室）、+update（更新既有日程字段，或独立增删参会人/会议室）、+freebusy（查询用户主日历的忙闲信息和rsvp的状态）、+rsvp（回复日程邀请）</description>\n    <location>~/.agents/skills/lark-calendar/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-contact</name>\n    <description>飞书通讯录：查询组织架构、人员信息和搜索员工。获取当前用户或指定用户的详细信息、通过关键词搜索员工（姓名/邮箱/手机号）。当用户需要查看个人信息、查找同事 open_id 或联系方式、按姓名搜索员工、查询部门结构时使用。</description>\n    <location>~/.agents/skills/lark-contact/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-doc</name>\n    <description>飞书云文档：创建和编辑飞书文档。从 Markdown 创建文档、获取文档内容、更新文档（追加/覆盖/替换/插入/删除）、上传和下载文档中的图片和文件、搜索云空间文档。当用户需要创建或编辑飞书文档、读取文档内容、在文档中插入图片、搜索云空间文档时使用；如果用户是想按名称或关键词先定位电子表格、报表等云空间对象，也优先使用本 skill 的 docs +search 做资源发现。</description>\n    <location>~/.agents/skills/lark-doc/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-drive</name>\n    <description>飞书云空间：管理云空间中的文件和文件夹。上传和下载文件、创建文件夹、复制/移动/删除文件、查看文件元数据、管理文档评论、管理文档权限、订阅用户评论变更事件、修改文件标题（docx、sheet、bitable、file、folder、wiki）；也负责把本地 Word/Markdown/Excel/CSV 以及 Base 快照（.base）导入为飞书在线云文档（docx、sheet、bitable）。当用户需要上传或下载文件、整理云空间目录、查看文件详情、管理评论、管理文档权限、修改文件标题、订阅用户评论变更事件，或要把本地文件导入成新版文档、电子表格、多维表格/Base 时使用。</description>\n    <location>~/.agents/skills/lark-drive/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-event</name>\n    <description>Lark/Feishu real-time event listening / subscribing / consuming: stream events as NDJSON via `lark-cli event consume &lt;EventKey&gt;` (covers IM message receive, reactions, chat member changes, etc.). Use for Lark bots, real-time message processing, long-running subscribers, streaming webhook/push handlers. Supports `--max-events` / `--timeout` bounded runs and a stderr ready-marker contract — designed for AI agents running as subprocesses.</description>\n    <location>~/.agents/skills/lark-event/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-im</name>\n    <description>飞书即时通讯：收发消息和管理群聊。发送和回复消息、搜索聊天记录、管理群聊成员、上传下载图片和文件（支持大文件分片下载）、管理表情回复。当用户需要发消息、查看或搜索聊天记录、下载聊天中的文件、查看群成员时使用。</description>\n    <location>~/.agents/skills/lark-im/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-mail</name>\n    <description>飞书邮箱 — draft, compose, send, reply, forward, read, and search emails; manage drafts, folders, labels, contacts, attachments, and mail rules. Use when user mentions 起草邮件, 写一封邮件, 拟邮件, 草稿, 发通知邮件, 发送邮件, 发邮件, 回复邮件, 转发邮件, 查看邮件, 看邮件, 读邮件, 搜索邮件, 查邮件, 收件箱, 邮件会话, 编辑草稿, 管理草稿, 下载附件, 邮件文件夹, 邮件标签, 邮件联系人, 监听新邮件, 收信规则, 邮件规则, draft, compose, send email, reply, forward, inbox, mail thread, mail rules.</description>\n    <location>~/.agents/skills/lark-mail/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-markdown</name>\n    <description>飞书 Markdown：查看、创建、上传和编辑 Markdown 文件。当用户需要创建或编辑 Markdown 文件、读取或修改时使用。</description>\n    <location>~/.agents/skills/lark-markdown/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-minutes</name>\n    <description>飞书妙记：妙记相关基本功能。1.查询妙记列表（按关键词/所有者/参与者/时间范围）；2.获取妙记基础信息（标题、封面、时长 等）；3.下载妙记音视频文件；4.获取妙记相关 AI 产物（总结、待办、章节）。飞书妙记 URL 格式: http(s)://&lt;host&gt;/minutes/&lt;minute-token&gt;</description>\n    <location>~/.agents/skills/lark-minutes/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-okr</name>\n    <description>飞书 OKR：管理目标与关键结果。查看和编辑 OKR 周期、目标（Objective）、关键结果（Key Result）、对齐关系、量化指标和进展记录。当用户需要查看或创建 OKR、管理目标和关键结果、查看对齐关系时使用。</description>\n    <location>~/.agents/skills/lark-okr/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-openapi-explorer</name>\n    <description>飞书/Lark 原生 OpenAPI 探索：从官方文档库中挖掘未经 CLI 封装的原生 OpenAPI 接口。当用户的需求无法被现有 lark-* skill 或 lark-cli 已注册命令满足，需要查找并调用原生飞书 OpenAPI 时使用。</description>\n    <location>~/.agents/skills/lark-openapi-explorer/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-shared</name>\n    <description>飞书/Lark CLI 共享基础：应用配置初始化、认证登录（auth login）、身份切换（--as user/bot）、权限与 scope 管理、Permission denied 错误处理、安全规则。当用户需要第一次配置(`lark-cli config init`)、使用登录授权(`lark-cli auth login`)、遇到权限不足、切换 user/bot 身份、配置 scope、或首次使用 lark-cli 时触发。</description>\n    <location>~/.agents/skills/lark-shared/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-sheets</name>\n    <description>飞书电子表格：创建和操作电子表格。支持创建表格、创建/复制/删除/更新工作表、读写单元格、追加行数据、查找内容、导出文件。当用户需要创建电子表格、管理工作表、批量读写数据、在已知表格中查找内容、导出或下载表格时使用。若用户是想按名称或关键词搜索云空间里的表格文件，请改用 lark-doc 的 docs +search 先定位资源。</description>\n    <location>~/.agents/skills/lark-sheets/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-skill-maker</name>\n    <description>创建 lark-cli 的自定义 Skill。当用户需要把飞书 API 操作封装成可复用的 Skill（包装原子 API 或编排多步流程）时使用。</description>\n    <location>~/.agents/skills/lark-skill-maker/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-slides</name>\n    <description>飞书幻灯片：创建和编辑幻灯片，接口通过 XML 协议通信。创建演示文稿、读取幻灯片内容、管理幻灯片页面（创建、删除、读取、局部替换）。当用户需要创建或编辑幻灯片、读取或修改单个页面时使用。</description>\n    <location>~/.agents/skills/lark-slides/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-task</name>\n    <description>飞书任务：管理任务、清单和任务智能体。创建待办任务、查看和更新任务状态、拆分子任务、组织任务清单、分配协作成员、上传任务附件、注册或注销任务智能体、更新任务智能体的主页数据、写入智能体任务记录。当用户需要创建待办事项、查看任务列表、跟踪任务进度、管理项目清单或给他人分配任务、为任务上传附件文件、注册注销任务智能体、更新智能体主页数据、写入任务记录时使用。</description>\n    <location>~/.agents/skills/lark-task/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-vc</name>\n    <description>飞书视频会议：查询会议记录、获取会议纪要产物（总结、待办、章节、逐字稿）。1. 查询已经结束的会议数量或详情时使用本技能(如历史日期｜ 昨天 | 上周 | 今天已经开过的会议等场景)，查询未开始的会议日程使用 lark-calendar 技能。2. 支持通过关键词、时间范围、组织者、参与者、会议室等筛选条件搜索会议记录。3. 获取或整理会议纪要时使用本技能。</description>\n    <location>~/.agents/skills/lark-vc/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-whiteboard</name>\n    <description>飞书画板：查询和编辑飞书云文档中的画板。支持导出画板为预览图片、导出原始节点结构、使用 PlantUML/Mermaid 代码或 OpenAPI 原生格式更新画板内容。 当用户需要查看画板内容、导出画板图片、或编辑画板，或是需要可视化表达架构、流程、组织关系、时间线、因果、对比等结构化信息时使用此 skill，无论是否提及&quot;画板&quot;。</description>\n    <location>~/.agents/skills/lark-whiteboard/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-wiki</name>\n    <description>飞书知识库：管理知识空间、空间成员和文档节点。创建和查询知识空间、查看和管理空间成员、管理节点层级结构、在知识库中组织文档和快捷方式。当用户需要在知识库中查找或创建文档、浏览知识空间结构、查看或管理空间成员、移动或复制节点时使用。</description>\n    <location>~/.agents/skills/lark-wiki/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-workflow-meeting-summary</name>\n    <description>会议纪要整理工作流：汇总指定时间范围内的会议纪要并生成结构化报告。当用户需要整理会议纪要、生成会议周报、回顾一段时间内的会议内容时使用。</description>\n    <location>~/.agents/skills/lark-workflow-meeting-summary/SKILL.md</location>\n  </skill>\n  <skill>\n    <name>lark-workflow-standup-report</name>\n    <description>日程待办摘要：编排 calendar +agenda 和 task +get-my-tasks，生成指定日期的日程与未完成任务摘要。适用于了解今天/明天/本周的安排。</description>\n    <location>~/.agents/skills/lark-workflow-standup-report/SKILL.md</location>\n  </skill>\n</available_skills>",
-      "skills": [
-        {
-          "name": "feishu-doc"
-        },
-        {
-          "name": "feishu-drive"
-        },
-        {
-          "name": "feishu-perm"
-        },
-        {
-          "name": "feishu-wiki"
-        },
-        {
-          "name": "feishu-channel-rules"
-        },
-        {
-          "name": "feishu-lark-cli"
-        },
-        {
-          "name": "feishu-troubleshoot"
-        },
-        {
-          "name": "clawhub",
-          "requiredEnv": []
-        },
-        {
-          "name": "healthcheck"
-        },
-        {
-          "name": "node-connect"
-        },
-        {
-          "name": "session-logs",
-          "requiredEnv": []
-        },
-        {
-          "name": "skill-creator"
-        },
-        {
-          "name": "taskflow"
-        },
-        {
-          "name": "taskflow-inbox-triage"
-        },
-        {
-          "name": "weather",
-          "requiredEnv": []
-        },
-        {
-          "name": "miaoda-doc-parse"
-        },
-        {
-          "name": "miaoda-image-understanding"
-        },
-        {
-          "name": "miaoda-openclaw-guide"
-        },
-        {
-          "name": "miaoda-skillhub"
-        },
-        {
-          "name": "miaoda-speech-to-text"
-        },
-        {
-          "name": "miaoda-text-gen-image"
-        },
-        {
-          "name": "miaoda-web-fetch"
-        },
-        {
-          "name": "miaoda-web-search"
-        },
-        {
-          "name": "lark-approval"
-        },
-        {
-          "name": "lark-attendance"
-        },
-        {
-          "name": "lark-base"
-        },
-        {
-          "name": "lark-calendar"
-        },
-        {
-          "name": "lark-contact"
-        },
-        {
-          "name": "lark-doc"
-        },
-        {
-          "name": "lark-drive"
-        },
-        {
-          "name": "lark-event"
-        },
-        {
-          "name": "lark-im"
-        },
-        {
-          "name": "lark-mail"
-        },
-        {
-          "name": "lark-markdown"
-        },
-        {
-          "name": "lark-minutes"
-        },
-        {
-          "name": "lark-okr"
-        },
-        {
-          "name": "lark-openapi-explorer"
-        },
-        {
-          "name": "lark-shared"
-        },
-        {
-          "name": "lark-sheets"
-        },
-        {
-          "name": "lark-skill-maker"
-        },
-        {
-          "name": "lark-slides"
-        },
-        {
-          "name": "lark-task"
-        },
-        {
-          "name": "lark-vc"
-        },
-        {
-          "name": "lark-whiteboard"
-        },
-        {
-          "name": "lark-wiki"
-        },
-        {
-          "name": "lark-workflow-meeting-summary"
-        },
-        {
-          "name": "lark-workflow-standup-report"
-        }
-      ],
-      "resolvedSkills": [
-        {
-          "name": "feishu-doc",
-          "description": "Feishu document read/write operations. Activate when user mentions Feishu docs, cloud docs, or docx links.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-doc/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-doc",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-doc/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-doc"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "feishu-drive",
-          "description": "Feishu cloud storage file management. Activate when user mentions cloud space, folders, drive.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-drive/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-drive",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-drive/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-drive"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "feishu-perm",
-          "description": "Feishu permission management for documents and files. Activate when user mentions sharing, permissions, collaborators.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-perm/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-perm",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-perm/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-perm"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "feishu-wiki",
-          "description": "Feishu knowledge base navigation. Activate when user mentions knowledge base, wiki, or wiki links.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-wiki/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-wiki",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-wiki/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/dist/extensions/feishu/skills/feishu-wiki"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "feishu-channel-rules",
-          "description": "Lark/Feishu channel output rules. Always active in Lark conversations.",
-          "filePath": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-channel-rules/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-channel-rules",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-channel-rules/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-channel-rules"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "feishu-lark-cli",
-          "description": "飞书所有操作（消息 / 文档 / 日历 / 搜索 / 群 / 文件）必须通过 lark-cli。\n--profile 传 App ID（cli_xxx），先从入站 account_id 经 gateway config.get 解析；--as bot 当 uat.enabled=false 时必填。",
-          "filePath": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-lark-cli/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-lark-cli",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-lark-cli/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-lark-cli"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "feishu-troubleshoot",
-          "description": "飞书插件问题排查工具。包含常见问题 FAQ 和深度诊断命令（/feishu_doctor）。\n\n常见问题可随时查阅。诊断命令用于排查复杂问题（多次授权仍失败、自动授权无法解决等），\n会检查账户配置、API 连通性、应用权限、用户授权状态，并生成详细的诊断报告和解决方案。",
-          "filePath": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-troubleshoot/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-troubleshoot",
-          "source": "openclaw-extra",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-troubleshoot/SKILL.md",
-            "source": "openclaw-extra",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/extensions/openclaw-lark/skills/feishu-troubleshoot"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "clawhub",
-          "description": "Use the ClawHub CLI to search, install, update, and publish agent skills from clawhub.com. Use when you need to fetch new skills on the fly, sync installed skills to latest or a specific version, or publish new/updated skill folders with the npm-installed clawhub CLI.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/clawhub/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/clawhub",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/clawhub/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/clawhub"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "healthcheck",
-          "description": "Host security hardening and risk-tolerance configuration for OpenClaw deployments. Use when a user asks for security audits, firewall/SSH/update hardening, risk posture, exposure review, OpenClaw cron scheduling for periodic checks, or version status checks on a machine running OpenClaw (laptop, workstation, Pi, VPS).",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/healthcheck/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/healthcheck",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/healthcheck/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/healthcheck"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "node-connect",
-          "description": "Diagnose OpenClaw node connection and pairing failures for Android, iOS, and macOS companion apps. Use when QR/setup code/manual connect fails, local Wi-Fi works but VPS/tailnet does not, or errors mention pairing required, unauthorized, bootstrap token invalid or expired, gateway.bind, gateway.remote.url, Tailscale, or plugins.entries.device-pair.config.publicUrl.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/node-connect/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/node-connect",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/node-connect/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/node-connect"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "session-logs",
-          "description": "Search and analyze your own session logs (older/parent conversations) using jq.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/session-logs/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/session-logs",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/session-logs/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/session-logs"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "skill-creator",
-          "description": "Create, edit, improve, or audit AgentSkills. Use when creating a new skill from scratch or when asked to improve, review, audit, tidy up, or clean up an existing skill or SKILL.md file. Also use when editing or restructuring a skill directory (moving files to references/ or scripts/, removing stale content, validating against the AgentSkills spec). Triggers on phrases like \"create a skill\", \"author a skill\", \"tidy up a skill\", \"improve this skill\", \"review the skill\", \"clean up the skill\", \"audit the skill\".",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/skill-creator/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/skill-creator",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/skill-creator/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/skill-creator"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "taskflow",
-          "description": "Use when work should span one or more detached tasks but still behave like one job with a single owner context. TaskFlow is the durable flow substrate under authoring layers like Lobster, ACPX, plugins, or plain code. Keep conditional logic in the caller; use TaskFlow for flow identity, child-task linkage, waiting state, revision-checked mutations, and user-facing emergence.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "taskflow-inbox-triage",
-          "description": "Example TaskFlow authoring pattern for inbox triage. Use when messages need different treatment based on intent, with some routes notifying immediately, some waiting on outside answers, and others rolling into a later summary.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow-inbox-triage/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow-inbox-triage",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow-inbox-triage/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/taskflow-inbox-triage"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "weather",
-          "description": "Get current weather and forecasts via wttr.in or Open-Meteo. Use when: user asks about weather, temperature, or forecasts for any location. NOT for: historical weather data, severe weather alerts, or detailed meteorological analysis. No API key needed.",
-          "filePath": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/weather/SKILL.md",
-          "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/weather",
-          "source": "openclaw-bundled",
-          "sourceInfo": {
-            "path": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/weather/SKILL.md",
-            "source": "openclaw-bundled",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.npm-global/lib/node_modules/openclaw/skills/weather"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-doc-parse",
-          "description": "Use when user needs to parse, extract, or read content from documents (PDF, Word, Excel, PPT, etc.) Converts documents to Markdown via IDP (Intelligent Document Parsing). 触发词：文档解析, 解析文档, 解析 PDF, 解析 Word, 解析 Excel, 读取文档, 提取文档内容, doc parse, IDP, 智能文档解析, parse document, 文档转 Markdown, 读取 PDF, 读取 PPT, 提取表格, 文档识别",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-doc-parse/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-doc-parse",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-doc-parse/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-doc-parse"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-image-understanding",
-          "description": "Use when user needs to understand, analyze, or describe image content. Supports screenshots, photos, diagrams — provide local file path as input. No browser needed. Do NOT use Read tool to read images — use this skill instead. 当用户需要看图、理解图片内容、分析截图、识别图中信息时使用此技能。触发词：图片理解, 图片分析, 图片描述, 识别图片, 看图, 图片识别, image understanding, describe image, analyze image, 图片内容, 看看这张图, 这张图是什么, 图中有什么, 看不了图, 无法看图",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-image-understanding/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-image-understanding",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-image-understanding/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-image-understanding"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-openclaw-guide",
-          "description": "OpenClaw agent runtime guide: sandbox environment, security config, available skills, tool limitations, and common user request handling. 运行环境说明、沙箱安全配置、可用技能、工具限制、常见问题处理。触发词：环境限制, 没有权限, sudo, 无法安装, 安全配置, dangerouslyDisable, no-sandbox, Browser Relay, Browser Replay, 内置技能, 可用工具",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-openclaw-guide/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-openclaw-guide",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-openclaw-guide/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-openclaw-guide"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-skillhub",
-          "description": "Use when user wants to search, find, install, or manage skills from Volcengine Skillhub (FindSkill), or asks whether a specific capability exists as a marketplace skill (如'有没有XX技能'/'有没有什么技能可以做XX'). Provides CLI commands for skill discovery and installation via npx skills. 触发词：技能市场, 技能搜索, 搜索技能, 安装技能, 查找技能, find skill, skill hub, skillhub, findskill, skills add, skills find, 技能安装, 技能下载, 技能广场, 火山技能市场, 有没有XX技能",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-skillhub/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-skillhub",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-skillhub/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-skillhub"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-speech-to-text",
-          "description": "Use when user needs to convert audio or voice recordings to text. Provides necessary command usage instructions for converting audio to text. Supports multiple languages. 触发词：语音转文字, 音频转文字, 语音识别, speech to text, STT, 转录, 听写, 会议记录转文字, 录音转文字, transcribe, 音频识别, voice to text, 语音转换",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-speech-to-text/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-speech-to-text",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-speech-to-text/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-speech-to-text"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-text-gen-image",
-          "description": "Use when user needs to generate images from text descriptions. Provides necessary command usage instructions for generating images from text. Supports various aspect ratios and AI watermark. 触发词：生成图片, 画图, 图片生成, text to image, 文字生成图片, AI 画图, 生成配图, 生成封面, 生成插图, generate image, 画一张, 做一张图",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-text-gen-image/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-text-gen-image",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-text-gen-image/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-text-gen-image"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-web-fetch",
-          "description": "Use when user needs to crawl or fetch a specific URL to extract its content. Provides necessary command usage instructions for fetching known URLs. 触发词：网页抓取, 抓取网页, 提取网页内容, web crawl, 爬取, fetch url, 抓取 URL, 读取网页",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-web-fetch/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-web-fetch",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-web-fetch/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-web-fetch"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "miaoda-web-search",
-          "description": "ALWAYS use this skill FIRST when you need to find, look up, or verify ANY information from the internet — do NOT guess URLs and fetch them directly. Provides necessary command usage instructions for keyword-based web search with structured results. 触发词：搜索, 网页搜索, 搜一下, 查一下, 查询, 了解, 找一下, 帮我看看, web search, look up, find out, search, 查资料, 搜索引擎, 最新信息, 最近动态",
-          "filePath": "/home/gem/workspace/agent/skills/miaoda-web-search/SKILL.md",
-          "baseDir": "/home/gem/workspace/agent/skills/miaoda-web-search",
-          "source": "openclaw-managed",
-          "sourceInfo": {
-            "path": "/home/gem/workspace/agent/skills/miaoda-web-search/SKILL.md",
-            "source": "openclaw-managed",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/workspace/agent/skills/miaoda-web-search"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-approval",
-          "description": "飞书审批 API：审批实例、审批任务管理。",
-          "filePath": "/home/gem/.agents/skills/lark-approval/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-approval",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-approval/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-approval"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-attendance",
-          "description": "飞书考勤打卡：查询自己的考勤打卡记录",
-          "filePath": "/home/gem/.agents/skills/lark-attendance/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-attendance",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-attendance/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-attendance"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-base",
-          "description": "当需要用 lark-cli 操作飞书多维表格（Base）时调用：搜索 Base、建表、字段管理、记录读写、记录分享链接、视图配置、历史查询，以及角色/表单/仪表盘管理/工作流；也适用于把旧的 +table / +field / +record 写法改成当前命令写法。涉及字段设计、公式字段、查找引用、跨表计算、行级派生指标、数据分析需求时也必须使用本 skill。",
-          "filePath": "/home/gem/.agents/skills/lark-base/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-base",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-base/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-base"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-calendar",
-          "description": "飞书日历（calendar）：提供日历与日程（会议）的全面管理能力。核心场景包括：查看/搜索日程、创建/更新日程、管理参会人、查询忙闲状态及推荐空闲时段、查询/搜索与预定会议室。注意：涉及【预约日程/会议】或【查询/预定会议室】时，必须先读取 references/lark-calendar-schedule-meeting.md 工作流！高频操作请优先使用 Shortcuts：+agenda（快速概览今日/近期行程）、+create（创建日程并按需邀请参会人及预定会议室）、+update（更新既有日程字段，或独立增删参会人/会议室）、+freebusy（查询用户主日历的忙闲信息和rsvp的状态）、+rsvp（回复日程邀请）",
-          "filePath": "/home/gem/.agents/skills/lark-calendar/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-calendar",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-calendar/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-calendar"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-contact",
-          "description": "飞书通讯录：查询组织架构、人员信息和搜索员工。获取当前用户或指定用户的详细信息、通过关键词搜索员工（姓名/邮箱/手机号）。当用户需要查看个人信息、查找同事 open_id 或联系方式、按姓名搜索员工、查询部门结构时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-contact/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-contact",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-contact/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-contact"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-doc",
-          "description": "飞书云文档：创建和编辑飞书文档。从 Markdown 创建文档、获取文档内容、更新文档（追加/覆盖/替换/插入/删除）、上传和下载文档中的图片和文件、搜索云空间文档。当用户需要创建或编辑飞书文档、读取文档内容、在文档中插入图片、搜索云空间文档时使用；如果用户是想按名称或关键词先定位电子表格、报表等云空间对象，也优先使用本 skill 的 docs +search 做资源发现。",
-          "filePath": "/home/gem/.agents/skills/lark-doc/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-doc",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-doc/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-doc"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-drive",
-          "description": "飞书云空间：管理云空间中的文件和文件夹。上传和下载文件、创建文件夹、复制/移动/删除文件、查看文件元数据、管理文档评论、管理文档权限、订阅用户评论变更事件、修改文件标题（docx、sheet、bitable、file、folder、wiki）；也负责把本地 Word/Markdown/Excel/CSV 以及 Base 快照（.base）导入为飞书在线云文档（docx、sheet、bitable）。当用户需要上传或下载文件、整理云空间目录、查看文件详情、管理评论、管理文档权限、修改文件标题、订阅用户评论变更事件，或要把本地文件导入成新版文档、电子表格、多维表格/Base 时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-drive/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-drive",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-drive/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-drive"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-event",
-          "description": "Lark/Feishu real-time event listening / subscribing / consuming: stream events as NDJSON via `lark-cli event consume <EventKey>` (covers IM message receive, reactions, chat member changes, etc.). Use for Lark bots, real-time message processing, long-running subscribers, streaming webhook/push handlers. Supports `--max-events` / `--timeout` bounded runs and a stderr ready-marker contract — designed for AI agents running as subprocesses.",
-          "filePath": "/home/gem/.agents/skills/lark-event/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-event",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-event/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-event"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-im",
-          "description": "飞书即时通讯：收发消息和管理群聊。发送和回复消息、搜索聊天记录、管理群聊成员、上传下载图片和文件（支持大文件分片下载）、管理表情回复。当用户需要发消息、查看或搜索聊天记录、下载聊天中的文件、查看群成员时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-im/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-im",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-im/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-im"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-mail",
-          "description": "飞书邮箱 — draft, compose, send, reply, forward, read, and search emails; manage drafts, folders, labels, contacts, attachments, and mail rules. Use when user mentions 起草邮件, 写一封邮件, 拟邮件, 草稿, 发通知邮件, 发送邮件, 发邮件, 回复邮件, 转发邮件, 查看邮件, 看邮件, 读邮件, 搜索邮件, 查邮件, 收件箱, 邮件会话, 编辑草稿, 管理草稿, 下载附件, 邮件文件夹, 邮件标签, 邮件联系人, 监听新邮件, 收信规则, 邮件规则, draft, compose, send email, reply, forward, inbox, mail thread, mail rules.",
-          "filePath": "/home/gem/.agents/skills/lark-mail/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-mail",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-mail/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-mail"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-markdown",
-          "description": "飞书 Markdown：查看、创建、上传和编辑 Markdown 文件。当用户需要创建或编辑 Markdown 文件、读取或修改时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-markdown/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-markdown",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-markdown/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-markdown"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-minutes",
-          "description": "飞书妙记：妙记相关基本功能。1.查询妙记列表（按关键词/所有者/参与者/时间范围）；2.获取妙记基础信息（标题、封面、时长 等）；3.下载妙记音视频文件；4.获取妙记相关 AI 产物（总结、待办、章节）。飞书妙记 URL 格式: http(s)://<host>/minutes/<minute-token>",
-          "filePath": "/home/gem/.agents/skills/lark-minutes/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-minutes",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-minutes/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-minutes"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-okr",
-          "description": "飞书 OKR：管理目标与关键结果。查看和编辑 OKR 周期、目标（Objective）、关键结果（Key Result）、对齐关系、量化指标和进展记录。当用户需要查看或创建 OKR、管理目标和关键结果、查看对齐关系时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-okr/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-okr",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-okr/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-okr"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-openapi-explorer",
-          "description": "飞书/Lark 原生 OpenAPI 探索：从官方文档库中挖掘未经 CLI 封装的原生 OpenAPI 接口。当用户的需求无法被现有 lark-* skill 或 lark-cli 已注册命令满足，需要查找并调用原生飞书 OpenAPI 时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-openapi-explorer/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-openapi-explorer",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-openapi-explorer/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-openapi-explorer"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-shared",
-          "description": "飞书/Lark CLI 共享基础：应用配置初始化、认证登录（auth login）、身份切换（--as user/bot）、权限与 scope 管理、Permission denied 错误处理、安全规则。当用户需要第一次配置(`lark-cli config init`)、使用登录授权(`lark-cli auth login`)、遇到权限不足、切换 user/bot 身份、配置 scope、或首次使用 lark-cli 时触发。",
-          "filePath": "/home/gem/.agents/skills/lark-shared/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-shared",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-shared/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-shared"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-sheets",
-          "description": "飞书电子表格：创建和操作电子表格。支持创建表格、创建/复制/删除/更新工作表、读写单元格、追加行数据、查找内容、导出文件。当用户需要创建电子表格、管理工作表、批量读写数据、在已知表格中查找内容、导出或下载表格时使用。若用户是想按名称或关键词搜索云空间里的表格文件，请改用 lark-doc 的 docs +search 先定位资源。",
-          "filePath": "/home/gem/.agents/skills/lark-sheets/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-sheets",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-sheets/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-sheets"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-skill-maker",
-          "description": "创建 lark-cli 的自定义 Skill。当用户需要把飞书 API 操作封装成可复用的 Skill（包装原子 API 或编排多步流程）时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-skill-maker/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-skill-maker",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-skill-maker/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-skill-maker"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-slides",
-          "description": "飞书幻灯片：创建和编辑幻灯片，接口通过 XML 协议通信。创建演示文稿、读取幻灯片内容、管理幻灯片页面（创建、删除、读取、局部替换）。当用户需要创建或编辑幻灯片、读取或修改单个页面时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-slides/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-slides",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-slides/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-slides"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-task",
-          "description": "飞书任务：管理任务、清单和任务智能体。创建待办任务、查看和更新任务状态、拆分子任务、组织任务清单、分配协作成员、上传任务附件、注册或注销任务智能体、更新任务智能体的主页数据、写入智能体任务记录。当用户需要创建待办事项、查看任务列表、跟踪任务进度、管理项目清单或给他人分配任务、为任务上传附件文件、注册注销任务智能体、更新智能体主页数据、写入任务记录时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-task/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-task",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-task/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-task"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-vc",
-          "description": "飞书视频会议：查询会议记录、获取会议纪要产物（总结、待办、章节、逐字稿）。1. 查询已经结束的会议数量或详情时使用本技能(如历史日期｜ 昨天 | 上周 | 今天已经开过的会议等场景)，查询未开始的会议日程使用 lark-calendar 技能。2. 支持通过关键词、时间范围、组织者、参与者、会议室等筛选条件搜索会议记录。3. 获取或整理会议纪要时使用本技能。",
-          "filePath": "/home/gem/.agents/skills/lark-vc/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-vc",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-vc/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-vc"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-whiteboard",
-          "description": "飞书画板：查询和编辑飞书云文档中的画板。支持导出画板为预览图片、导出原始节点结构、使用 PlantUML/Mermaid 代码或 OpenAPI 原生格式更新画板内容。 当用户需要查看画板内容、导出画板图片、或编辑画板，或是需要可视化表达架构、流程、组织关系、时间线、因果、对比等结构化信息时使用此 skill，无论是否提及\"画板\"。",
-          "filePath": "/home/gem/.agents/skills/lark-whiteboard/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-whiteboard",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-whiteboard/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-whiteboard"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-wiki",
-          "description": "飞书知识库：管理知识空间、空间成员和文档节点。创建和查询知识空间、查看和管理空间成员、管理节点层级结构、在知识库中组织文档和快捷方式。当用户需要在知识库中查找或创建文档、浏览知识空间结构、查看或管理空间成员、移动或复制节点时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-wiki/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-wiki",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-wiki/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-wiki"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-workflow-meeting-summary",
-          "description": "会议纪要整理工作流：汇总指定时间范围内的会议纪要并生成结构化报告。当用户需要整理会议纪要、生成会议周报、回顾一段时间内的会议内容时使用。",
-          "filePath": "/home/gem/.agents/skills/lark-workflow-meeting-summary/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-workflow-meeting-summary",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-workflow-meeting-summary/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-workflow-meeting-summary"
-          },
-          "disableModelInvocation": false
-        },
-        {
-          "name": "lark-workflow-standup-report",
-          "description": "日程待办摘要：编排 calendar +agenda 和 task +get-my-tasks，生成指定日期的日程与未完成任务摘要。适用于了解今天/明天/本周的安排。",
-          "filePath": "/home/gem/.agents/skills/lark-workflow-standup-report/SKILL.md",
-          "baseDir": "/home/gem/.agents/skills/lark-workflow-standup-report",
-          "source": "agents-skills-personal",
-          "sourceInfo": {
-            "path": "/home/gem/.agents/skills/lark-workflow-standup-report/SKILL.md",
-            "source": "agents-skills-personal",
-            "scope": "project",
-            "origin": "top-level",
-            "baseDir": "/home/gem/.agents/skills/lark-workflow-standup-report"
-          },
-          "disableModelInvocation": false
-        }
-      ],
-      "version": 0
-    },
-    "status": "done",
-    "startedAt": 1780457102092,
     "modelProvider": "freellm",
     "model": "auto",
-    "contextTokens": 200000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1780457101801,
-      "sessionId": "5d2b5088-6261-48f6-926b-f74827c8421f",
+      "generatedAt": 1780465826205,
+      "sessionId": "88ffbece-1244-4e00-9ec8-46a6d33ae1ee",
       "sessionKey": "agent:main:main",
       "provider": "freellm",
       "model": "auto",
       "workspaceDir": "/home/gem/workspace/agent/workspace",
-      "bootstrapMaxChars": 20000,
-      "bootstrapTotalMaxChars": 150000,
+      "bootstrapMaxChars": 12000,
+      "bootstrapTotalMaxChars": 60000,
       "bootstrapTruncation": {
-        "warningMode": "once",
+        "warningMode": "always",
         "warningShown": false,
         "truncatedFiles": 0,
         "nearLimitFiles": 0,
@@ -2407,9 +888,10 @@
         "sandboxed": false
       },
       "systemPrompt": {
-        "chars": 42942,
-        "projectContextChars": 11329,
-        "nonProjectContextChars": 31613
+        "chars": 39360,
+        "hash": "9287202ff285faf169ff6a08ed7ab0391e43dda9778abe98fcd8393a57c6a73a",
+        "projectContextChars": 9450,
+        "nonProjectContextChars": 29910
       },
       "injectedWorkspaceFiles": [
         {
@@ -2461,14 +943,6 @@
           "truncated": false
         },
         {
-          "name": "BOOTSTRAP.md",
-          "path": "/home/gem/workspace/agent/workspace/BOOTSTRAP.md",
-          "missing": false,
-          "rawChars": 1900,
-          "injectedChars": 1900,
-          "truncated": false
-        },
-        {
           "name": "MEMORY.md",
           "path": "/home/gem/workspace/agent/workspace/MEMORY.md",
           "missing": false,
@@ -2478,99 +952,56 @@
         }
       ],
       "skills": {
-        "promptChars": 17708,
+        "promptChars": 17735,
+        "hash": "8a34f360200786bf1ded1831d2db704a3e3131d60609ca7507ade60caf2edcd2",
         "entries": [
           {
-            "name": "feishu-doc",
-            "blockChars": 299
+            "name": "browser-automation",
+            "blockChars": 330
           },
           {
-            "name": "feishu-drive",
-            "blockChars": 291
-          },
-          {
-            "name": "feishu-perm",
-            "blockChars": 313
-          },
-          {
-            "name": "feishu-wiki",
-            "blockChars": 293
-          },
-          {
-            "name": "feishu-channel-rules",
+            "name": "canvas",
             "blockChars": 263
           },
           {
-            "name": "feishu-lark-cli",
-            "blockChars": 333
-          },
-          {
-            "name": "feishu-troubleshoot",
-            "blockChars": 326
-          },
-          {
             "name": "clawhub",
-            "blockChars": 432
-          },
-          {
-            "name": "healthcheck",
-            "blockChars": 491
-          },
-          {
-            "name": "node-connect",
-            "blockChars": 541
-          },
-          {
-            "name": "session-logs",
             "blockChars": 253
           },
           {
-            "name": "skill-creator",
-            "blockChars": 759
+            "name": "diagram-maker",
+            "blockChars": 266
           },
           {
-            "name": "taskflow",
-            "blockChars": 543
+            "name": "feishu-channel-rules",
+            "blockChars": 245
           },
           {
-            "name": "taskflow-inbox-triage",
-            "blockChars": 418
+            "name": "feishu-doc",
+            "blockChars": 261
           },
           {
-            "name": "weather",
-            "blockChars": 416
+            "name": "feishu-drive",
+            "blockChars": 253
           },
           {
-            "name": "miaoda-doc-parse",
-            "blockChars": 468
+            "name": "feishu-lark-cli",
+            "blockChars": 315
           },
           {
-            "name": "miaoda-image-understanding",
-            "blockChars": 568
+            "name": "feishu-perm",
+            "blockChars": 275
           },
           {
-            "name": "miaoda-openclaw-guide",
-            "blockChars": 446
+            "name": "feishu-troubleshoot",
+            "blockChars": 308
           },
           {
-            "name": "miaoda-skillhub",
-            "blockChars": 587
+            "name": "feishu-wiki",
+            "blockChars": 255
           },
           {
-            "name": "miaoda-speech-to-text",
-            "blockChars": 447
-          },
-          {
-            "name": "miaoda-text-gen-image",
-            "blockChars": 454
-          },
-          {
-            "name": "miaoda-web-fetch",
-            "blockChars": 370
-          },
-          {
-            "name": "miaoda-web-search",
-            "blockChars": 514
+            "name": "healthcheck",
+            "blockChars": 278
           },
           {
             "name": "lark-approval",
@@ -2667,341 +1098,568 @@
           {
             "name": "lark-workflow-standup-report",
             "blockChars": 259
+          },
+          {
+            "name": "meme-maker",
+            "blockChars": 251
+          },
+          {
+            "name": "miaoda-doc-parse",
+            "blockChars": 468
+          },
+          {
+            "name": "miaoda-image-understanding",
+            "blockChars": 568
+          },
+          {
+            "name": "miaoda-openclaw-guide",
+            "blockChars": 446
+          },
+          {
+            "name": "miaoda-skillhub",
+            "blockChars": 587
+          },
+          {
+            "name": "miaoda-speech-to-text",
+            "blockChars": 447
+          },
+          {
+            "name": "miaoda-text-gen-image",
+            "blockChars": 454
+          },
+          {
+            "name": "miaoda-web-fetch",
+            "blockChars": 370
+          },
+          {
+            "name": "miaoda-web-search",
+            "blockChars": 514
+          },
+          {
+            "name": "node-connect",
+            "blockChars": 281
+          },
+          {
+            "name": "node-inspect-debugger",
+            "blockChars": 277
+          },
+          {
+            "name": "python-debugpy",
+            "blockChars": 265
+          },
+          {
+            "name": "session-logs",
+            "blockChars": 253
+          },
+          {
+            "name": "skill-creator",
+            "blockChars": 259
+          },
+          {
+            "name": "spike",
+            "blockChars": 251
+          },
+          {
+            "name": "taskflow",
+            "blockChars": 281
+          },
+          {
+            "name": "taskflow-inbox-triage",
+            "blockChars": 291
+          },
+          {
+            "name": "weather",
+            "blockChars": 266
           }
         ]
       },
       "tools": {
         "listChars": 0,
-        "schemaChars": 43542,
+        "schemaChars": 38712,
         "entries": [
           {
             "name": "read",
             "summaryChars": 298,
+            "summaryHash": "f8a1d7cf1ecfe02b1b5865c93387e6a5891e5079117b4fe18614b6f912521727",
             "schemaChars": 304,
+            "schemaHash": "134f19bcabe3e29d63c5cebb38f1d2556759fd08adad6bc90a4b4d3cd1fb8441",
             "propertiesCount": 3
           },
           {
             "name": "edit",
             "summaryChars": 326,
+            "summaryHash": "c498a85576e187d069e8e8ea4f70f81bddd57829600d385ef61c4359fd634c9e",
             "schemaChars": 834,
+            "schemaHash": "457e8bb9f800b21be76c4fd8c0e3078bf07ee9bf93ac82f39944c171bd8f6d84",
             "propertiesCount": 2
           },
           {
             "name": "write",
             "summaryChars": 127,
+            "summaryHash": "cdb1c46027b22d1f1b923b47bfe297821d9fe589a9f9d92994961948060a4d89",
             "schemaChars": 225,
+            "schemaHash": "e98a2484f667cf7c22d76ca103bf2022bf9113dc63fe38b899e71c328cb1e833",
             "propertiesCount": 2
           },
           {
             "name": "exec",
             "summaryChars": 539,
-            "schemaChars": 1098,
+            "summaryHash": "4825198988fbfa8ebf5c2a8fbe3946da0be639b1e3b737ceaa4364195bba3f04",
+            "schemaChars": 1187,
+            "schemaHash": "0c03eeccccb7b7e97234d2c8245c6060e2b292588f02455eae20c60b61bb8bb8",
             "propertiesCount": 12
           },
           {
             "name": "process",
-            "summaryChars": 416,
-            "schemaChars": 961,
+            "summaryChars": 456,
+            "summaryHash": "55297e65d460e0e1e06e7fad4cedb75ffda8fac9fa8b10aa06d6cead3c5a76ea",
+            "schemaChars": 1074,
+            "schemaHash": "a2d30a25569f409d7e8539844c89a088044535388b24031d014577b96ed27c5c",
             "propertiesCount": 12
           },
           {
-            "name": "canvas",
-            "summaryChars": 106,
-            "schemaChars": 661,
-            "propertiesCount": 18
-          },
-          {
             "name": "nodes",
-            "summaryChars": 118,
-            "schemaChars": 1589,
+            "summaryChars": 143,
+            "summaryHash": "ea1b0a5498ca3c788b26d164245652e1aaa989806e0123715793ab25f9578121",
+            "schemaChars": 1764,
+            "schemaHash": "339c9b744f121ff6a5b2a8a2a7e19286c4114d8dc165a172d3708e993d8b0e55",
             "propertiesCount": 32
           },
           {
             "name": "cron",
-            "summaryChars": 3726,
-            "schemaChars": 6700,
-            "propertiesCount": 13
+            "summaryChars": 3610,
+            "summaryHash": "262e6a7b421538d13ca6d79fc14616de3ea0c24fde8b050d6fa1652fe991e5c5",
+            "schemaChars": 7359,
+            "schemaHash": "a486139fdfec0cd8dc5bf05537b39f040400a8da3c04458e43a31faabef8759b",
+            "propertiesCount": 14
           },
           {
             "name": "message",
-            "summaryChars": 321,
-            "schemaChars": 5720,
-            "propertiesCount": 105
+            "summaryChars": 292,
+            "summaryHash": "46ee437726a0d285bee2d2e86271181bd041b7b18eb33cbd8f09b55b418bf41d",
+            "schemaChars": 6036,
+            "schemaHash": "b6f247d982a7a7bbf615a98d85050219b034e27852232236527713415c3dd112",
+            "propertiesCount": 108
           },
           {
             "name": "image_generate",
-            "summaryChars": 387,
-            "schemaChars": 1195,
-            "propertiesCount": 10
+            "summaryChars": 392,
+            "summaryHash": "57b16a66f72edadb1640a608d9f2761fd8d237e124b275d16d74356df5d95c8b",
+            "schemaChars": 2264,
+            "schemaHash": "1ff0d91a2a16769e27d71721f3307059944254c0567f9db718fe90e1665b088d",
+            "propertiesCount": 16
           },
           {
             "name": "gateway",
-            "summaryChars": 494,
-            "schemaChars": 497,
-            "propertiesCount": 12
+            "summaryChars": 377,
+            "summaryHash": "61f7e422103698365bb389c00ae4c46b9630840b16971cd141e91ac8f486029d",
+            "schemaChars": 576,
+            "schemaHash": "6a5b646bf45a2297a8bf9d57815d705fb1770df3ee95d4cf406dda97c6c69143",
+            "propertiesCount": 13
+          },
+          {
+            "name": "update_plan",
+            "summaryChars": 163,
+            "summaryHash": "ea18cc44224e849c68cdf0a4839c295c1b20daf2699e2fc2be4c4e1552327455",
+            "schemaChars": 489,
+            "schemaHash": "50cb08b8a29e72637eb6720e6f5f3786783824537574f05ee9ae7a5f4ecacc4b",
+            "propertiesCount": 2
           },
           {
             "name": "sessions_list",
-            "summaryChars": 177,
-            "schemaChars": 212,
-            "propertiesCount": 4
+            "summaryChars": 135,
+            "summaryHash": "c7e411ae02e3adff5504aaee48f02d262a8abb9152558a3172aae289e3b05faf",
+            "schemaChars": 435,
+            "schemaHash": "c29c6b82c36a2d95a88c8944f129929b2621ee2af6d17b2ab101d4d7e9633d89",
+            "propertiesCount": 9
           },
           {
             "name": "sessions_history",
-            "summaryChars": 180,
-            "schemaChars": 161,
+            "summaryChars": 117,
+            "summaryHash": "f5d45b76f11a8ac63cc45d456fb6f675f0b1a2e191feb9671924cb5830058f03",
+            "schemaChars": 162,
+            "schemaHash": "ac33b8af2252262afe479236046f5a04bc018f1fcf24d1a8bf32743f0e867598",
             "propertiesCount": 3
           },
           {
             "name": "sessions_send",
-            "summaryChars": 208,
-            "schemaChars": 274,
+            "summaryChars": 224,
+            "summaryHash": "56fd935fc97400f8c60b16ae58268660a2d84d8014a60abed515576c45a6f307",
+            "schemaChars": 275,
+            "schemaHash": "f1fbaa412fe6b6aee102234c87c5aa140f39c9086f9bae6e1e9691309a602ffb",
             "propertiesCount": 5
           },
           {
+            "name": "sessions_spawn",
+            "summaryChars": 332,
+            "summaryHash": "5ced554d0c09b9c71fa003139eca7871bbfdc0917a323fc17af2a9faec46c5b7",
+            "schemaChars": 1250,
+            "schemaHash": "2d1670783c8e0c6cae4a1d0a2bdcc059520837661a88702e827905e742a194c9",
+            "propertiesCount": 17
+          },
+          {
             "name": "sessions_yield",
-            "summaryChars": 97,
+            "summaryChars": 79,
+            "summaryHash": "f3782fc41c1522657e1d3494f486a2df998fed38a6b89dcf7f6934fb41424320",
             "schemaChars": 60,
+            "schemaHash": "b1c4c753820bc3096d85ef7a266a14c9fbe12450536db58076b75bb61d14dbbb",
             "propertiesCount": 1
           },
           {
-            "name": "sessions_spawn",
-            "summaryChars": 302,
-            "schemaChars": 1333,
-            "propertiesCount": 18
-          },
-          {
             "name": "subagents",
-            "summaryChars": 105,
-            "schemaChars": 191,
-            "propertiesCount": 4
-          },
-          {
-            "name": "session_status",
-            "summaryChars": 336,
-            "schemaChars": 89,
+            "summaryChars": 132,
+            "summaryHash": "1c2ffd38549c0444b118d43736fc4b875ea1aaabc446bbf8bc1fc4ee9180cca4",
+            "schemaChars": 122,
+            "schemaHash": "c4a241d2c3d46ba7985abfce4d3fcd63298ce81f89d49183c8f3d584c48d0c33",
             "propertiesCount": 2
           },
           {
+            "name": "session_status",
+            "summaryChars": 278,
+            "summaryHash": "71177e543dc6235bad4b1a26761995681dcec27ab58dcb4f4f8a7fc9a7b2b5aa",
+            "schemaChars": 89,
+            "schemaHash": "d2995f3d69d126e98ac93eec3c2a9fe5556925bd7979a8e4b6b5a2bf62d329dd",
+            "propertiesCount": 2
+          },
+          {
+            "name": "web_search",
+            "summaryChars": 65,
+            "summaryHash": "b38e9b3c079beaa988d3c576303660b91a55c2e72f56351da04160529173273f",
+            "schemaChars": 991,
+            "schemaHash": "3879e368875d824b14e0e683f81408824e9a2a5850fa2f8514a68caebda54d18",
+            "propertiesCount": 12
+          },
+          {
             "name": "image",
-            "summaryChars": 201,
-            "schemaChars": 342,
+            "summaryChars": 119,
+            "summaryHash": "baddb232b3847e91db0f3fe7c6b84de207a14c02eec22e7db2a1bd72b8e3c3c6",
+            "schemaChars": 350,
+            "schemaHash": "49bb766071c935edca8c2d0df47fc2109bbffe3d4ba32d0b19fe90ec873736ce",
             "propertiesCount": 6
           },
           {
             "name": "pdf",
-            "summaryChars": 275,
-            "schemaChars": 400,
-            "propertiesCount": 6
+            "summaryChars": 159,
+            "summaryHash": "9f323da0ccbf37f01fff7374ae5cba64b4c05b5f0fc9d982aee7c64040cc61d5",
+            "schemaChars": 448,
+            "schemaHash": "9e8e5acf6d543d3bf39ef65c5cad5326013243efbc32a78aeff5a86edc3947ed",
+            "propertiesCount": 7
           },
           {
             "name": "browser",
-            "summaryChars": 1066,
-            "schemaChars": 2799,
-            "propertiesCount": 48
+            "summaryChars": 1537,
+            "summaryHash": "8a4aab8d6a66131c4f065bc2672af8fbcc19555e55fb4fbb1c24261d02e63e28",
+            "schemaChars": 3234,
+            "schemaHash": "e94e5f5a49853203b631c61e3dfcec535edad2b81bc642048de47d44cdf49605",
+            "propertiesCount": 53
           },
           {
             "name": "feishu_doc",
             "summaryChars": 321,
+            "summaryHash": "031518d7b24ffb1cfd3e02e3d4085e277c85d42dfbaebbfd2c3b98c40ad4bd03",
             "schemaChars": 2898,
+            "schemaHash": "730bd6c68eccec4bb0af6297f1885d3e9e97428b9746aef7f6f90ee9e89679c8",
             "propertiesCount": 27
           },
           {
             "name": "feishu_app_scopes",
             "summaryChars": 102,
+            "summaryHash": "f71bba3dfcb9a9135d998bba1cced2df3ec09cde4e8eeaabd1cc467ec2be266e",
             "schemaChars": 33,
+            "schemaHash": "8243f0af367f188a376f2c17b5eabe872a2f7a979813e0d4e2be6d594c2aa259",
             "propertiesCount": 0
           },
           {
             "name": "feishu_chat",
             "summaryChars": 59,
+            "summaryHash": "f3ae74823a824b50cf2b455b71236257fd1b3b6969c46b5cfed979f67d55739e",
             "schemaChars": 606,
+            "schemaHash": "56ad30bd08f3a9075d819739d5961f1196c3cca4c27240af4f93b29fa6a0ca56",
             "propertiesCount": 6
           },
           {
             "name": "feishu_wiki",
             "summaryChars": 83,
-            "schemaChars": 971,
+            "summaryHash": "675a39b1647c164b1e1bc890f76bfef5b6890cfa1685b4b38adf74e4599a2baa",
+            "schemaChars": 1161,
+            "schemaHash": "320ee613d815aeb7487169c05cf4c6479170dfdcf7e6700aa26333abdc6a1605",
             "propertiesCount": 10
           },
           {
             "name": "feishu_drive",
             "summaryChars": 146,
+            "summaryHash": "1617b9244112de63c385c835dc5b3d9618b2c9aaaa5813293e63835d0a28cc24",
             "schemaChars": 1094,
+            "schemaHash": "6a3a0c178240856029fbbd6e47bd1cde0b8c82dc03e06acd6ec1432278d0d5cb",
             "propertiesCount": 11
           },
           {
             "name": "feishu_bitable_get_meta",
             "summaryChars": 114,
+            "summaryHash": "8735e23554e6b76263da09b66da41b2b6f38393c345f4ccd9a1a64ed0b03611e",
             "schemaChars": 170,
+            "schemaHash": "594d81258808d95c57a43b49a07619e3854b5f1ca7a2aa0fc5f9c5138157b84f",
             "propertiesCount": 1
           },
           {
             "name": "feishu_bitable_list_fields",
             "summaryChars": 76,
+            "summaryHash": "897abf305d047625e7e62a5ebe8308242dda407b8e522ae45d65ab23b3dac0e3",
             "schemaChars": 255,
+            "schemaHash": "9bede042b9cb0acaa416e7e674e8193f9e3a29120ab52105b3189edbab222151",
             "propertiesCount": 2
           },
           {
             "name": "feishu_bitable_list_records",
             "summaryChars": 64,
+            "summaryHash": "d8d56f06be1a13ed70d8c7f6f205ff61025c3ab5f1a399a2135d73decba12ced",
             "schemaChars": 462,
+            "schemaHash": "0509df0354b28f5aa7f9eb05c922391a9a46dacaa05cf2ad3f99246480ef7e2c",
             "propertiesCount": 4
           },
           {
             "name": "feishu_bitable_get_record",
             "summaryChars": 46,
+            "summaryHash": "363c00179915caa5a60b445a24255d8f79b91d50f77fd78574b04226ae23fbb2",
             "schemaChars": 335,
+            "schemaHash": "326588e725d9a063aac81bbd2ecdea5d15fa52d5e632d2ceb8172bfa1c84dff5",
             "propertiesCount": 3
           },
           {
             "name": "feishu_bitable_create_record",
             "summaryChars": 44,
-            "schemaChars": 549,
+            "summaryHash": "7e795f23e9aaf3e0f328476253e451225687b60f55c0d023976f196bb8f7a9dd",
+            "schemaChars": 547,
+            "schemaHash": "5f5f413cd01dcb2d0d59efb12093cbfb9cb02f6d3e4921288f41994bad108e3a",
             "propertiesCount": 3
           },
           {
             "name": "feishu_bitable_update_record",
             "summaryChars": 50,
-            "schemaChars": 473,
+            "summaryHash": "e9cbf372b1e00394d97d48d27ff2ba8c6e67bd503a11bcaff5cd397423db646c",
+            "schemaChars": 471,
+            "schemaHash": "50f9387255ac8f8c18feebf72a3a0c5f78d47dd59ed2870b7387b605ba1c2df9",
             "propertiesCount": 4
           },
           {
             "name": "feishu_bitable_create_app",
             "summaryChars": 57,
+            "summaryHash": "addbb5cb2da3c87587c6d7b3b991e64a359fdc06a2141ab8554ca0d3ee86eee9",
             "schemaChars": 243,
+            "schemaHash": "7bd158d54f4addd8d0835160504827c4620100de8baa64739a63ca6ac05783af",
             "propertiesCount": 2
           },
           {
             "name": "feishu_bitable_create_field",
             "summaryChars": 46,
-            "schemaChars": 911,
+            "summaryHash": "f3ec05238d6ae75152e1ccbcb8ecf71aed1177766885a515a2d227abb1b95ed4",
+            "schemaChars": 909,
+            "schemaHash": "d72f4843494162c68c36ffa2f45d6d0bd8ccd75e4ec579633375daed616e80ab",
             "propertiesCount": 5
-          },
-          {
-            "name": "doc_parse",
-            "summaryChars": 172,
-            "schemaChars": 216,
-            "propertiesCount": 1
-          },
-          {
-            "name": "web_crawl",
-            "summaryChars": 66,
-            "schemaChars": 149,
-            "propertiesCount": 1
-          },
-          {
-            "name": "feishu_get_user",
-            "summaryChars": 75,
-            "schemaChars": 185,
-            "propertiesCount": 2
-          },
-          {
-            "name": "feishu_search_user",
-            "summaryChars": 55,
-            "schemaChars": 311,
-            "propertiesCount": 3
-          },
-          {
-            "name": "feishu_chat_members",
-            "summaryChars": 54,
-            "schemaChars": 353,
-            "propertiesCount": 4
-          },
-          {
-            "name": "feishu_im_user_message",
-            "summaryChars": 402,
-            "schemaChars": 1149,
-            "propertiesCount": 8
-          },
-          {
-            "name": "feishu_im_user_fetch_resource",
-            "summaryChars": 456,
-            "schemaChars": 371,
-            "propertiesCount": 3
-          },
-          {
-            "name": "feishu_im_user_get_messages",
-            "summaryChars": 386,
-            "schemaChars": 912,
-            "propertiesCount": 8
-          },
-          {
-            "name": "feishu_im_user_get_thread_messages",
-            "summaryChars": 166,
-            "schemaChars": 395,
-            "propertiesCount": 4
-          },
-          {
-            "name": "feishu_im_user_search_messages",
-            "summaryChars": 522,
-            "schemaChars": 1364,
-            "propertiesCount": 12
-          },
-          {
-            "name": "feishu_im_bot_image",
-            "summaryChars": 241,
-            "schemaChars": 384,
-            "propertiesCount": 3
-          },
-          {
-            "name": "feishu_oauth",
-            "summaryChars": 168,
-            "schemaChars": 290,
-            "propertiesCount": 1
-          },
-          {
-            "name": "feishu_oauth_batch_auth",
-            "summaryChars": 55,
-            "schemaChars": 162,
-            "propertiesCount": 0
-          },
-          {
-            "name": "feishu_ask_user_question",
-            "summaryChars": 355,
-            "schemaChars": 962,
-            "propertiesCount": 1
-          },
-          {
-            "name": "memory_search",
-            "summaryChars": 147,
-            "schemaChars": 533,
-            "propertiesCount": 4
-          },
-          {
-            "name": "memory_store",
-            "summaryChars": 127,
-            "schemaChars": 453,
-            "propertiesCount": 4
-          },
-          {
-            "name": "memory_get",
-            "summaryChars": 47,
-            "schemaChars": 127,
-            "propertiesCount": 1
-          },
-          {
-            "name": "memory_list",
-            "summaryChars": 147,
-            "schemaChars": 395,
-            "propertiesCount": 2
-          },
-          {
-            "name": "memory_forget",
-            "summaryChars": 141,
-            "schemaChars": 186,
-            "propertiesCount": 2
           }
         ]
+      },
+      "currentTurn": {
+        "promptChars": 39,
+        "runtimeContextChars": 0
       }
     },
-    "inputTokens": 29478,
-    "outputTokens": 77,
     "cacheRead": 0,
     "cacheWrite": 0,
-    "estimatedCostUsd": 0,
-    "totalTokensFresh": false,
-    "endedAt": 1780457108189,
-    "runtimeMs": 6097
+    "totalTokensFresh": true,
+    "route": {
+      "channel": "webchat"
+    },
+    "sessionStartedAt": 1780463799758,
+    "lastInteractionAt": 1780465825847,
+    "usageFamilyKey": "agent:main:main",
+    "usageFamilySessionIds": [
+      "5d2b5088-6261-48f6-926b-f74827c8421f",
+      "88ffbece-1244-4e00-9ec8-46a6d33ae1ee"
+    ],
+    "skillsSnapshot": {
+      "skills": [
+        {
+          "name": "browser-automation"
+        },
+        {
+          "name": "canvas"
+        },
+        {
+          "name": "clawhub",
+          "requiredEnv": []
+        },
+        {
+          "name": "diagram-maker"
+        },
+        {
+          "name": "feishu-channel-rules"
+        },
+        {
+          "name": "feishu-doc"
+        },
+        {
+          "name": "feishu-drive"
+        },
+        {
+          "name": "feishu-lark-cli"
+        },
+        {
+          "name": "feishu-perm"
+        },
+        {
+          "name": "feishu-troubleshoot"
+        },
+        {
+          "name": "feishu-wiki"
+        },
+        {
+          "name": "healthcheck"
+        },
+        {
+          "name": "lark-approval"
+        },
+        {
+          "name": "lark-attendance"
+        },
+        {
+          "name": "lark-base"
+        },
+        {
+          "name": "lark-calendar"
+        },
+        {
+          "name": "lark-contact"
+        },
+        {
+          "name": "lark-doc"
+        },
+        {
+          "name": "lark-drive"
+        },
+        {
+          "name": "lark-event"
+        },
+        {
+          "name": "lark-im"
+        },
+        {
+          "name": "lark-mail"
+        },
+        {
+          "name": "lark-markdown"
+        },
+        {
+          "name": "lark-minutes"
+        },
+        {
+          "name": "lark-okr"
+        },
+        {
+          "name": "lark-openapi-explorer"
+        },
+        {
+          "name": "lark-shared"
+        },
+        {
+          "name": "lark-sheets"
+        },
+        {
+          "name": "lark-skill-maker"
+        },
+        {
+          "name": "lark-slides"
+        },
+        {
+          "name": "lark-task"
+        },
+        {
+          "name": "lark-vc"
+        },
+        {
+          "name": "lark-whiteboard"
+        },
+        {
+          "name": "lark-wiki"
+        },
+        {
+          "name": "lark-workflow-meeting-summary"
+        },
+        {
+          "name": "lark-workflow-standup-report"
+        },
+        {
+          "name": "meme-maker",
+          "requiredEnv": []
+        },
+        {
+          "name": "miaoda-doc-parse"
+        },
+        {
+          "name": "miaoda-image-understanding"
+        },
+        {
+          "name": "miaoda-openclaw-guide"
+        },
+        {
+          "name": "miaoda-skillhub"
+        },
+        {
+          "name": "miaoda-speech-to-text"
+        },
+        {
+          "name": "miaoda-text-gen-image"
+        },
+        {
+          "name": "miaoda-web-fetch"
+        },
+        {
+          "name": "miaoda-web-search"
+        },
+        {
+          "name": "node-connect"
+        },
+        {
+          "name": "node-inspect-debugger",
+          "requiredEnv": []
+        },
+        {
+          "name": "python-debugpy",
+          "requiredEnv": []
+        },
+        {
+          "name": "session-logs",
+          "requiredEnv": []
+        },
+        {
+          "name": "skill-creator"
+        },
+        {
+          "name": "spike"
+        },
+        {
+          "name": "taskflow"
+        },
+        {
+          "name": "taskflow-inbox-triage"
+        },
+        {
+          "name": "weather",
+          "requiredEnv": []
+        }
+      ],
+      "version": 1780465813718,
+      "promptRef": {
+        "version": 1,
+        "algorithm": "sha256",
+        "hash": "1b496545c2d60952cc4160d0c34c13ab7e9aec3c8cf70b5c73bf331ba6caf6a6",
+        "bytes": 23543
+      }
+    },
+    "status": "done",
+    "startedAt": 1780465826370,
+    "contextTokens": 200000,
+    "endedAt": 1780465828675,
+    "runtimeMs": 2305
   }
 }

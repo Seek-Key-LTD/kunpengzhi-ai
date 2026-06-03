@@ -1,0 +1,6 @@
+URL:   https://git4tateam-app_4k8rbdjs6wk69-1866446270705962.aiforce.run
+TOKEN: 3871bf45003b60ef6c8cd6e901998a1fdb726a33767b310d
+
+--- 测试命令（Mac 终端里跑）---
+
+curl -sv -H "Authorization: Bearer 3871bf45003b60ef6c8cd6e901998a1fdb726a33767b310d" --connect-timeout 10 "https://git4tateam-app_4k8rbdjs6wk69-1866446270705962.aiforce.run/"
