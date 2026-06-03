@@ -137,7 +137,7 @@ class TTSEngine:
             final = self.strip_markdown(oral)[:2000] or clean[:2000]
             import edge_tts
             key = f"tts/debate_{idx:03d}_{uuid.uuid4().hex[:8]}.mp3"
-            tmp = f"/tmp/{uuid.uuid4().hex}.mp3"
+            tmp = f"/tmp/debate_{idx:03d}_{uuid.uuid4().hex[:8]}.mp3"
             await edge_tts.Communicate(final, self.voice).save(tmp)
             if not os.path.exists(tmp):
                 return None
@@ -156,31 +156,63 @@ class TTSEngine:
     async def stitch_audio(self, paths: List[str]) -> Optional[str]:
         if len(paths) == 0:
             return None
+        
+        # Sort paths to guarantee chronological debate order (based on filename which contains indices like debate_001_...)
+        sorted_paths = []
+        for p in paths:
+            if os.path.exists(p) and os.path.getsize(p) > 100:
+                sorted_paths.append(p)
+        
+        sorted_paths.sort(key=lambda x: os.path.basename(x))
+        if not sorted_paths:
+            return None
+
+        data = None
+        
+        # 1. Try using pydub first (which inserts silence padding but requires ffprobe/ffmpeg)
         try:
             from pydub import AudioSegment
             combined = AudioSegment.empty()
-            for p in paths:
-                if os.path.exists(p) and os.path.getsize(p) > 100:
-                    combined += AudioSegment.from_mp3(p)
-                    combined += AudioSegment.silent(duration=300)
+            for p in sorted_paths:
+                combined += AudioSegment.from_mp3(p)
+                combined += AudioSegment.silent(duration=300)
             if len(combined) > 0:
                 out = f"/tmp/辩论全录_{uuid.uuid4().hex[:8]}.mp3"
                 combined.export(out, format="mp3", bitrate="48k")
                 with open(out, "rb") as f:
                     data = f.read()
+                os.remove(out)
+                log.info("🎧 Audio stitched successfully using pydub.")
+        except Exception as e:
+            log.warning(f"Pydub stitch failed: {e}. Falling back to raw binary concatenation (no ffprobe/ffmpeg required)...")
+            # 2. Fallback to raw binary concatenation of MP3 bytes (robust under sandbox/Heroku environments without ffmpeg/ffprobe)
+            try:
+                combined_bytes = b""
+                for p in sorted_paths:
+                    with open(p, "rb") as f:
+                        combined_bytes += f.read()
+                if combined_bytes:
+                    data = combined_bytes
+                    log.info("🎧 Audio stitched successfully using raw binary concatenation.")
+            except Exception as ex:
+                log.error(f"Binary concatenation fallback failed: {ex}")
+
+        if data:
+            try:
                 key = f"tts/debate_full_{uuid.uuid4().hex[:8]}.mp3"
                 ok = await R2Store.upload(key, data)
-                for p in paths:
+                # Cleanup temporary audio files
+                for p in sorted_paths:
                     try:
                         os.remove(p)
                     except:
                         pass
-                os.remove(out)
                 if ok:
                     log.info(f"🎧 辩论全录: {len(data)} bytes")
                     return R2Store.public_url(key)
-        except Exception as e:
-            log.warning(f"Stitch fail: {e}")
+            except Exception as e:
+                log.error(f"Failed to upload stitched audio to R2: {e}")
+                
         return None
 
 
