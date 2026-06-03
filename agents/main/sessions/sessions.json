@@ -1,7 +1,7 @@
 {
   "agent:main:feishu:default:direct:ou_2f92a7aebdf35e672c28652e21aa4460": {
     "sessionId": "ed9041f1-0415-4352-b95c-0f9218d231ff",
-    "updatedAt": 1780497838980,
+    "updatedAt": 1780498512901,
     "systemSent": true,
     "abortedLastRun": false,
     "chatType": "direct",
@@ -203,8 +203,8 @@
         "bytes": 23543
       }
     },
-    "status": "running",
-    "startedAt": 1780497838696,
+    "status": "failed",
+    "startedAt": 1780498501908,
     "modelProvider": "freellm",
     "model": "auto",
     "contextTokens": 200000,
@@ -825,7 +825,7 @@
       }
     },
     "sessionStartedAt": 1780122347984,
-    "lastInteractionAt": 1780497835527,
+    "lastInteractionAt": 1780498499393,
     "compactionCheckpoints": [
       {
         "checkpointId": "4c30321d-6e05-416f-b26f-09656646089e",
@@ -852,7 +852,9 @@
     "inputTokens": 109808,
     "outputTokens": 113,
     "cacheRead": 0,
-    "cacheWrite": 0
+    "cacheWrite": 0,
+    "endedAt": 1780498497770,
+    "runtimeMs": 0
   },
   "agent:main:main": {
     "sessionId": "88ffbece-1244-4e00-9ec8-46a6d33ae1ee",
