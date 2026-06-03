@@ -950,7 +950,7 @@ async def start():
     
     # 模拟用户输入 "1" 开始辩论
     msg = cl.Message(content="1")
-    await main(msg)
+    asyncio.create_task(main(msg))
 
 @cl.on_message
 async def main(message: cl.Message):
