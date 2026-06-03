@@ -1,84 +1,11 @@
 {
   "providers": {
-    "codex": {
-      "baseUrl": "https://chatgpt.com/backend-api",
-      "auth": "token",
-      "api": "openai-codex-responses",
-      "models": [
-        {
-          "id": "gpt-5.4",
-          "name": "gpt-5.4",
-          "api": "openai-codex-responses",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "cost": {
-            "input": 0,
-            "output": 0,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 272000,
-          "maxTokens": 128000,
-          "compat": {
-            "supportsReasoningEffort": true,
-            "supportsUsageInStreaming": true
-          }
-        },
-        {
-          "id": "gpt-5.4-mini",
-          "name": "GPT-5.4-Mini",
-          "api": "openai-codex-responses",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "cost": {
-            "input": 0,
-            "output": 0,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 272000,
-          "maxTokens": 128000,
-          "compat": {
-            "supportsReasoningEffort": true,
-            "supportsUsageInStreaming": true
-          }
-        },
-        {
-          "id": "gpt-5.2",
-          "name": "gpt-5.2",
-          "api": "openai-codex-responses",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "cost": {
-            "input": 0,
-            "output": 0,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          },
-          "contextWindow": 272000,
-          "maxTokens": 128000,
-          "compat": {
-            "supportsReasoningEffort": true,
-            "supportsUsageInStreaming": true
-          }
-        }
-      ]
-    },
     "miaoda": {
       "baseUrl": "https://innerapi.aiforce.cloud/innerapi/api/v1/sgw/model/proxy",
-      "apiKey": "secretref-managed",
+      "apiKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxODQ0ODUyNTE0X2FwcF80azhyYmRqczZ3azY5X3ByZXZpZXciLCJleHAiOjE3ODA3MTM4NjQsIm5iZiI6MTc4MDQ1NDY2NCwiaWF0IjoxNzgwNDU0NjY0LCJqdGkiOiJhMGYyYzhlYS0yNDU4LTI1ZDEtMWIzMy1hYjVlNjgwNTRiODgiLCJ0ZW5hbnRfaWQiOjE4NDQ4NTI1MTQsInVzZXJfaWQiOjE4NjM4ODI4OTI4Njg2MTEsImFwcF9pZCI6ImFwcF80azhyYmRqczZ3azY5IiwiYXBwX2VudiI6InByZXZpZXciLCJhY2Nlc3Nfa2V5IjoiMTg0NDg1MjUxNF9hcHBfNGs4cmJkanM2d2s2OV9wcmV2aWV3Iiwic2FuZGJveF9pZCI6IjE4NjY0NDYyNzA3MDU5NjIifQ.bj6PLJMJhkNDKX5lNOzmWWQ39YokI9Jjsum_UkZRn-Y",
       "api": "openai-completions",
       "headers": {
-        "x-api-key": "secretref-managed"
+        "x-api-key": "1844852514_app_4k8rbdjs6wk69_preview"
       },
       "models": [
         {
@@ -219,6 +146,30 @@
           },
           "contextWindow": 200000,
           "maxTokens": 16000
+        }
+      ]
+    },
+    "freellm": {
+      "baseUrl": "https://freellmapi.git4ta.fun/v1",
+      "apiKey": "freellmapi-7304d343a34f8e4d2b7d4c7e33348fcc5ceca361f8cc422f",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "auto",
+          "name": "auto",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 8192,
+          "api": "openai-completions"
         }
       ]
     }
