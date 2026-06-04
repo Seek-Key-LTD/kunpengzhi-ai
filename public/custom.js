@@ -19,6 +19,7 @@ function injectSidebars() {
 
 // ─── 2. 浮动 Q&A 小窗（白嫖 $1000 App Builder）────
 function injectQAWidget() {
+    console.log("鲲鹏志: Qfunction injectQAWidget()A widget 注入开始..."); {
     if (document.getElementById('qa-float-btn')) return;
 
     // 加载 Google Widget 脚本
@@ -98,3 +99,12 @@ if (document.readyState === 'loading') {
     injectSidebars();
     injectQAWidget();
 }
+
+// 测试标记：脚本执行了就在 body 加个红点
+(function(){
+    const dot = document.createElement('div');
+    dot.id = 'script-test-dot';
+    dot.style.cssText = 'position:fixed;top:10px;left:10px;z-index:99999;width:12px;height:12px;background:red;border-radius:50%;';
+    document.body.appendChild(dot);
+    console.log('鲲鹏志: custom.js 已执行 ✅');
+})();
