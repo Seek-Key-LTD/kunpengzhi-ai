@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>鲲鹏志 · AI 知识库</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "Noto Sans SC", sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      max-width: 720px;
+      width: 90%;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      color: #94a3b8;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    .search-box {
+      margin: 2rem 0;
+    }
+    #searchWidgetTrigger {
+      width: 100%;
+      max-width: 480px;
+      padding: 1rem 1.5rem;
+      font-size: 1.1rem;
+      border: 2px solid #334155;
+      border-radius: 12px;
+      background: #1e293b;
+      color: #e2e8f0;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    #searchWidgetTrigger:focus {
+      border-color: #f59e0b;
+    }
+    .footer {
+      margin-top: 3rem;
+      font-size: 0.85rem;
+      color: #475569;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">🦅 由 Google GenAI App Builder $1000 赠金驱动</div>
+    <h1>鲲鹏志·知识库</h1>
+    <p>
+      《牧人记》《牧兰记》《双约记》《牧月记》<br>
+      四部曲 × 57 章 · AI 问答
+    </p>
+    <div class="search-box">
+      <input placeholder="问任何关于鲲鹏志的问题…" id="searchWidgetTrigger" />
+    </div>
+    <div class="footer">
+      🌐 Vertex AI Agent Builder · Gemini · $1000 赠金白嫖中
+    </div>
+  </div>
+
+  <!-- Gen App Builder Widget -->
+  <script src="https://cloud.google.com/ai/gen-app-builder/client?hl=zh_CN"></script>
+  <gen-search-widget
+    configId="52a37158-b391-4d50-a881-93cfd950cafc"
+    triggerId="searchWidgetTrigger">
+  </gen-search-widget>
+</body>
+</html>
