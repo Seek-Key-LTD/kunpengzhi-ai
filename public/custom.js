@@ -19,13 +19,13 @@
         // 左右面板
         var l = document.createElement('div');
         l.id = 'kz-left';
-        l.style.cssText = 'position:fixed;left:0;top:0;width:240px;height:100%;z-index:9990;';
+        l.className = 'fixed-sidebar';
         l.innerHTML = '<iframe src="/left-board" style="width:100%;height:100%;border:none;" title="left"></iframe>';
         document.body.appendChild(l);
 
         var r = document.createElement('div');
         r.id = 'kz-right';
-        r.style.cssText = 'position:fixed;right:0;top:0;width:240px;height:100%;z-index:9990;';
+        r.className = 'fixed-sidebar';
         r.innerHTML = '<iframe src="/bagua" style="width:100%;height:100%;border:none;" title="right"></iframe>';
         document.body.appendChild(r);
 
