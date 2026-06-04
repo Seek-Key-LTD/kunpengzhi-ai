@@ -137,7 +137,7 @@ custom_js = "/public/custom.js"
 alert_style = "classic"
 
 # Specify additional attributes for custom JS file
-# custom_js_attributes = "async type = \"module\""
+custom_js_attributes = "data-cfasync=\"false\" defer"
 
 # Custom login page image, relative to public directory or external URL
 # login_page_image = "/public/custom-background.jpg"
