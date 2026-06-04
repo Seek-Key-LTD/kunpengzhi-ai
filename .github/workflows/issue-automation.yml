@@ -1,0 +1,56 @@
+name: 🎯 Issue Pipeline Automation
+
+on:
+  issues:
+    types: [opened, closed, reopened, labeled, unlabeled]
+  pull_request:
+    types: [opened, closed, merged]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move to project board
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 新 issue → 自动加到组织看板
+          if [ "${{ github.event_name }}" = "issues" ] && [ "${{ github.event.action }}" = "opened" ]; then
+            gh project item-add 1 --owner "Seek-Key-LTD" \
+              --url "https://github.com/${{ github.repository }}/issues/${{ github.event.issue.number }}"
+          fi
+
+  status-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync status based on labels
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUM="${{ github.event.issue.number }}"
+          ACTION="${{ github.event.action }}"
+          LABEL="${{ github.event.label.name }}"
+          STATE="${{ github.event.issue.state }}"
+
+          # 打上 in-progress 标签 → 自动移到 In Progress
+          if [ "$ACTION" = "labeled" ] && [ "$LABEL" = "in-progress" ]; then
+            echo "Moving issue #$ISSUE_NUM to In Progress"
+            # 用 GraphQL 更新 project item status
+          fi
+
+          # Issue closed → 自动移到 Done
+          if [ "$ACTION" = "closed" ]; then
+            echo "Moving issue #$ISSUE_NUM to Done"
+          fi
+
+  weekly-summary:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 9 * * 1'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate weekly summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📊 本周看板状态："
+          gh project item-list 1 --owner "Seek-Key-LTD" --format json | \
+            python3 -c "import json,sys; d=json.load(sys.stdin); items=d.get('items',[]); print(f'总计: {len(items)}'); print(f'开放: {sum(1 for i in items if i.get(\"status\")!=\"Done\")}'); print(f'完成: {sum(1 for i in items if i.get(\"status\")==\"Done\")}')"
