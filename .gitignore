@@ -13,3 +13,7 @@ env/
 
 # Environment
 .env
+outputs/
+*.bak
+status.sh
+dashboard.sh

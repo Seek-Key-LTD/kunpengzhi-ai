@@ -39,7 +39,27 @@ log = logging.getLogger("burn")
 # ─── 配置 ─────────────────────────────────────────
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "http://localhost:4000/v1")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-47318")
-DEBATE_MODEL = os.getenv("DEBATE_MODEL", "gemini-2.5-pro")
+DEBATE_MODEL = os.getenv("DEBATE_MODEL", "gemini-2.5-flash")
+# ─── 启动校验 ────────────────────────────────────
+_REQUIRED_ENV = ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN", "OPENAI_BASE_URL", "OPENAI_API_KEY"]
+_MISSING = [v for v in _REQUIRED_ENV if not os.getenv(v)]
+if _MISSING:
+    log.warning(f"⚠️  缺少环境变量: {_MISSING}")
+    log.warning("R2 上传和 LLM 调用可能失败，请检查 .env 文件或环境变量")
+else:
+    log.info("✅ 环境变量校验通过")
+
+# 确保本地输出目录存在
+_LOCAL_OUTPUTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "outputs")
+os.makedirs(os.path.join(_LOCAL_OUTPUTS, "kg"), exist_ok=True)
+os.makedirs(os.path.join(_LOCAL_OUTPUTS, "analysis"), exist_ok=True)
+os.makedirs(os.path.join(_LOCAL_OUTPUTS, "crossref"), exist_ok=True)
+os.makedirs(os.path.join(_LOCAL_OUTPUTS, "podcast"), exist_ok=True)
+os.makedirs(os.path.join(_LOCAL_OUTPUTS, "debates"), exist_ok=True)
+os.makedirs(os.path.join(_LOCAL_OUTPUTS, "qa"), exist_ok=True)
+os.makedirs(os.path.join(_LOCAL_OUTPUTS, "batch"), exist_ok=True)
+log.info(f"📁 本地输出目录: {_LOCAL_OUTPUTS}")
+
 CLOUDFLARE_ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
 CLOUDFLARE_API_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "")
 R2_BUCKET = os.getenv("R2_BUCKET", "kunpengzhi-tts")
@@ -51,7 +71,7 @@ GITLAB_CE_TOKEN = os.getenv("GITLAB_CE_TOKEN", "")
 GITLAB_PROJECT = os.getenv("GITLAB_PROJECT", "kunpengzhi/podcast-content")
 
 # 并发控制
-MAX_CONCURRENT = 50  # 50路并发 🔥
+MAX_CONCURRENT = 20  # 50路并发 🔥
 RATE_LIMIT_DELAY = 0.2  # 每批后等待（激进）
 
 # 进度文件
@@ -66,7 +86,7 @@ client = openai.AsyncOpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY)
 semaphore = asyncio.Semaphore(MAX_CONCURRENT)
 
 async def llm_burn(prompt: str, system: str = "", max_tokens: int = 8192) -> Tuple[str, int]:
-    """调用 LLM 并返回 (文本, 估算总token数)"""
+    """调用 LLM 并返回 (文本, 估算总token数) - 带有指数退避重试"""
     async with semaphore:
         messages = []
         if system:
@@ -75,19 +95,35 @@ async def llm_burn(prompt: str, system: str = "", max_tokens: int = 8192) -> Tup
         
         input_tokens = len(prompt) + len(system)
         
-        resp = await client.chat.completions.create(
-            model=DEBATE_MODEL,
-            messages=messages,
-            max_tokens=max_tokens,
-            timeout=180,
-        )
-        text = resp.choices[0].message.content
-        output_tokens = len(text) if text else 0
-        return text or "", input_tokens + output_tokens
+        max_retries = 8
+        backoff_factor = 2.0
+        initial_delay = 1.0
+        
+        for attempt in range(max_retries):
+            try:
+                resp = await client.chat.completions.create(
+                    model=DEBATE_MODEL,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    timeout=180,
+                )
+                text = resp.choices[0].message.content
+                output_tokens = len(text) if text else 0
+                return text or "", input_tokens + output_tokens
+            except (openai.RateLimitError, openai.APITimeoutError, openai.APIConnectionError) as e:
+                if attempt == max_retries - 1:
+                    log.error(f"❌ LLM 调用失败（已达到最大重试次数）: {e}")
+                    raise
+                delay = initial_delay * (backoff_factor ** attempt)
+                log.warning(f"⚠️  LLM 调用触发限流或超时 ({e})，正在进行第 {attempt + 1} 次重试，等待 {delay:.1f} 秒...")
+                await asyncio.sleep(delay)
+            except Exception as e:
+                log.error(f"❌ LLM 发生非重试异常: {e}")
+                raise
 
 
 async def llm_stream_burn(prompt: str, system: str = "") -> Tuple[str, int]:
-    """流式调用，适合长文本"""
+    """流式调用，适合长文本 - 带有指数退避重试"""
     async with semaphore:
         messages = []
         if system:
@@ -96,19 +132,35 @@ async def llm_stream_burn(prompt: str, system: str = "") -> Tuple[str, int]:
         
         input_tokens = len(prompt) + len(system)
         
-        stream = await client.chat.completions.create(
-            model=DEBATE_MODEL,
-            messages=messages,
-            stream=True,
-            timeout=300,
-        )
+        max_retries = 8
+        backoff_factor = 2.0
+        initial_delay = 1.0
         
-        result = ""
-        async for chunk in stream:
-            if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
-                result += chunk.choices[0].delta.content
-        
-        return result, input_tokens + len(result)
+        for attempt in range(max_retries):
+            try:
+                stream = await client.chat.completions.create(
+                    model=DEBATE_MODEL,
+                    messages=messages,
+                    stream=True,
+                    timeout=300,
+                )
+                
+                result = ""
+                async for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+                        result += chunk.choices[0].delta.content
+                
+                return result, input_tokens + len(result)
+            except (openai.RateLimitError, openai.APITimeoutError, openai.APIConnectionError) as e:
+                if attempt == max_retries - 1:
+                    log.error(f"❌ LLM 流式调用失败（已达到最大重试次数）: {e}")
+                    raise
+                delay = initial_delay * (backoff_factor ** attempt)
+                log.warning(f"⚠️  LLM 流式调用触发限流或超时 ({e})，正在进行第 {attempt + 1} 次重试，等待 {delay:.1f} 秒...")
+                await asyncio.sleep(delay)
+            except Exception as e:
+                log.error(f"❌ LLM 流式发生非重试异常: {e}")
+                raise
 
 
 # ─── R2 存储 ─────────────────────────────────────
@@ -126,7 +178,23 @@ async def r2_upload(key: str, data: bytes) -> bool:
 
 
 async def r2_upload_text(key: str, text: str) -> bool:
-    return await r2_upload(key, text.encode("utf-8"))
+    """上传到 R2，同时写本地文件兜底"""
+    # 本地兜底：把 key 中的 / 换成路径
+    local_path = os.path.join(_LOCAL_OUTPUTS, key)
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    try:
+        with open(local_path, 'w', encoding='utf-8') as f:
+            f.write(text)
+    except Exception as e:
+        log.warning(f"本地写入失败 {local_path}: {e}")
+    
+    # R2 上传
+    ok = await r2_upload(key, text.encode("utf-8"))
+    if ok:
+        log.info(f"  ☁️  R2: {key} ({len(text)} bytes)")
+    else:
+        log.warning(f"  ⚠️  R2 上传失败，但已保存到本地: {local_path}")
+    return ok
 
 
 # ─── GitLab CE ───────────────────────────────────
@@ -291,6 +359,16 @@ async def pipeline_1_kg(chapters: List[Dict]):
             all_triples.extend(triples)
             total_tokens += tokens
             mark_done("kg", k)
+            # 逐章保存到本地
+            try:
+                ch_key = f"kg/{c['book']}/{c['chapter']}.json"
+                ch_data = json.dumps(triples, ensure_ascii=False, indent=2)
+                local_path = os.path.join(_LOCAL_OUTPUTS, ch_key)
+                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                with open(local_path, 'w', encoding='utf-8') as f:
+                    f.write(ch_data)
+            except Exception as e:
+                log.warning(f"  本地保存失败: {e}")
             log.info(f"    ✅ {c['book']}/{c['chapter']}: {len(triples)} 三元组 (~{tokens} tokens)")
         
         await asyncio.sleep(RATE_LIMIT_DELAY)

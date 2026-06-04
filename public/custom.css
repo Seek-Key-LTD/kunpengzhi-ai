@@ -1,6 +1,5 @@
-/* 鲲鹏志 · 宽屏高级视觉定制样式 (自适应主题) */
+/* 鲲鹏志 · 宽屏高级视觉定制样式 */
 
-/* Default: Light theme values */
 :root {
   --row-bg: rgba(0, 0, 0, 0.02);
   --row-border: rgba(0, 0, 0, 0.08);
@@ -11,7 +10,6 @@
   --speech-bg: rgba(0, 0, 0, 0.02);
 }
 
-/* Dark theme overrides */
 .dark, [data-theme='dark'], body.dark-theme {
   --row-bg: rgba(255, 255, 255, 0.03);
   --row-border: rgba(255, 255, 255, 0.08);
@@ -22,20 +20,16 @@
   --speech-bg: rgba(255, 255, 255, 0.03);
 }
 
-/* 全屏布局优化 */
-.cl-message {
+.cl-message, .cl-message-content {
   width: 100% !important;
   max-width: 100% !important;
 }
 
 .cl-message-content {
-  width: 100% !important;
-  max-width: 100% !important;
   background: transparent !important;
   padding: 0 !important;
 }
 
-/* 3列布局框架 */
 .debate-row {
   display: flex;
   justify-content: space-between;
@@ -43,10 +37,9 @@
   width: 100%;
   gap: 24px;
   margin: 16px 0;
-  font-family: "LXGW WenKai", "Inter", -apple-system, sans-serif;
+  font-family: LXGW WenKai, Inter, -apple-system, sans-serif;
 }
 
-/* 耳语栏 (Whisper Bar) 样式 */
 .whisper-bar {
   flex: 0 0 24%;
   font-size: 0.88em;
@@ -61,7 +54,6 @@
   align-self: flex-start;
 }
 
-/* 激活状态的耳语栏 */
 .whisper-bar.active {
   border: 1px solid rgba(128, 128, 128, 0.2);
   box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.25);
@@ -69,13 +61,13 @@
 }
 
 .whisper-bar.left-bar.active {
-  border-left: 4px solid #ef4444; /* 珊瑚红 */
+  border-left: 4px solid #ef4444;
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(255, 255, 255, 0.01));
   color: var(--speech-text-color);
 }
 
 .whisper-bar.right-bar.active {
-  border-left: 4px solid #3b82f6; /* 冰晶蓝 */
+  border-left: 4px solid #3b82f6;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(255, 255, 255, 0.01));
   color: var(--speech-text-color);
 }
@@ -89,13 +81,8 @@
   gap: 6px;
 }
 
-.left-bar .whisper-title {
-  color: #ef4444;
-}
-
-.right-bar .whisper-title {
-  color: #3b82f6;
-}
+.left-bar .whisper-title { color: #ef4444; }
+.right-bar .whisper-title { color: #3b82f6; }
 
 .whisper-placeholder {
   font-style: italic;
@@ -104,7 +91,6 @@
   padding: 12px 0;
 }
 
-/* 辩手发言区 */
 .speech-content {
   flex: 1;
   padding: 20px 26px;
@@ -116,61 +102,17 @@
   color: var(--speech-text-color);
 }
 
-.speech-content.pro-side {
-  border-top: 4px solid #ef4444;
-}
+.speech-content.pro-side { border-top: 4px solid #ef4444; }
+.speech-content.con-side { border-top: 4px solid #3b82f6; }
 
-.speech-content.con-side {
-  border-top: 4px solid #3b82f6;
-}
-
-.speech-content:hover {
-  border-color: rgba(128, 128, 128, 0.25);
-}
-
-/* 左右固定侧边栏 — 真正悬浮，不占空间 */
-.fixed-sidebar {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  width: 240px;
-  background-color: #0b0f19;
-  z-index: 9990;
-  overflow: hidden;
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.5);
-  transition: all 0.3s ease;
-  pointer-events: all;
-}
-
-#kz-left {
-  left: 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-#kz-right {
-  right: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* 主内容区不推挤，悬浮覆盖 */
 #root {
   margin-left: 0 !important;
   margin-right: 0 !important;
   max-width: 100% !important;
-  transition: none;
 }
 
-/* 适配 Chainlit 顶栏 */
 .MuiAppBar-root {
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
 }
-
-/* 侧边栏内部 iframe */
-.fixed-sidebar iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
