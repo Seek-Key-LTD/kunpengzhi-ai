@@ -2449,6 +2449,11 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
 </html>
 """
 
+@app.get("/custom.js")
+async def get_custom_js():
+    with open("public/custom.js", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read(), media_type="application/javascript")
+
 @app.get("/left-board")
 async def get_left_board_page():
     return HTMLResponse(content=LEFT_BOARD_CONTENT)
@@ -2459,7 +2464,7 @@ async def get_bagua_api():
 
 # 将 /status, /bagua, /bagua/api, /left-board 路由移动到 FastAPI 路由表的最前列，绕过 Chainlit 自带 of 单页应用 (SPA) 兜底通配符
 try:
-    target_paths = ["/status", "/bagua/api", "/bagua", "/left-board"]
+    target_paths = ["/status", "/bagua/api", "/bagua", "/left-board", "/custom.js", "/public/custom.js"]
     moved_routes = []
     i = 0
     while i < len(app.routes):
