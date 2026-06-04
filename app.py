@@ -1049,7 +1049,8 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     welcome_msg = cl.Message(content="🏛️ **议事长**: 欢迎来到鲲鹏志辩论现场！本场辩论采用罗伯特议事规则。\n"
                                      "本场为 100% 中美盲测对抗赛。一侧为中国模型组合（鹰派），一侧为美国模型组合（洋派）。\n"
                                      "每轮发言后麦克风交还议事长，由议事长归纳交锋，确保辩论焦点清晰。\n"
-                                     "双方辩手将围绕辩题展开激烈交锋，并引用《鲲鹏志》书库原文。\n\n")
+                                     "双方辩手将围绕辩题展开激烈交锋，并引用《鲲鹏志》书库原文。\n\n"
+                                     "*(评测池挂一漏万，以当前实际运行的模型版本为准)*\n\n")
     await welcome_msg.send()
     await asyncio.sleep(INTRO_SPEED_MS / 1000 * 30) # 模拟更慢的开场白
 
@@ -1142,7 +1143,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     reveal_content += "\n".join(pro_side_models) + "\n\n"
     reveal_content += f"### 🔵 反方阵营 ({con_country})\n"
     reveal_content += "\n".join(con_side_models) + "\n\n"
-    reveal_content += "---\n*提示：模型身份在辩论进行时是完全隐蔽的，仅在辩论结束后解密归档。*"
+    reveal_content += "---\n*提示：模型身份在辩论进行时是完全隐蔽的，仅在辩论结束后解密归档。评测池挂一漏万，以当前实际运行的模型版本为准。*"
     
     await cl.Message(content=reveal_content).send()
 
@@ -1848,6 +1849,7 @@ HTML_CONTENT = r"""<!DOCTYPE html>
                 <h2>当前辩题</h2>
                 <h3 id="topic-title" style="margin-top: 0.5rem; font-size: 1.05rem; font-weight: 600;">等待辩题加载...</h3>
                 <p id="debate-phase" style="margin-top: 0.4rem; color: #fbbf24; font-size: 0.85rem; font-weight: 500;">阶段: 尚未开始</p>
+                <p style="margin-top: 0.5rem; font-size: 0.72rem; color: var(--text-secondary); opacity: 0.7; font-style: italic;">(注: 评测池挂一漏万，以当前运行之物理模型版本为准)</p>
             </div>
 
             <div class="glass-panel debater-card" id="detail-panel">
@@ -1868,6 +1870,28 @@ HTML_CONTENT = r"""<!DOCTYPE html>
                 <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem; font-weight: 600;">🎙️ 发言实录</div>
                 <div class="speech-box" id="detail-speech">无发言记录</div>
                 <div class="whisper-box" id="detail-whisper">无实时指导</div>
+            </div>
+
+            <!-- MIDI Panel -->
+            <div class="glass-panel midi-panel" style="background: rgba(17, 24, 39, 0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.8rem; margin-top: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column;">
+                <h2 style="font-size: 0.9rem; color: var(--color-active); border-left: 3px solid var(--color-active); padding-left: 0.4rem; margin-bottom: 0.6rem; font-weight: bold; display: flex; align-items: center; justify-content: space-between;">
+                    <span>🎹 MIDI 律吕声响</span>
+                    <span id="audio-status-tag" style="font-size: 0.65rem; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 1px 4px; border-radius: 3px; font-weight: normal;">READY</span>
+                </h2>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.75rem; color: var(--text-secondary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>和声伴奏 (MIDI Bassline)</span>
+                        <span id="midi-voice-name" style="color: #60a5fa; font-weight: bold;">G-Minor 鹊桥仙</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>情绪音量</span>
+                        <input type="range" id="vol-slider" min="0" max="100" value="70" style="width: 100px; height: 3px; background: #374151; outline: none; border-radius: 2px; cursor: pointer;" oninput="updateVolume(this.value)">
+                    </div>
+                    <div style="display: flex; gap: 0.4rem; margin-top: 0.2rem;">
+                        <button id="btn-mute" onclick="toggleMute()" style="flex: 1; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; border-radius: 4px; padding: 3px 6px; font-size: 0.7rem; cursor: pointer; font-family: inherit; font-weight: bold; transition: all 0.2s;">🔕 MUTE / 静静音</button>
+                        <button id="btn-audio-test" onclick="playTestTone()" style="flex: 1; background: rgba(59, 130, 246, 0.15); border: 1px solid #3b82f6; color: #60a5fa; border-radius: 4px; padding: 3px 6px; font-size: 0.7rem; cursor: pointer; font-family: inherit; font-weight: bold; transition: all 0.2s;">🔊 测试音律</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1897,14 +1921,14 @@ HTML_CONTENT = r"""<!DOCTYPE html>
         };
 
         const SPEAKER_INFO = {
-            "正方一辩": { trigram: "☰", name: "乾 · 吕洞宾", id: "pro1", type: "pro" },
-            "反方一辩": { trigram: "☷", name: "坤 · 何仙姑", id: "con1", type: "con" },
-            "正方二辩": { trigram: "☶", name: "艮 · 张果老", id: "pro2", type: "pro" },
-            "反方二辩": { trigram: "☱", name: "兑 · 韩湘子", id: "con2", type: "con" },
-            "正方三辩": { trigram: "☲", name: "离 · 汉钟离", id: "pro3", type: "pro" },
-            "反方三辩": { trigram: "☵", name: "坎 · 蓝采和", id: "con3", type: "con" },
-            "正方四辩": { trigram: "☳", name: "震 · 铁拐李", id: "pro4", type: "pro" },
-            "反方四辩": { trigram: "☴", name: "巽 · 曹国舅", id: "con4", type: "con" }
+            "正方一辩": { trigram: "☰", name: "乾 · 吕洞宾", id: "pro1", type: "pro", matchup: "☯️ 乾坤对位（男对女）" },
+            "反方一辩": { trigram: "☷", name: "坤 · 何仙姑", id: "con1", type: "con", matchup: "☯️ 乾坤对位（女对男）" },
+            "正方二辩": { trigram: "☶", name: "艮 · 张果老", id: "pro2", type: "pro", matchup: "☯️ 艮兑对位（老对少）" },
+            "反方二辩": { trigram: "☱", name: "兑 · 韩湘子", id: "con2", type: "con", matchup: "☯️ 艮兑对位（少对老）" },
+            "正方三辩": { trigram: "☲", name: "离 · 汉钟离", id: "pro3", type: "pro", matchup: "☯️ 离坎对位（富对穷）" },
+            "反方三辩": { trigram: "☵", name: "坎 · 蓝采和", id: "con3", type: "con", matchup: "☯️ 离坎对位（穷对富）" },
+            "正方四辩": { trigram: "☳", name: "震 · 铁拐李", id: "pro4", type: "pro", matchup: "☯️ 震巽对位（贱对贵）" },
+            "反方四辩": { trigram: "☴", name: "巽 · 曹国舅", id: "con4", type: "con", matchup: "☯️ 震巽对位（贵对贱）" }
         };
 
         let localDebateState = null;
@@ -1940,12 +1964,15 @@ HTML_CONTENT = r"""<!DOCTYPE html>
             }
             document.getElementById("detail-role").className = info.type + "-text";
             
+            let identityHtml = info.name;
+            if (info.matchup) {
+                identityHtml += ` <span style="font-size: 0.75rem; color: #fbbf24; margin-left: 8px;">${info.matchup}</span>`;
+            }
             if (roundData.real_model) {
                 const countryLabel = roundData.country === "China" ? "🇨🇳 鹰派/中" : "🇺🇸 洋派/美";
-                document.getElementById("detail-identity").textContent = `${info.name} [已解密: ${roundData.real_model} (${countryLabel})]`;
-            } else {
-                document.getElementById("detail-identity").textContent = info.name;
+                identityHtml += `<br><span style="font-size: 0.72rem; color: #10b981; font-weight: bold;">[已解密: ${roundData.real_model} (${countryLabel})]</span>`;
             }
+            document.getElementById("detail-identity").innerHTML = identityHtml;
             document.getElementById("detail-avatar").textContent = info.trigram;
             document.getElementById("detail-poem").textContent = SPEAKER_POEMS[role] || "无";
 
@@ -2069,6 +2096,90 @@ HTML_CONTENT = r"""<!DOCTYPE html>
             }
             updateDetailPanel();
         });
+
+        // ─── Web Audio API MIDI Synth for Baseline Tones ───
+        let audioCtx = null;
+        let isMuted = false;
+        let masterGain = null;
+
+        function initAudio() {
+            if (audioCtx) return;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioCtx.createGain();
+                masterGain.connect(audioCtx.destination);
+                const vol = document.getElementById("vol-slider").value / 100;
+                masterGain.gain.value = vol;
+                console.log("🔊 赛博律吕 MIDI Synth 引擎初始化成功");
+            } catch (e) {
+                console.error("Failed to initialize Web Audio API:", e);
+            }
+        }
+
+        function toggleMute() {
+            initAudio();
+            if (!masterGain) return;
+            isMuted = !isMuted;
+            const btn = document.getElementById("btn-mute");
+            const tag = document.getElementById("audio-status-tag");
+            if (isMuted) {
+                masterGain.gain.value = 0;
+                btn.textContent = "🔊 UNMUTE / 开启";
+                btn.style.background = "rgba(16, 185, 129, 0.15)";
+                btn.style.border = "1px solid #10b981";
+                btn.style.color = "#34d399";
+                tag.textContent = "MUTED";
+                tag.style.background = "rgba(239, 68, 68, 0.15)";
+                tag.style.color = "#f87171";
+            } else {
+                const vol = document.getElementById("vol-slider").value / 100;
+                masterGain.gain.value = vol;
+                btn.textContent = "🔕 MUTE / 静音";
+                btn.style.background = "rgba(239, 68, 68, 0.15)";
+                btn.style.border = "1px solid #ef4444";
+                btn.style.color = "#f87171";
+                tag.textContent = "READY";
+                tag.style.background = "rgba(16, 185, 129, 0.15)";
+                tag.style.color = "#10b981";
+            }
+        }
+
+        function updateVolume(val) {
+            initAudio();
+            if (!masterGain || isMuted) return;
+            masterGain.gain.value = val / 100;
+        }
+
+        function playTestTone() {
+            initAudio();
+            if (!audioCtx) return;
+            
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            // 播放经典的仙侠 G-Minor 纯阳五声和弦 (G3, Bb3, D4, G4)
+            const freqs = [196.00, 233.08, 293.66, 392.00]; 
+            const now = audioCtx.currentTime;
+            
+            freqs.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(freq, now);
+                
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.12, now + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 2.0 + index * 0.2);
+                
+                osc.connect(gainNode);
+                gainNode.connect(masterGain);
+                
+                osc.start(now);
+                osc.stop(now + 2.5 + index * 0.2);
+            });
+        }
 
         fetchState();
         setInterval(fetchState, 1000);
