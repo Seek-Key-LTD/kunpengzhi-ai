@@ -1,144 +1,80 @@
-# 🦅 鲲鹏志 · CI/CD Pipeline
+# 🦅 鲲鹏志 · CI/CD Pipeline (Checkpoint 版)
 # Runner: kunpeng-burner (Group: seekkey)
-# 策略：小步快跑，每步 5 章，失败只丢一小批
+# 策略：每次触发处理 5 章，进度存入 progress.json，断点续传
 
 variables:
-  PIPELINE_DEBUG: "1"
-  LITELLM_BASE_URL: "http://localhost:4000/v1"
-  LITELLM_API_KEY: "sk-47318"
   MODEL: "gemini-2.5-flash"
 
 stages:
-  - check
-  - batch-kg
-  - batch-analysis
-  - batch-podcast
-  - batch-debate
-  - quality-check
+  - status
+  - batch
   - publish
-  - notify
 
 # =========================================
-# 1. 环境检查
+# 0. 状态上报（每次触发先看进度）
 # =========================================
-check-env:
-  stage: check
+show-status:
+  stage: status
   tags: [burn]
   script:
-    - echo "✅ Runner 在线: $(hostname)"
-    - python3 --version
-    - curl -s -o /dev/null -w "litellm: %{http_code}" $LITELLM_BASE_URL/models
-    - echo ""
-    - echo "📦 可用模型: $MODEL"
-  only:
-    - schedules
+    - cd ~/kunpengzhi-ai
+    - python3 scripts/checkpoint_runner.py --mode status
+    - du -sh outputs/ 2>/dev/null || echo "暂无产出"
 
 # =========================================
-# 2. 批次知识图谱 (每批 5 章)
+# 1. 处理下一批 5 章知识图谱
 # =========================================
-kg-batch-1:
-  stage: batch-kg
+batch-kg:
+  stage: batch
   tags: [burn, kg]
   script:
     - cd ~/kunpengzhi-ai
-    - python3 scripts/batch_processor.py --mode kg --batch 1 --count 5
+    - python3 scripts/checkpoint_runner.py --mode kg --batch-size 5
+    - echo "📊 本次产出:"
+    - find outputs/kg/ -name "*.json" -type f | wc -l
+    - echo "个知识图谱文件"
   artifacts:
     paths:
       - outputs/kg/
-    expire_in: 30 days
-
-kg-batch-2:
-  stage: batch-kg
-  tags: [burn, kg]
-  needs: [kg-batch-1]
-  script:
-    - cd ~/kunpengzhi-ai
-    - python3 scripts/batch_processor.py --mode kg --batch 2 --count 5
-  artifacts:
-    paths:
-      - outputs/kg/
-    expire_in: 30 days
-
-kg-batch-3:
-  stage: batch-kg
-  tags: [burn, kg]
-  needs: [kg-batch-2]
-  script:
-    - cd ~/kunpengzhi-ai
-    - python3 scripts/batch_processor.py --mode kg --batch 3 --count 5
-  artifacts:
-    paths:
-      - outputs/kg/
-    expire_in: 30 days
+    expire_in: 7 days
 
 # =========================================
-# 3. 章节分析 (紧跟 KG 批次)
+# 2. 处理下一批 3 章分析
 # =========================================
-analysis-batch-1:
-  stage: batch-analysis
+batch-analysis:
+  stage: batch
   tags: [burn, analysis]
-  needs: [kg-batch-1]
+  needs: [batch-kg]
   script:
     - cd ~/kunpengzhi-ai
-    - python3 scripts/batch_processor.py --mode analysis --batch 1 --count 5
+    - python3 scripts/checkpoint_runner.py --mode analysis --batch-size 3
+    - echo "📊 本次产出:"
+    - find outputs/analysis/ -type f | wc -l
+    - echo "个分析文件"
   artifacts:
     paths:
       - outputs/analysis/
-    expire_in: 30 days
-
-analysis-batch-2:
-  stage: batch-analysis
-  tags: [burn, analysis]
-  needs: [kg-batch-2]
-  script:
-    - cd ~/kunpengzhi-ai
-    - python3 scripts/batch_processor.py --mode analysis --batch 2 --count 5
-  artifacts:
-    paths:
-      - outputs/analysis/
-    expire_in: 30 days
+    expire_in: 7 days
 
 # =========================================
-# 4. 质量检查
+# 3. 推送到 GitHub（内容仓库）
 # =========================================
-quality-check:
-  stage: quality-check
-  tags: [burn]
-  needs: [analysis-batch-1]
-  script:
-    - cd ~/kunpengzhi-ai
-    - python3 -c "
-from core.graph_rag import build_graph
-build_graph()
-print('✅ 知识图谱: 可用')
-"
-    - echo "📊 本批产出:" 
-    - find outputs/ -type f | head -5
-    - echo "✅ 质量检查通过"
-
-# =========================================
-# 5. 发布到 GitLab
-# =========================================
-publish:
+publish-content:
   stage: publish
   tags: [burn]
+  needs: [batch-analysis]
   script:
-    - cd ~/kunpengzhi
-    - git add -A
-    - git commit -m "🦅 CI 自动更新: $(date '+%Y-%m-%d %H:%M')"
-    - git push origin main
-  only:
-    - schedules
-
-# =========================================
-# 6. 飞书通知
-# =========================================
-notify-feishu:
-  stage: notify
-  tags: [burn]
-  script:
+    - echo "📤 同步到 R2..."
     - cd ~/kunpengzhi-ai
-    - echo "✅ Pipeline 完成: $(date)"
-    - du -sh outputs/ || true
-  only:
-    - schedules
+    - |
+      for f in $(find outputs/ -type f -name "*.json" -newer progress.json 2>/dev/null); do
+        echo "  上传: $f"
+        curl -s -X PUT "https://$CLOUDFLARE_ACCOUNT_ID.r2.cloudflarestorage.com/$R2_BUCKET/$f" \
+          -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+          -T "$f" > /dev/null
+      done
+    - echo "✅ R2 同步完成"
+
+# pipeline 清理：3天后自动删除 artifacts
+variables:
+  GIT_STRATEGY: none  # 不需要 clone 代码，全在本地操作
