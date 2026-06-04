@@ -1,110 +1,107 @@
 // 鲲鹏志 · Chainlit 自定义注入脚本
+(function() {
+    console.log('鲲鹏志: custom.js 已加载');
 
-// ─── 1. 左右看板 ───────────────────────────────
-function injectSidebars() {
-    if (document.getElementById('left-sidebar')) return;
-    
-    const leftSidebar = document.createElement('div');
-    leftSidebar.id = 'left-sidebar';
-    leftSidebar.className = 'fixed-sidebar';
-    leftSidebar.innerHTML = '<iframe src="/left-board" style="width:100%; height:100%; border:none;"></iframe>';
-    document.body.appendChild(leftSidebar);
-
-    const rightSidebar = document.createElement('div');
-    rightSidebar.id = 'right-sidebar';
-    rightSidebar.className = 'fixed-sidebar';
-    rightSidebar.innerHTML = '<iframe src="/bagua" style="width:100%; height:100%; border:none;"></iframe>';
-    document.body.appendChild(rightSidebar);
-}
-
-// ─── 2. 浮动 Q&A 小窗（白嫖 $1000 App Builder）────
-function injectQAWidget() {
-    console.log("鲲鹏志: Qfunction injectQAWidget()A widget 注入开始..."); {
-    if (document.getElementById('qa-float-btn')) return;
-
-    // 加载 Google Widget 脚本
-    const script = document.createElement('script');
-    script.src = 'https://cloud.google.com/ai/gen-app-builder/client?hl=zh_CN';
-    script.async = true;
-    document.head.appendChild(script);
-
-    // 创建 widget 元素（隐藏）
-    const widget = document.createElement('gen-search-widget');
-    widget.setAttribute('configId', '52a37158-b391-4d50-a881-93cfd950cafc');
-    widget.setAttribute('triggerId', 'qaFloatTrigger');
-    widget.style.display = 'none';
-    document.body.appendChild(widget);
-
-    // 创建浮动按钮
-    const btn = document.createElement('div');
-    btn.id = 'qa-float-btn';
-    btn.innerHTML = '🔍';
-    btn.title = '搜鲲鹏志知识库';
-    btn.style.cssText = `
-        position: fixed;
-        bottom: 100px;
-        right: 20px;
-        z-index: 9999;
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #f59e0b, #ef4444);
-        color: white;
-        font-size: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: none;
-        user-select: none;
-    `;
-    btn.onmouseenter = () => { btn.style.transform = 'scale(1.1)'; btn.style.boxShadow = '0 6px 20px rgba(0,0,0,0.4)'; };
-    btn.onmouseleave = () => { btn.style.transform = 'scale(1)'; btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)'; };
-
-    // 点击时激活搜索
-    btn.onclick = () => {
-        const trigger = document.getElementById('qaFloatTrigger');
-        if (trigger) trigger.click();
-    };
-
-    // 隐藏的 trigger 元素
-    const trigger = document.createElement('span');
-    trigger.id = 'qaFloatTrigger';
-    trigger.style.display = 'none';
-    document.body.appendChild(trigger);
-    document.body.appendChild(btn);
-
-    // 嵌入额外样式
-    const style = document.createElement('style');
-    style.textContent = `
-        .gen-search-widget-answer {
-            font-family: "Noto Sans SC", sans-serif !important;
+    function ready(fn) {
+        if (document.readyState !== 'loading') {
+            setTimeout(fn, 0);
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
         }
-        .gen-search-widget-answer b, .gen-search-widget-answer strong {
-            color: #f59e0b !important;
-        }
-    `;
-    document.head.appendChild(style);
-}
+    }
 
-// ─── 注入 ───────────────────────────────────────
-if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', () => {
-        injectSidebars();
-        injectQAWidget();
+    // ─── 1. 左右看板 ───────────────────────────────
+    function injectSidebars() {
+        if (document.getElementById('left-sidebar')) return;
+        var left = document.createElement('div');
+        left.id = 'left-sidebar';
+        left.style.cssText = 'position:fixed;left:0;top:0;width:240px;height:100%;z-index:9990;';
+        left.innerHTML = '<iframe src="/left-board" style="width:100%;height:100%;border:none;"></iframe>';
+        document.body.appendChild(left);
+        var right = document.createElement('div');
+        right.id = 'right-sidebar';
+        right.style.cssText = 'position:fixed;right:0;top:0;width:240px;height:100%;z-index:9990;';
+        right.innerHTML = '<iframe src="/bagua" style="width:100%;height:100%;border:none;"></iframe>';
+        document.body.appendChild(right);
+        console.log('鲲鹏志: 左右面板注入完成');
+    }
+
+    // ─── 2. 浮动 Q&A 按钮 ─────────────────────────
+    var qaLoaded = false;
+    var qaTriggerEl = null;
+
+    function loadQAWidget() {
+        if (qaLoaded) return;
+        qaLoaded = true;
+
+        // 先加载 Google 脚本，加载完后再创建元素
+        var s = document.createElement('script');
+        s.src = 'https://cloud.google.com/ai/gen-app-builder/client?hl=zh_CN';
+        s.async = true;
+
+        s.onload = function() {
+            console.log('鲲鹏志: Google Widget 脚本已加载');
+            // 脚本已加载，现在创建 widget 元素
+            var w = document.createElement('gen-search-widget');
+            w.setAttribute('configId', '52a37158-b391-4d50-a881-93cfd950cafc');
+            w.setAttribute('triggerId', 'qaBtn');
+            w.style.display = 'none';
+            document.body.appendChild(w);
+
+            // 创建 trigger 元素
+            qaTriggerEl = document.createElement('button');
+            qaTriggerEl.id = 'qaBtn';
+            qaTriggerEl.style.display = 'none';
+            document.body.appendChild(qaTriggerEl);
+
+            // 激活按钮
+            var btn = document.getElementById('qa-float-btn');
+            if (btn) {
+                btn.onclick = function() {
+                    console.log('鲲鹏志: Q&A 按钮被点击');
+                    document.getElementById('qaBtn').click();
+                };
+                btn.style.cursor = 'pointer';
+                btn.title = '搜鲲鹏志知识库';
+                console.log('鲲鹏志: Q&A 按钮已激活');
+            }
+        };
+
+        s.onerror = function() {
+            console.error('鲲鹏志: Google Widget 脚本加载失败');
+        };
+
+        document.head.appendChild(s);
+        console.log('鲲鹏志: 开始加载 Google Widget 脚本...');
+    }
+
+    function injectQAButton() {
+        if (document.getElementById('qa-float-btn')) return;
+
+        // 先创建按钮（灰色待激活状态）
+        var btn = document.createElement('div');
+        btn.id = 'qa-float-btn';
+        btn.textContent = '🔍';
+        btn.style.cssText = 'position:fixed;bottom:100px;right:270px;z-index:9999;width:48px;height:48px;border-radius:50%;background:#6b7280;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);border:none;user-select:none;transition:background 0.3s;';
+        document.body.appendChild(btn);
+        console.log('鲲鹏志: Q&A 按钮已创建（待激活）');
+
+        // 开始加载 Widget 脚本
+        loadQAWidget();
+    }
+
+    // ─── 3. 主注入逻辑 ─────────────────────────
+    ready(function() {
+        function tryInject() {
+            if (!document.body) { setTimeout(tryInject, 100); return; }
+            injectSidebars();
+            injectQAButton();
+            var dot = document.createElement('div');
+            dot.id = 'script-test-dot';
+            dot.style.cssText = 'position:fixed;top:5px;left:5px;z-index:99999;width:8px;height:8px;background:lime;border-radius:50%;';
+            document.body.appendChild(dot);
+            console.log('鲲鹏志: 所有注入完成 ✅');
+        }
+        tryInject();
     });
-} else {
-    injectSidebars();
-    injectQAWidget();
-}
-
-// 测试标记：脚本执行了就在 body 加个红点
-(function(){
-    const dot = document.createElement('div');
-    dot.id = 'script-test-dot';
-    dot.style.cssText = 'position:fixed;top:10px;left:10px;z-index:99999;width:12px;height:12px;background:red;border-radius:50%;';
-    document.body.appendChild(dot);
-    console.log('鲲鹏志: custom.js 已执行 ✅');
 })();
