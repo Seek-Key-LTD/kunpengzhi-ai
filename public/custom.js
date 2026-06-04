@@ -1,107 +1,76 @@
 // 鲲鹏志 · Chainlit 自定义注入脚本
 (function() {
-    console.log('鲲鹏志: custom.js 已加载');
+    'use strict';
+    console.log('[鲲鹏志] custom.js 已加载');
 
-    function ready(fn) {
-        if (document.readyState !== 'loading') {
-            setTimeout(fn, 0);
-        } else {
-            document.addEventListener('DOMContentLoaded', fn);
-        }
-    }
+    var injected = false;
 
-    // ─── 1. 左右看板 ───────────────────────────────
-    function injectSidebars() {
-        if (document.getElementById('left-sidebar')) return;
-        var left = document.createElement('div');
-        left.id = 'left-sidebar';
-        left.style.cssText = 'position:fixed;left:0;top:0;width:240px;height:100%;z-index:9990;';
-        left.innerHTML = '<iframe src="/left-board" style="width:100%;height:100%;border:none;"></iframe>';
-        document.body.appendChild(left);
-        var right = document.createElement('div');
-        right.id = 'right-sidebar';
-        right.style.cssText = 'position:fixed;right:0;top:0;width:240px;height:100%;z-index:9990;';
-        right.innerHTML = '<iframe src="/bagua" style="width:100%;height:100%;border:none;"></iframe>';
-        document.body.appendChild(right);
-        console.log('鲲鹏志: 左右面板注入完成');
-    }
+    function doInject() {
+        if (injected) return;
+        if (!document.body) { setTimeout(doInject, 200); return; }
 
-    // ─── 2. 浮动 Q&A 按钮 ─────────────────────────
-    var qaLoaded = false;
-    var qaTriggerEl = null;
+        // 测试标记
+        var dot = document.createElement('div');
+        dot.id = 'kz-dot';
+        dot.textContent = '✅';
+        dot.style.cssText = 'position:fixed;top:2px;left:2px;z-index:999999;font-size:10px;background:rgba(0,255,0,0.8);padding:2px 4px;border-radius:3px;';
+        document.body.appendChild(dot);
 
-    function loadQAWidget() {
-        if (qaLoaded) return;
-        qaLoaded = true;
+        // 左右面板
+        var l = document.createElement('div');
+        l.id = 'kz-left';
+        l.style.cssText = 'position:fixed;left:0;top:0;width:240px;height:100%;z-index:9990;';
+        l.innerHTML = '<iframe src="/left-board" style="width:100%;height:100%;border:none;" title="left"></iframe>';
+        document.body.appendChild(l);
 
-        // 先加载 Google 脚本，加载完后再创建元素
-        var s = document.createElement('script');
-        s.src = 'https://cloud.google.com/ai/gen-app-builder/client?hl=zh_CN';
-        s.async = true;
+        var r = document.createElement('div');
+        r.id = 'kz-right';
+        r.style.cssText = 'position:fixed;right:0;top:0;width:240px;height:100%;z-index:9990;';
+        r.innerHTML = '<iframe src="/bagua" style="width:100%;height:100%;border:none;" title="right"></iframe>';
+        document.body.appendChild(r);
 
-        s.onload = function() {
-            console.log('鲲鹏志: Google Widget 脚本已加载');
-            // 脚本已加载，现在创建 widget 元素
-            var w = document.createElement('gen-search-widget');
-            w.setAttribute('configId', '52a37158-b391-4d50-a881-93cfd950cafc');
-            w.setAttribute('triggerId', 'qaBtn');
-            w.style.display = 'none';
-            document.body.appendChild(w);
+        // 加载 Google Widget
+        var gs = document.createElement('script');
+        gs.src = 'https://cloud.google.com/ai/gen-app-builder/client?hl=zh_CN';
+        gs.onload = function() {
+            console.log('[鲲鹏志] Google Widget 已就绪');
+            var gw = document.createElement('gen-search-widget');
+            gw.setAttribute('configId', '52a37158-b391-4d50-a881-93cfd950cafc');
+            gw.setAttribute('triggerId', 'kz-search-trigger');
+            gw.style.display = 'none';
+            document.body.appendChild(gw);
 
-            // 创建 trigger 元素
-            qaTriggerEl = document.createElement('button');
-            qaTriggerEl.id = 'qaBtn';
-            qaTriggerEl.style.display = 'none';
-            document.body.appendChild(qaTriggerEl);
+            var tr = document.createElement('span');
+            tr.id = 'kz-search-trigger';
+            tr.style.display = 'none';
+            document.body.appendChild(tr);
 
-            // 激活按钮
-            var btn = document.getElementById('qa-float-btn');
+            var btn = document.getElementById('kz-search-btn');
             if (btn) {
                 btn.onclick = function() {
-                    console.log('鲲鹏志: Q&A 按钮被点击');
-                    document.getElementById('qaBtn').click();
+                    var t = document.getElementById('kz-search-trigger');
+                    if (t) t.click();
                 };
-                btn.style.cursor = 'pointer';
+                btn.style.background = 'linear-gradient(135deg,#f59e0b,#ef4444)';
                 btn.title = '搜鲲鹏志知识库';
-                console.log('鲲鹏志: Q&A 按钮已激活');
+                console.log('[鲲鹏志] 🔍 按钮已激活');
             }
         };
+        document.head.appendChild(gs);
 
-        s.onerror = function() {
-            console.error('鲲鹏志: Google Widget 脚本加载失败');
-        };
-
-        document.head.appendChild(s);
-        console.log('鲲鹏志: 开始加载 Google Widget 脚本...');
-    }
-
-    function injectQAButton() {
-        if (document.getElementById('qa-float-btn')) return;
-
-        // 先创建按钮（灰色待激活状态）
+        // 🔍 按钮（默认灰色）
         var btn = document.createElement('div');
-        btn.id = 'qa-float-btn';
+        btn.id = 'kz-search-btn';
         btn.textContent = '🔍';
-        btn.style.cssText = 'position:fixed;bottom:100px;right:270px;z-index:9999;width:48px;height:48px;border-radius:50%;background:#6b7280;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);border:none;user-select:none;transition:background 0.3s;';
+        btn.style.cssText = 'position:fixed;bottom:100px;right:270px;z-index:9999;width:48px;height:48px;border-radius:50%;background:#6b7280;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);border:none;user-select:none;cursor:default;';
         document.body.appendChild(btn);
-        console.log('鲲鹏志: Q&A 按钮已创建（待激活）');
 
-        // 开始加载 Widget 脚本
-        loadQAWidget();
+        injected = true;
+        console.log('[鲲鹏志] 全部注入完成 ✅');
     }
 
-    // ─── 3. 主注入逻辑 ─────────────────────────
-    ready(function() {
-        function tryInject() {
-            if (!document.body) { setTimeout(tryInject, 100); return; }
-            injectSidebars();
-            injectQAButton();
-            var dot = document.createElement('div');
-            dot.id = 'script-test-dot';
-            dot.style.cssText = 'position:fixed;top:5px;left:5px;z-index:99999;width:8px;height:8px;background:lime;border-radius:50%;';
-            document.body.appendChild(dot);
-            console.log('鲲鹏志: 所有注入完成 ✅');
-        }
-        tryInject();
-    });
+    // 等 window load 确保 React 已挂载
+    window.addEventListener('load', doInject);
+    // 兜底：如果 load 已触发
+    if (document.readyState === 'complete') doInject();
 })();
