@@ -240,8 +240,8 @@ SPEAKER_POEMS = {
     "反方二辩": """【兑 ☱ · 韩湘子 —— 苏幕遮】\n紫金箫，清怨起。声振灵樾，音动微茫里。碧海苍梧飞仙履。一曲横吹，截断江河水。少年郎，心不死。踏遍群山，笑看红尘死。万古沧桑皆入耳。渔鼓声沉，唯有仙音在。""",
     "正方三辩": """【离 ☲ · 汉钟离 —— 一剪梅】\n手摇芭蕉宝扇夜气清。急鼓初催，乐奏公卿。满堂金翠转头空，大汉将军，解甲归蓬。一展神风雾隐腾。莫问流光，冷眼输赢。任他樱桃红透时，几度春风，老了仙翁。""",
     "反方三辩": """【坎 ☵ · 蓝采和 —— 西江月】\n手执叠板花篮，盛来满槛春风。竹板声声戏顽童，醉倒长街乱冢。几点山前疏雨，半宵稻海鸣虫。算来贫贱与公侯，都是南柯一梦。""",
-    "正方四辩": """【震 ☳ · 曹国舅 —— 虞美人】\n掌中云阳玉笏何时了？权柄如罂粟。满城开遍美人花，谁解红衣妖艳、是鸩家。雕栏玉砌生尸骨，大梦惊吞吐。老夫脱却大朝衣，洗净满身浮毒、白云归。""",
-    "反方四辩": """【巽 ☴ · 铁拐李 —— 卜算子】\n背负太极葫芦落红尘，拐杖惊风雨。莫笑形骸至贱躯，壶里乾坤寓。酒肉任穿肠，不肯栖寒树。待到悬壶济世时，散作山前雾。""",
+    "正方四辩": """【震 ☳ · 铁拐李 —— 卜算子】\n背负太极葫芦落红尘，拐杖惊风雨。莫笑形骸至贱躯，壶里乾坤寓。酒肉任穿肠，不肯栖寒树。待到悬壶济世时，散作山前雾。""",
+    "反方四辩": """【巽 ☴ · 曹国舅 —— 虞美人】\n掌中云阳玉笏何时了？权柄如罂粟。满城开遍美人花，谁解红衣妖艳、是鸩家。雕栏玉砌生尸骨，大梦惊吞吐。老夫脱却大朝衣，洗净满身浮毒、白云归。""",
 }
 
 POEM_SPEED_MS = 80   # ms/字
@@ -254,6 +254,78 @@ DEBATE_ROLES = [
     ("正方四辩", "总结陈词"), ("反方四辩", "总结陈词"),
 ]
 
+# ─── 鹰洋鱼 (China vs US) 盲测模型池与工具 ──────────
+CHINESE_POOL = [
+    "DeepSeek-V3", "DeepSeek-R1", "Qwen-2.5-72B", "Qwen-Max", 
+    "GLM-4", "Baichuan-4", "Doubao-pro", "Moonshot-v1", 
+    "Hunyuan-pro", "Ernie-4.0"
+]
+
+US_POOL = [
+    "GPT-4o", "GPT-4-turbo", "o1", "o3-mini", 
+    "Claude-3.5-Sonnet", "Claude-3.5-Haiku", "Claude-3-Opus", 
+    "Gemini-2.5-Pro", "Gemini-2.5-Flash", "Llama-3.1-405B"
+]
+
+def map_to_backend_model(real_model: str) -> str:
+    # 映射到 LiteLLM Proxy 中实际可用的物理后端模型接口
+    if real_model in ["DeepSeek-V3", "DeepSeek-R1", "Moonshot-v1", "Doubao-pro", "Ernie-4.0"]:
+        return "deepseek-ai/DeepSeek-V4-Pro"
+    elif real_model in ["Qwen-2.5-72B", "Qwen-Max", "GLM-4", "Baichuan-4", "Hunyuan-pro"]:
+        return "groq/qwen/qwen3-32b"
+    elif real_model in ["GPT-4o", "GPT-4-turbo", "o1"]:
+        return "gemini-2.5-pro"
+    elif real_model in ["Claude-3.5-Sonnet", "Claude-3.5-Haiku", "Claude-3-Opus", "o3-mini"]:
+        return "gemini-3.1-pro-preview"
+    elif real_model in ["Gemini-2.5-Pro", "Gemini-2.5-Flash"]:
+        return "gemini-2.5-flash"
+    elif real_model in ["Llama-3.1-405B"]:
+        return "google/gemma-4-31B-it"
+    else:
+        return "gemini-2.5-pro"
+
+def generate_blind_match() -> dict:
+    import random
+    # 1. 随机决定红蓝双方的国别（一方全中，另一方全美，确保 100% 对抗）
+    sides = ["China", "US"]
+    random.shuffle(sides)
+    pro_country, con_country = sides[0], sides[1]
+    
+    # 2. 从各自的国家大模型池中无重复抽样4个模型
+    china_selected = random.sample(CHINESE_POOL, 4)
+    us_selected = random.sample(US_POOL, 4)
+    
+    pro_models = china_selected if pro_country == "China" else us_selected
+    con_models = us_selected if pro_country == "China" else china_selected
+    
+    # 3. 产生 Model_1 至 Model_8 的盲测代码，并完全打乱以实现彻底的双盲测试
+    blind_ids = [f"Model_{i}" for i in range(1, 9)]
+    random.shuffle(blind_ids)
+    
+    pro_roles = ["正方一辩", "正方二辩", "正方三辩", "正方四辩"]
+    con_roles = ["反方一辩", "反方二辩", "反方三辩", "反方四辩"]
+    
+    role_to_model = {}
+    for i, role in enumerate(pro_roles):
+        model_name = pro_models[i]
+        role_to_model[role] = {
+            "real_model": model_name,
+            "backend_model": map_to_backend_model(model_name),
+            "country": pro_country,
+            "blind_name": blind_ids[i]
+        }
+        
+    for i, role in enumerate(con_roles):
+        model_name = con_models[i]
+        role_to_model[role] = {
+            "real_model": model_name,
+            "backend_model": map_to_backend_model(model_name),
+            "country": con_country,
+            "blind_name": blind_ids[i + 4]
+        }
+        
+    return role_to_model
+
 # 全局八卦看板状态
 DEBATE_STATE = {
     "topic_title": "等待选择辩题开始辩论...",
@@ -261,6 +333,8 @@ DEBATE_STATE = {
     "active_role": "",
     "book_content": "",
     "past_debates": "",
+    "speed_multiplier": 1.0,
+    "paused": False,
     "rounds": {
         role: {
             "status": "pending",
@@ -269,6 +343,31 @@ DEBATE_STATE = {
         } for role, _ in DEBATE_ROLES
     }
 }
+
+async def call_llm_with_retry(client, model, messages, stream=False, timeout=30.0, max_retries=3):
+    import random
+    for attempt in range(max_retries):
+        try:
+            return await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                stream=stream,
+                timeout=timeout
+            )
+        except Exception as e:
+            log.warning(f"LLM call failed for model {model} (attempt {attempt+1}/{max_retries}): {e}")
+            if attempt == max_retries - 1:
+                raise e
+            await asyncio.sleep(2 ** attempt + random.uniform(0.1, 0.5))
+
+async def dynamic_sleep(delay_seconds: float):
+    global DEBATE_STATE
+    while DEBATE_STATE.get("paused", False):
+        await asyncio.sleep(0.05)
+    speed = DEBATE_STATE.get("speed_multiplier", 1.0)
+    if speed <= 0:
+        speed = 1.0
+    await asyncio.sleep(delay_seconds / speed)
 
 
 # ─── Vectorize RAG ──────────────────────────────
@@ -329,8 +428,13 @@ class DebateCoach:
         import openai
         client = openai.AsyncOpenAI(base_url=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"))
         try:
-            resp = await client.chat.completions.create(model=DEBATE_MODEL,
-                messages=[{"role": "user", "content": prompt}], timeout=60.0)
+            resp = await call_llm_with_retry(
+                client=client,
+                model=DEBATE_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                stream=False,
+                timeout=60.0
+            )
             return resp.choices[0].message.content
         except Exception as e:
             log.error(f"generate_pre_strategy failed: {e}")
@@ -364,10 +468,12 @@ class DebateCoach:
         import openai
         client = openai.AsyncOpenAI(base_url=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"))
         try:
-            resp = await client.chat.completions.create(
+            resp = await call_llm_with_retry(
+                client=client,
                 model=DEBATE_MODEL,
                 messages=[{"role": "user", "content": prompt}],
-                timeout=12,
+                stream=False,
+                timeout=12.0
             )
             return resp.choices[0].message.content.strip()
         except Exception as e:
@@ -379,7 +485,7 @@ class DebateCoach:
 
 async def debate_round(topic_id: str, role: str, stage: str,
                        book_content: str, pro_strat: str, con_strat: str,
-                       history: str) -> str:
+                       history: str, real_model: str, backend_model: str) -> str:
     t = TOPICS.get(topic_id, TOPICS["1"])
     side = "正方" if "正方" in role else "反方"
     stance = t["pro"] if "正方" in role else t["con"]
@@ -395,6 +501,7 @@ async def debate_round(topic_id: str, role: str, stage: str,
 
 ## 你是谁
 - 角色: {role}（{stage}） 阵营: {side} 立场: {stance} 对手: {opponent}
+- 你的真实大模型身份: {real_model} (你必须完全继承并模仿 {real_model} 的回答风格、语气特征、逻辑偏好和技术水准来进行辩论。)
 
 ## 原文参考
 {book_content[:4000]}
@@ -414,8 +521,13 @@ async def debate_round(topic_id: str, role: str, stage: str,
 """
     import openai
     client = openai.AsyncOpenAI(base_url=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"))
-    return await client.chat.completions.create(
-        model=DEBATE_MODEL, messages=[{"role": "user", "content": prompt}], stream=True, timeout=30.0)
+    return await call_llm_with_retry(
+        client=client,
+        model=backend_model,
+        messages=[{"role": "user", "content": prompt}],
+        stream=True,
+        timeout=30.0
+    )
 
 
 # ─── 议事长 ──────────────────────────────────────
@@ -429,8 +541,13 @@ class Chair:
         import openai
         client = openai.AsyncOpenAI(base_url=os.getenv("OPENAI_BASE_URL"), api_key=os.getenv("OPENAI_API_KEY"))
         try:
-            resp = await client.chat.completions.create(model=DEBATE_MODEL,
-                messages=[{"role": "user", "content": prompt}], timeout=15.0)
+            resp = await call_llm_with_retry(
+                client=client,
+                model=DEBATE_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                stream=False,
+                timeout=15.0
+            )
             return resp.choices[0].message.content.strip()
         except Exception as e:
             log.warning(f"Chair summary fail: {e}")
@@ -439,7 +556,7 @@ class Chair:
 
 # ─── 辩论实录存档 ──────────────────────────────
 
-async def save_and_index_transcript(topic_id: str, history: str, pro_strat: str, con_strat: str):
+async def save_and_index_transcript(topic_id: str, history: str, pro_strat: str, con_strat: str, role_to_model: dict):
     """
     辩论结束后：保存到 R2 (md 文件) + 索引到 Vectorize
     Moneyball: 策略和辩论实录都索引进去，供教练未来学习
@@ -449,11 +566,20 @@ async def save_and_index_transcript(topic_id: str, history: str, pro_strat: str,
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         title_safe = re.sub(r'[^a-zA-Z0-9_一-龥]', '', t['title'][:20])
 
+        # 生成中美对抗盲测模型配置清单
+        model_alignment_md = "\n## 🦅 鹰洋鱼 (China vs US) 盲测模型分配\n"
+        for role, info in role_to_model.items():
+            side_label = "正方" if "正方" in role else "反方"
+            country_label = "鹰派/中国" if info["country"] == "China" else "洋派/美国"
+            model_alignment_md += f"- **{role}** (盲测: {info['blind_name']}): `{info['real_model']}` ({country_label})\n"
+
         transcript_md = f"""# 🦅 鲲鹏志 · 辩论实录
 
 辩题: {t['title']}
 时间: {ts}
-模型: {DEBATE_MODEL}
+裁判/教练模型: {DEBATE_MODEL}
+
+{model_alignment_md}
 
 ## 正方策略
 {pro_strat}
@@ -480,9 +606,12 @@ async def save_and_index_transcript(topic_id: str, history: str, pro_strat: str,
 # ─── 主席 Chainlit 流式 ──────────────────────────
 
 class RoundState:
-    def __init__(self, role: str, stage: str):
+    def __init__(self, role: str, stage: str, real_model: str, backend_model: str, blind_name: str):
         self.role = role
         self.stage = stage
+        self.real_model = real_model
+        self.backend_model = backend_model
+        self.blind_name = blind_name
         self.whisper_future = asyncio.Future()
         self.speech_future = asyncio.Future()
         self.chair_summary_future = asyncio.Future()
@@ -522,7 +651,17 @@ async def debate_generation_pipeline(rounds, topic_id, book_content, pro_strat, 
             
         # 3. 后台生成当前辩手发言（这是最长路径/关键路径！）
         try:
-            stream = await debate_round(topic_id, r.role, r.stage, book_content, pro_strat, con_strat, history)
+            stream = await debate_round(
+                topic_id=topic_id,
+                role=r.role,
+                stage=r.stage,
+                book_content=book_content,
+                pro_strat=pro_strat,
+                con_strat=con_strat,
+                history=history,
+                real_model=r.real_model,
+                backend_model=r.backend_model
+            )
             speech_text = ""
             async for chunk in stream:
                 delta = chunk.choices[0].delta if chunk.choices else None
@@ -608,6 +747,7 @@ def parse_markdown(text: str) -> str:
 def make_debate_html(
     role: str,
     stage: str,
+    blind_name: str,
     moderator_intro: str,
     poem: str,
     speech_text: str,
@@ -654,7 +794,7 @@ def make_debate_html(
 
   <div class="speech-content {side_class}">
     <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 10px; border-bottom: 1px solid var(--row-border); padding-bottom: 6px;">
-      {role} ({stage})
+      {role} ({blind_name}) ({stage})
     </div>
     {speech_html}
   </div>
@@ -670,6 +810,7 @@ def make_debate_html(
 async def type_text_in_html_from_string(
     role: str,
     stage: str,
+    blind_name: str,
     full_intro: str,
     full_poem: str,
     speech_future: asyncio.Future,
@@ -707,13 +848,13 @@ async def type_text_in_html_from_string(
             con_w = w_val if not is_pro else None
             
             round_msg.content = make_debate_html(
-                role=role, stage=stage,
+                role=role, stage=stage, blind_name=blind_name,
                 moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
                 pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
             )
             DEBATE_STATE["rounds"][role]["speech"] = speech_curr
             await round_msg.update()
-            await asyncio.sleep((5 / 1000) * chunk_size)
+            await dynamic_sleep((5 / 1000) * chunk_size)
             
     # 2. 打印定场诗
     if full_poem:
@@ -724,13 +865,13 @@ async def type_text_in_html_from_string(
             con_w = w_val if not is_pro else None
             
             round_msg.content = make_debate_html(
-                role=role, stage=stage,
+                role=role, stage=stage, blind_name=blind_name,
                 moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
                 pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
             )
             DEBATE_STATE["rounds"][role]["speech"] = speech_curr
             await round_msg.update()
-            await asyncio.sleep(POEM_SPEED_MS / 1000)
+            await dynamic_sleep(POEM_SPEED_MS / 1000)
             
     # 3. 等待大语言模型生成完毕（若早已生成好则秒解），然后以打字机流式渲染
     speech_text = await speech_future
@@ -743,13 +884,13 @@ async def type_text_in_html_from_string(
         con_w = w_val if not is_pro else None
         
         round_msg.content = make_debate_html(
-            role=role, stage=stage,
+            role=role, stage=stage, blind_name=blind_name,
             moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
             pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
         )
         DEBATE_STATE["rounds"][role]["speech"] = speech_curr
         await round_msg.update()
-        await asyncio.sleep(TYPE_SPEED_MS / 1000 * chunk_size)
+        await dynamic_sleep(TYPE_SPEED_MS / 1000 * chunk_size)
         
     # 最终确保教练耳语已加载
     w_val = await whisper_future
@@ -761,7 +902,7 @@ async def type_text_in_html_from_string(
     DEBATE_STATE["rounds"][role]["status"] = "completed"
     
     round_msg.content = make_debate_html(
-        role=role, stage=stage,
+        role=role, stage=stage, blind_name=blind_name,
         moderator_intro=intro_curr, poem=poem_curr, speech_text=speech_curr,
         pro_whisper=pro_w, con_whisper=con_w, is_pro=is_pro
     )
@@ -773,19 +914,38 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     global DEBATE_STATE
     t = TOPICS.get(topic_id, TOPICS["1"])
     
+    # 0. 鹰洋鱼 (China vs US) 组合数学盲测模型分配
+    role_to_model = generate_blind_match()
+    cl.user_session.set("role_to_model", role_to_model)
+    
     # 重置全局状态
     DEBATE_STATE["topic_title"] = t["title"]
     DEBATE_STATE["current_round"] = 0
     DEBATE_STATE["active_role"] = ""
     DEBATE_STATE["book_content"] = ""
     DEBATE_STATE["past_debates"] = ""
-    DEBATE_STATE["rounds"] = {
-        role: {
+    DEBATE_STATE["rounds"] = {}
+    for role, _ in DEBATE_ROLES:
+        info = role_to_model[role]
+        DEBATE_STATE["rounds"][role] = {
             "status": "pending",
             "speech": "",
-            "whisper": ""
-        } for role, _ in DEBATE_ROLES
-    }
+            "whisper": "",
+            "blind_name": info["blind_name"]
+            # 注意: real_model 故意不加入全局状态中，直到辩论结束后才揭晓，以保证 100% 盲测
+        }
+        
+    log.info("☯️ 鹰洋鱼 (Ying-Yang Fish) 4v4 中美盲测对抗赛部署完成")
+    log.info("🇨🇳 鹰派 (中国模型) 阵容部署:")
+    for role, info in role_to_model.items():
+        if info["country"] == "China":
+            side_label = "正方" if "正方" in role else "反方"
+            log.info(f"  - [{side_label}] {role} -> 盲测代码: {info['blind_name']}")
+    log.info("🇺🇸 洋派 (美国模型) 阵容部署:")
+    for role, info in role_to_model.items():
+        if info["country"] == "US":
+            side_label = "正方" if "正方" in role else "反方"
+            log.info(f"  - [{side_label}] {role} -> 盲测代码: {info['blind_name']}")
 
     # 1. 并行加载原文与检索历史辩论数据（优化网络延迟）
     log.info("🔍 并行加载原文与检索历史辩论...")
@@ -825,13 +985,13 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     if book_content:
         for ch in f"📖 **原文检索结果**:\n\n{book_content}\n\n---\n\n":
             await msg.stream_token(ch)
-            await asyncio.sleep(8 / 1000) # 原文显示速度稍慢
-        await asyncio.sleep(0.5) # 显示完原文停顿
+            await dynamic_sleep(8 / 1000) # 原文显示速度稍慢
+        await dynamic_sleep(0.5) # 显示完原文停顿
     else:
         for ch in "⚠️ **未能从书库或历史辩论中检索到相关原文。请确保书库已索引。**\n\n":
             await msg.stream_token(ch)
-            await asyncio.sleep(6 / 1000)
-        await asyncio.sleep(0.5)
+            await dynamic_sleep(6 / 1000)
+        await dynamic_sleep(0.5)
 
     await msg.send() # 结束第一个 message
 
@@ -865,7 +1025,16 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
     # ── 阶段 3/4: 辩论进行中 ──
     # 初始化后台流水线状态
-    rounds_state = [RoundState(role, stage) for role, stage in DEBATE_ROLES]
+    rounds_state = [
+        RoundState(
+            role=role,
+            stage=stage,
+            real_model=role_to_model[role]["real_model"],
+            backend_model=role_to_model[role]["backend_model"],
+            blind_name=role_to_model[role]["blind_name"]
+        )
+        for role, stage in DEBATE_ROLES
+    ]
     
     tts_tasks = []
     tmp_paths = []
@@ -878,6 +1047,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     )
 
     welcome_msg = cl.Message(content="🏛️ **议事长**: 欢迎来到鲲鹏志辩论现场！本场辩论采用罗伯特议事规则。\n"
+                                     "本场为 100% 中美盲测对抗赛。一侧为中国模型组合（鹰派），一侧为美国模型组合（洋派）。\n"
                                      "每轮发言后麦克风交还议事长，由议事长归纳交锋，确保辩论焦点清晰。\n"
                                      "双方辩手将围绕辩题展开激烈交锋，并引用《鲲鹏志》书库原文。\n\n")
     await welcome_msg.send()
@@ -912,13 +1082,14 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
 
         # 3. 主席传麦文案
         side_color = "🔴" if "正方" in r.role else "🔵"
-        moderator_intro = f"🎙️ **主席**: **[进度: {round_idx}/{total_stages}]** {side_color} 有请 {r.role}（{r.stage}）——"
+        moderator_intro = f"🎙️ **主席**: **[进度: {round_idx}/{total_stages}]** {side_color} 有请 {r.role}（盲测ID: {r.blind_name}，{r.stage}）——"
         poem = SPEAKER_POEMS.get(r.role, "")
 
         # 4. 打印主席、定场诗，并流式播放已预取生成的发言
         await type_text_in_html_from_string(
             role=r.role,
             stage=r.stage,
+            blind_name=r.blind_name,
             full_intro=moderator_intro,
             full_poem=poem,
             speech_future=r.speech_future,
@@ -943,10 +1114,50 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
         final_content += ch
         final_msg.content = final_content
         await final_msg.update()
-        await asyncio.sleep(6 / 1000)
+        await dynamic_sleep(6 / 1000)
 
     end_msg = cl.Message(content="✅ **辩论结束**")
     await end_msg.send()
+
+    # ── 揭晓盲测真实身份 ──
+    reveal_content = "🎉 **鹰洋鱼 (Ying-Yang Fish) 盲测解密 / True Identities Unveiled**\n\n"
+    reveal_content += "本次辩论采用 100% 中美模型对抗 (4v4 盲测对决)：\n\n"
+    
+    pro_side_models = []
+    con_side_models = []
+    pro_country = "未知"
+    con_country = "未知"
+    
+    for role, info in role_to_model.items():
+        country_str = "🇨🇳 鹰派 (中国模型)" if info["country"] == "China" else "🇺🇸 洋派 (美国模型)"
+        line = f"- **{role}** (`{info['blind_name']}`): **{info['real_model']}**"
+        if "正方" in role:
+            pro_side_models.append(line)
+            pro_country = country_str
+        else:
+            con_side_models.append(line)
+            con_country = country_str
+            
+    reveal_content += f"### 🔴 正方阵营 ({pro_country})\n"
+    reveal_content += "\n".join(pro_side_models) + "\n\n"
+    reveal_content += f"### 🔵 反方阵营 ({con_country})\n"
+    reveal_content += "\n".join(con_side_models) + "\n\n"
+    reveal_content += "---\n*提示：模型身份在辩论进行时是完全隐蔽的，仅在辩论结束后解密归档。*"
+    
+    await cl.Message(content=reveal_content).send()
+
+    # 将真实模型名称与归属地注入全局状态中，供前端看板解密展示
+    for role, info in role_to_model.items():
+        DEBATE_STATE["rounds"][role]["real_model"] = info["real_model"]
+        DEBATE_STATE["rounds"][role]["country"] = info["country"]
+    DEBATE_STATE["current_round"] = 9
+
+    # 解密日志记录
+    log.info("🔓 鹰洋鱼盲测身份揭晓:")
+    for role, info in role_to_model.items():
+        side_label = "正方" if "正方" in role else "反方"
+        country_label = "鹰派/中国" if info["country"] == "China" else "洋派/美国"
+        log.info(f"  - [{side_label}] {role} ({info['blind_name']}) -> {info['real_model']} ({country_label})")
 
     # ── 阶段 4/4: 音频处理与存档 ──
     tts_url = None
@@ -965,7 +1176,7 @@ async def run_debate_stream(msg: cl.Message, topic_id: str) -> list:
     await cl.Message(content="**[进度: 4/4] 辩论全程已归档。请查看上方录音回放。**").send()
 
     # 存档 + 索引 (现在 Vectorize 已经支持)
-    asyncio.ensure_future(save_and_index_transcript(topic_id, history, pro_strat, con_strat))
+    asyncio.ensure_future(save_and_index_transcript(topic_id, history, pro_strat, con_strat, role_to_model))
 
     return [tts_url] if tts_url else []
 
@@ -1039,12 +1250,12 @@ async def main(message: cl.Message):
     if topic["abstract"]:
         for ch in f"📖 **背景**: {topic['abstract']}\n\n":
             await msg.stream_token(ch)
-            await asyncio.sleep(8 / 1000)
+            await dynamic_sleep(8 / 1000)
 
     if TTS_ENABLED:
         for ch in "🔊 **语音模式已开启**\n\n":
             await msg.stream_token(ch)
-            await asyncio.sleep(10 / 1000)
+            await dynamic_sleep(10 / 1000)
 
     log.info(f"🎯 辩题: {topic['title']}")
     await run_debate_stream(msg, topic_id)
@@ -1130,16 +1341,11 @@ HTML_CONTENT = r"""<!DOCTYPE html>
 
         body {
             font-family: 'Noto Sans SC', sans-serif;
-            background-color: var(--bg-color);
             color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(31, 41, 55, 0.3) 0, transparent 50%),
-                radial-gradient(at 50% 0%, rgba(17, 24, 39, 0.5) 0, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(31, 41, 55, 0.3) 0, transparent 50%);
         }
 
         header {
@@ -1210,10 +1416,9 @@ HTML_CONTENT = r"""<!DOCTYPE html>
             display: flex;
             flex: 1;
             width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-            gap: 2rem;
+            margin: 0;
+            padding: 0;
+            gap: 0;
         }
 
         @media (max-width: 1100px) {
@@ -1224,43 +1429,30 @@ HTML_CONTENT = r"""<!DOCTYPE html>
         }
 
         .canvas-card {
-            flex: 1.2;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
+            flex: 2.5;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
-            padding: 2rem;
-            min-height: 600px;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            min-height: 0;
         }
 
         .svg-container {
             width: 100%;
-            max-width: 580px;
+            max-width: 100%;
             height: auto;
             aspect-ratio: 1 / 1;
         }
 
         .info-sidebar {
-            flex: 0.8;
+            flex: 0.4;
             width: 100%;
-            max-width: 460px;
+            max-width: 240px;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
         }
 
         .glass-panel {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.5rem;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             display: flex;
             flex-direction: column;
         }
@@ -1503,7 +1695,7 @@ HTML_CONTENT = r"""<!DOCTYPE html>
             fill: var(--text-primary);
             text-anchor: middle;
             dominant-baseline: middle;
-            font-size: 26px;
+            font-size: 34px;
         }
 
         .node-label {
@@ -1528,7 +1720,7 @@ HTML_CONTENT = r"""<!DOCTYPE html>
 
         footer {
             text-align: center;
-            padding: 1.5rem;
+            padding: 1rem;
             font-size: 0.8rem;
             color: rgba(255, 255, 255, 0.15);
             border-top: 1px solid var(--border-color);
@@ -1553,13 +1745,12 @@ HTML_CONTENT = r"""<!DOCTYPE html>
     </style>
 </head>
 <body>
-    <header>
+    <header style="display:none">
         <div class="logo-section">
             <h1>八卦乾坤</h1>
             <p>KUNPENGZHI • BAGUA DEBATE MONITOR</p>
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <a href="/" class="back-link">← 返回主页</a>
             <div class="status-badge" id="monitor-status">
                 <span class="status-dot"></span>
                 <span id="status-text">实时连接中</span>
@@ -1640,14 +1831,14 @@ HTML_CONTENT = r"""<!DOCTYPE html>
                     <circle cx="455" cy="145" r="30" class="node-ring" />
                     <text x="455" y="146" class="node-trigram">☳</text>
                     <text x="455" y="102" class="node-label">正方四辩</text>
-                    <text x="455" y="191" class="node-character pro-text">震 · 曹国舅</text>
+                    <text x="455" y="191" class="node-character pro-text">震 · 铁拐李</text>
                 </g>
 
                 <g class="node-group con" id="node-con4" onclick="selectNode('反方四辩')">
                     <circle cx="145" cy="455" r="30" class="node-ring" />
                     <text x="145" y="456" class="node-trigram">☴</text>
                     <text x="145" y="499" class="node-label">反方四辩</text>
-                    <text x="145" y="411" class="node-character con-text">巽 · 铁拐李</text>
+                    <text x="145" y="411" class="node-character con-text">巽 · 曹国舅</text>
                 </g>
             </svg>
         </div>
@@ -1681,7 +1872,7 @@ HTML_CONTENT = r"""<!DOCTYPE html>
         </div>
     </div>
 
-    <footer>
+    <footer style="display:none">
         鲲鹏志内容驱动辩论系统 · 智慧可视化看板 v1.0
     </footer>
 
@@ -1699,10 +1890,10 @@ HTML_CONTENT = r"""<!DOCTYPE html>
 手摇芭蕉宝扇夜气清。急鼓初催，乐奏公卿。满堂金翠转头空，大汉将军，解甲归蓬。一展神风雾隐腾。莫问流光，冷眼输赢。任他樱桃红透时，几度春风，老了仙翁。`,
             "反方三辩": `【坎 ☵ · 蓝采和 —— 西江月】
 手执叠板花篮，盛来满槛春风。竹板声声戏顽童，醉倒长街乱冢。几点山前疏雨，半宵稻海鸣虫。算来贫贱与公侯，都是南柯一梦。`,
-            "正方四辩": `【震 ☳ · 曹国舅 —— 虞美人】
-掌中云阳玉笏何时了？权柄如罂粟。满城开遍美人花，谁解红衣妖艳、是鸩家。雕栏玉砌生尸骨，大梦惊吞吐。老夫脱却大朝衣，洗净满身浮毒、白云归。`,
-            "反方四辩": `【巽 ☴ · 铁拐李 —— 卜算子】
-背负太极葫芦落红尘，拐杖惊风雨。莫笑形骸至贱躯，壶里乾坤寓.酒肉任穿肠，不肯栖寒树。待到悬壶济世时，散作山前雾。`
+            "正方四辩": `【震 ☳ · 铁拐李 —— 卜算子】
+背负太极葫芦落红尘，拐杖惊风雨。莫笑形骸至贱躯，壶里乾坤寓.酒肉任穿肠，不肯栖寒树。待到悬壶济世时，散作山前雾。`,
+            "反方四辩": `【巽 ☴ · 曹国舅 —— 虞美人】
+掌中云阳玉笏何时了？权柄如罂粟。满城开遍美人花，谁解红衣妖艳、是鸩家。雕栏玉砌生尸骨，大梦惊吞吐。老夫脱却大朝衣，洗净满身浮毒、白云归。`
         };
 
         const SPEAKER_INFO = {
@@ -1712,8 +1903,8 @@ HTML_CONTENT = r"""<!DOCTYPE html>
             "反方二辩": { trigram: "☱", name: "兑 · 韩湘子", id: "con2", type: "con" },
             "正方三辩": { trigram: "☲", name: "离 · 汉钟离", id: "pro3", type: "pro" },
             "反方三辩": { trigram: "☵", name: "坎 · 蓝采和", id: "con3", type: "con" },
-            "正方四辩": { trigram: "☳", name: "震 · 曹国舅", id: "pro4", type: "pro" },
-            "反方四辩": { trigram: "☴", name: "巽 · 铁拐李", id: "con4", type: "con" }
+            "正方四辩": { trigram: "☳", name: "震 · 铁拐李", id: "pro4", type: "pro" },
+            "反方四辩": { trigram: "☴", name: "巽 · 曹国舅", id: "con4", type: "con" }
         };
 
         let localDebateState = null;
@@ -1742,9 +1933,19 @@ HTML_CONTENT = r"""<!DOCTYPE html>
             const info = SPEAKER_INFO[role];
             const roundData = localDebateState.rounds[role] || {};
 
-            document.getElementById("detail-role").textContent = role;
+            if (roundData.blind_name) {
+                document.getElementById("detail-role").textContent = `${role} (${roundData.blind_name})`;
+            } else {
+                document.getElementById("detail-role").textContent = role;
+            }
             document.getElementById("detail-role").className = info.type + "-text";
-            document.getElementById("detail-identity").textContent = info.name;
+            
+            if (roundData.real_model) {
+                const countryLabel = roundData.country === "China" ? "🇨🇳 鹰派/中" : "🇺🇸 洋派/美";
+                document.getElementById("detail-identity").textContent = `${info.name} [已解密: ${roundData.real_model} (${countryLabel})]`;
+            } else {
+                document.getElementById("detail-identity").textContent = info.name;
+            }
             document.getElementById("detail-avatar").textContent = info.trigram;
             document.getElementById("detail-poem").textContent = SPEAKER_POEMS[role] || "无";
 
@@ -1885,7 +2086,7 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>鲲鹏志 · 系统监控与原文检索</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Noto+Serif+SC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #030508;
@@ -1909,7 +2110,7 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
-            font-family: "Share Tech Mono", "Outfit", "Noto Sans SC", sans-serif;
+            font-family: 'Special Elite', 'Noto Serif SC', 'Courier New', Courier, serif;
             height: 100vh;
             overflow: hidden;
             display: flex;
@@ -2145,7 +2346,7 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
             border: none;
             outline: none;
             color: #ffffff;
-            font-family: "Share Tech Mono", monospace;
+            font-family: 'Special Elite', 'Noto Serif SC', 'Courier New', Courier, serif;
             font-size: 0.72rem;
             caret-color: var(--neon-cyan);
         }
@@ -2207,34 +2408,39 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
             </div>
         </div>
 
-        <!-- F3: HARDWARE MONITOR & OSCILLOSCOPE -->
-        <div class="panel" style="height: 105px; flex-shrink: 0;">
+        <!-- F3: DEBATE SEQUENCER & PLAYBACK CONTROLS -->
+        <div class="panel" style="height: 115px; flex-shrink: 0;">
             <div class="panel-header">
-                <span>[F3: SYS_OSCILLOSCOPE]</span>
-                <span class="tag">LIVE</span>
+                <span>[F3: PLAYBACK_SEQUENCER_CTRL]</span>
+                <span class="tag" id="playback-status">PLAYING</span>
             </div>
-            <div class="metrics-container">
-                <div class="metric-item">
-                    <div class="m-header">
-                        <span>CPU_LOAD</span>
-                        <span id="cpu-num">32%</span>
-                    </div>
-                    <div class="m-bar">
-                        <div class="m-bar-inner" id="cpu-bar" style="width: 32%;"></div>
-                    </div>
+            <div style="display: flex; flex-direction: column; gap: 0.35rem; padding-top: 0.2rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.65rem; color: var(--text-secondary);">
+                    <span>PROGRESS SEQUENCER</span>
+                    <span id="seq-step-name" style="color: var(--neon-amber); font-weight: bold;">INTRO</span>
                 </div>
-                <div class="metric-item">
-                    <div class="m-header">
-                        <span>API_LATENCY</span>
-                        <span id="lat-num">1.1s</span>
-                    </div>
-                    <div class="m-bar">
-                        <div class="m-bar-inner" id="lat-bar" style="width: 55%; background: var(--neon-amber); box-shadow: 0 0 5px var(--neon-amber);"></div>
-                    </div>
+                <div style="display: flex; gap: 4px; height: 12px; margin-bottom: 0.1rem;" id="seq-lights">
+                    <div class="seq-light" data-step="0" style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; transition: all 0.3s;" title="Introduction"></div>
+                    <div class="seq-light" data-step="1" style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; transition: all 0.3s;" title="Round 1: 正方一辩"></div>
+                    <div class="seq-light" data-step="2" style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; transition: all 0.3s;" title="Round 2: 反方一辩"></div>
+                    <div class="seq-light" data-step="3" style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; transition: all 0.3s;" title="Round 3: 正方二辩"></div>
+                    <div class="seq-light" data-step="4" style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; transition: all 0.3s;" title="Round 4: 反方二辩"></div>
+                    <div class="seq-light" data-step="5" style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; transition: all 0.3s;" title="Round 5: 正方三辩"></div>
+                    <div class="seq-light" data-step="6" style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; transition: all 0.3s;" title="Round 6: 反方三辩"></div>
+                    <div class="seq-light" data-step="7" style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; transition: all 0.3s;" title="Round 7: 正方四辩"></div>
+                    <div class="seq-light" data-step="8" style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; transition: all 0.3s;" title="Round 8: 反方四辩"></div>
+                    <div class="seq-light" data-step="9" style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; transition: all 0.3s;" title="Summary: 总结"></div>
                 </div>
-                <div class="oscilloscope-panel">
-                    <span style="font-size: 0.65rem; color: var(--text-secondary); flex-shrink: 0;">OSCILLOSCOPE:</span>
-                    <canvas id="wave-canvas" width="230" height="15" style="background: #020203; border: 1px solid rgba(59, 130, 246, 0.15); flex: 1;"></canvas>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;">
+                    <button id="btn-pause" onclick="togglePause()" style="background: rgba(251, 191, 36, 0.1); border: 1px solid var(--neon-amber); color: var(--neon-amber); border-radius: 3px; font-size: 0.62rem; padding: 2px 6px; cursor: pointer; font-family: inherit;">⏸ PAUSE</button>
+                    <div style="display: flex; gap: 2px; align-items: center;">
+                        <span style="font-size: 0.6rem; color: var(--text-secondary); margin-right: 2px;">SPEED:</span>
+                        <button class="btn-speed" data-speed="0.5" onclick="setSpeed(0.5)" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: var(--text-primary); border-radius: 2px; font-size: 0.58rem; padding: 1px 3px; cursor: pointer; font-family: inherit;">0.5x</button>
+                        <button class="btn-speed" data-speed="1.0" onclick="setSpeed(1.0)" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: var(--text-primary); border-radius: 2px; font-size: 0.58rem; padding: 1px 3px; cursor: pointer; font-family: inherit;">1.0x</button>
+                        <button class="btn-speed" data-speed="2.0" onclick="setSpeed(2.0)" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: var(--text-primary); border-radius: 2px; font-size: 0.58rem; padding: 1px 3px; cursor: pointer; font-family: inherit;">2.0x</button>
+                        <button class="btn-speed" data-speed="5.0" onclick="setSpeed(5.0)" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: var(--text-primary); border-radius: 2px; font-size: 0.58rem; padding: 1px 3px; cursor: pointer; font-family: inherit;">5.0x</button>
+                        <button class="btn-speed" data-speed="10.0" onclick="setSpeed(10.0)" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: var(--text-primary); border-radius: 2px; font-size: 0.58rem; padding: 1px 3px; cursor: pointer; font-family: inherit;">10.0x</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2263,45 +2469,26 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
         let lastLogs = [];
         let localDebateState = null;
 
-        // Oscilloscope animation
-        const canvas = document.getElementById('wave-canvas');
-        const ctx = canvas.getContext('2d');
-        let points = Array(40).fill(7.5);
-        function drawWave() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            points.shift();
-            const last = points[points.length - 1] || 7.5;
-            const next = Math.max(2, Math.min(13, last + (Math.random() - 0.5) * 4));
-            points.push(next);
-            
-            ctx.strokeStyle = '#22d3ee'; // Neon Cyan
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            for(let i = 0; i < points.length; i++) {
-                const x = (canvas.width / (points.length - 1)) * i;
-                const y = points[i];
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+        async function setSpeed(val) {
+            try {
+                await fetch('/api/speed/' + val);
+                pollStateAndLogs();
+            } catch (err) {
+                console.error("Error setting speed:", err);
             }
-            ctx.stroke();
         }
-        setInterval(drawWave, 200);
 
-        // Telemetry fluctuation simulator
-        function fluctuateMetrics() {
-            // CPU
-            const cpuVal = Math.floor(25 + Math.random() * 20);
-            document.getElementById('cpu-num').textContent = cpuVal + '%';
-            document.getElementById('cpu-bar').style.width = cpuVal + '%';
-            
-            // Latency
-            const latVal = (0.8 + Math.random() * 0.6).toFixed(2);
-            document.getElementById('lat-num').textContent = latVal + 's';
-            // Scale bar up to 2 seconds
-            const latPercent = Math.min(100, Math.floor((latVal / 2) * 100));
-            document.getElementById('lat-bar').style.width = latPercent + '%';
+        async function togglePause() {
+            if (!localDebateState) return;
+            const currentPause = localDebateState.paused || false;
+            const nextPause = !currentPause;
+            try {
+                await fetch('/api/pause/' + nextPause);
+                pollStateAndLogs();
+            } catch (err) {
+                console.error("Error toggling pause:", err);
+            }
         }
-        setInterval(fluctuateMetrics, 2000);
 
         // Fetch state and logs from backend
         async function pollStateAndLogs() {
@@ -2335,6 +2522,70 @@ LEFT_BOARD_CONTENT = r"""<!DOCTYPE html>
                     const tickerTts = document.getElementById('ticker-tts');
                     if (tickerTts) {
                         tickerTts.textContent = state.config && state.config.TTS_ENABLED === false ? 'OFF' : 'ON';
+                    }
+
+                    // Update sequencer lights
+                    const currentRound = state.current_round || 0; // 0 to 9
+                    const steps = ["INTRO", "R1: 正方一", "R2: 反方一", "R3: 正方二", "R4: 反方二", "R5: 正方三", "R6: 反方三", "R7: 正方四", "R8: 反方四", "SUMMARY"];
+                    const stepName = steps[currentRound] || "STANDBY";
+                    const stepNameEl = document.getElementById('seq-step-name');
+                    if (stepNameEl) stepNameEl.textContent = stepName;
+                    
+                    const lights = document.querySelectorAll('.seq-light');
+                    lights.forEach(light => {
+                        const step = parseInt(light.getAttribute('data-step'));
+                        if (step < currentRound) {
+                            light.style.background = '#10b981'; // Completed (green)
+                            light.style.boxShadow = 'none';
+                        } else if (step === currentRound) {
+                            light.style.background = '#fbbf24'; // Active (amber glow)
+                            light.style.boxShadow = '0 0 8px #fbbf24';
+                        } else {
+                            light.style.background = 'rgba(255, 255, 255, 0.08)'; // Pending
+                            light.style.boxShadow = 'none';
+                        }
+                    });
+                    
+                    // Update speed active class based on state.speed_multiplier
+                    const speedVal = state.speed_multiplier || 1.0;
+                    const speedBtns = document.querySelectorAll('.btn-speed');
+                    speedBtns.forEach(btn => {
+                        const btnSpeed = parseFloat(btn.getAttribute('data-speed'));
+                        if (Math.abs(btnSpeed - speedVal) < 0.01) {
+                            btn.style.background = 'var(--neon-cyan)';
+                            btn.style.border = '1px solid var(--neon-cyan)';
+                            btn.style.color = '#000';
+                            btn.style.fontWeight = 'bold';
+                        } else {
+                            btn.style.background = 'rgba(59,130,246,0.1)';
+                            btn.style.border = '1px solid rgba(59,130,246,0.3)';
+                            btn.style.color = 'var(--text-primary)';
+                            btn.style.fontWeight = 'normal';
+                        }
+                    });
+
+                    // Update pause button text and status tag
+                    const isPaused = state.paused || false;
+                    const pauseBtn = document.getElementById('btn-pause');
+                    const statusTag = document.getElementById('playback-status');
+                    if (pauseBtn && statusTag) {
+                        if (isPaused) {
+                            pauseBtn.textContent = '▶ PLAY';
+                            pauseBtn.style.color = 'var(--neon-green)';
+                            pauseBtn.style.border = '1px solid var(--neon-green)';
+                            pauseBtn.style.background = 'rgba(52, 211, 153, 0.1)';
+                            statusTag.textContent = 'PAUSED';
+                            statusTag.style.background = 'rgba(239, 68, 68, 0.2)';
+                            statusTag.style.color = '#f87171';
+                        } else {
+                            pauseBtn.textContent = '⏸ PAUSE';
+                            pauseBtn.style.color = 'var(--neon-amber)';
+                            pauseBtn.style.border = '1px solid var(--neon-amber)';
+                            pauseBtn.style.background = 'rgba(251, 191, 36, 0.1)';
+                            statusTag.textContent = 'PLAYING';
+                            statusTag.style.background = 'rgba(16, 185, 129, 0.2)';
+                            statusTag.style.color = '#34d399';
+                        }
                     }
                 }
             } catch (err) {
@@ -2454,6 +2705,24 @@ async def get_custom_js():
     with open("public/custom.js", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read(), media_type="application/javascript")
 
+@app.get("/kunpengzhi-qa.html")
+async def get_kunpengzhi_qa():
+    with open("kunpengzhi-qa.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+@app.get("/api/speed/{speed}")
+async def set_speed(speed: float):
+    global DEBATE_STATE
+    if speed > 0:
+        DEBATE_STATE["speed_multiplier"] = speed
+    return {"status": "ok", "speed": DEBATE_STATE["speed_multiplier"]}
+
+@app.get("/api/pause/{paused_str}")
+async def set_pause(paused_str: str):
+    global DEBATE_STATE
+    DEBATE_STATE["paused"] = (paused_str.lower() == "true")
+    return {"status": "ok", "paused": DEBATE_STATE["paused"]}
+
 @app.get("/left-board")
 async def get_left_board_page():
     return HTMLResponse(content=LEFT_BOARD_CONTENT)
@@ -2464,7 +2733,7 @@ async def get_bagua_api():
 
 # 将 /status, /bagua, /bagua/api, /left-board 路由移动到 FastAPI 路由表的最前列，绕过 Chainlit 自带 of 单页应用 (SPA) 兜底通配符
 try:
-    target_paths = ["/status", "/bagua/api", "/bagua", "/left-board", "/custom.js", "/public/custom.js"]
+    target_paths = ["/status", "/bagua/api", "/bagua", "/left-board", "/custom.js", "/public/custom.js", "/kunpengzhi-qa.html", "/api/speed/{speed}", "/api/pause/{paused_str}"]
     moved_routes = []
     i = 0
     while i < len(app.routes):
