@@ -1,0 +1,18 @@
+name: Mirror to Codeup
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Alibaba Cloud Codeup
+        run: |
+          git remote add codeup https://${{ secrets.CODEUP_ALIYUN_USERNAME }}:${{ secrets.CODEUP_ALIYUN_TOKEN }}@codeup.aliyun.com/698053416ec1ba182dc6e452/seekkey/kunpengzhi-ai.git
+          git push codeup main
