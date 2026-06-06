@@ -17,3 +17,4 @@ outputs/
 *.bak
 status.sh
 dashboard.sh
+gitlab-runner
