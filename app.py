@@ -1213,20 +1213,6 @@ async def show_coach_briefing(action: cl.Action):
 
 # ─── Chainlit ─────────────────────────────────────
 
-@cl.password_auth_callback
-def auth_callback(username: str, password: str):
-    valid_users = {
-        "84621942@qq.com": "1314",
-        "ben@git4ta.fun": "3131",
-    }
-    env_pwd = os.getenv("APP_PASSWORD")
-    if env_pwd and password == env_pwd:
-        return cl.User(identifier=username)
-        
-    if username in valid_users and valid_users[username] == password:
-        return cl.User(identifier=username)
-    return None
-
 @cl.on_chat_start
 async def start():
     await cl.Message(content="""🦅 **鲲鹏志 · Moneyball 数据驱动辩论**
