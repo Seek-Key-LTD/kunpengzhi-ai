@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memory Bus 全链路监控</title>
+<script defer src="https://metabase.git4ta.fun/app/embed.js"></script>
+<script>
+function defineMetabaseConfig(config) {
+  window.metabaseConfig = config;
+}
+</script>
+<script>
+  defineMetabaseConfig({
+    "theme": {
+      "preset": "light"
+    },
+    "isGuest": true,
+    "instanceUrl": "https://metabase.git4ta.fun"
+  });
+</script>
+<style>
+body { margin: 0; font-family: system-ui, sans-serif; background: #f5f7fa; }
+metabase-dashboard { 
+  display: block;
+  width: 100%;
+  height: 100vh;
+}
+</style>
+</head>
+<body>
+<metabase-dashboard 
+  token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZXNvdXJjZSI6eyJkYXNoYm9hcmQiOjM5fSwicGFyYW1zIjp7fSwiZXhwIjoyMDk5MzI2OTQzLCJpYXQiOjE3ODM5NjY5NDJ9.CCtaxBq2TxJn5eizbajg53S5LlT9Vg0oqKZ2G4zLPvY" 
+  with-title="true" 
+  with-downloads="true">
+</metabase-dashboard>
+</body>
+</html>
