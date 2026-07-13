@@ -1,19 +1,9 @@
-# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-
-# Chainlit
-.chainlit/
-*.db
-
-# Environment
+*.pyc
 .env
-outputs/
-*.bak
-status.sh
-dashboard.sh
+.vtcode/
+kunpengzhi_ai.egg-info/
+vtcode.toml
+package.json
+mem_ops_api.py
+.chainlit/
