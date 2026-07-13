@@ -22,4 +22,3 @@ packages = ["core", "debate", "graphrag_project"]
 
 [tool.uv]
 managed = true
->>>>>>> bbbaf07 (feat: add Memory Bus Metabase dashboard embed page)
