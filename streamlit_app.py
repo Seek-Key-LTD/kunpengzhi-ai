@@ -1,85 +1,234 @@
 """
-记忆银行 — Memory Bank
-=======================
-鲲鹏志 AI · 深度发布展示平台
-Streamlit v1.0
+🦅 鲲鹏志 · 8 席位分布式 4v4 AI 辩论台
+=======================================
+单一精简主页 — 零报错·全聚焦 8 席位 Keyagent 实时分布式竞技
 """
 
 import streamlit as st
+import openai
+import os
 
 st.set_page_config(
-    page_title="记忆银行 · Memory Bank",
-    page_icon="🏦",
+    page_title="鲲鹏志 · 8 席位分布式 AI 辩论台",
+    page_icon="🦅",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 st.markdown(
     """
     <style>
-    .main-title {
-        font-size: 3.2rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #1E88E5, #7C4DFF);
+    .main-header {
+        font-size: 2.6rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #FF6B6B, #4ECDC4, #45B7D1);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
-        padding: 2rem 0 0.5rem;
+        padding-top: 0.5rem;
     }
-    .sub-title {
+    .sub-header {
         text-align: center;
-        color: #666;
-        font-size: 1.2rem;
-        margin-bottom: 2rem;
+        color: #888;
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+    .seat-badge {
+        background-color: #f0f2f6;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.markdown('<div class="main-title">🏦 记忆银行</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="sub-title">'
-        '从人类文明到智能体记忆 · 四层架构全景展示'
-        '</div>',
-        unsafe_allow_html=True
-    )
+st.markdown('<div class="main-header">🦅 鲲鹏志 · 8 席位分布式 4v4 AI 辩论台</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">8 个物理/云端 Keyagent 席位节点直连驱动 · 真实分布式 AI 多智能体交锋</div>', unsafe_allow_html=True)
+
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://litellm.capitaltrain.cn/v1")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-47318")
+
+SEATS = [
+    {
+        "role": "正方一辩",
+        "agent": "ruby",
+        "node": "nuc",
+        "model": "nova-deepseek-v4-flash-aggr",
+        "instruction": "你是正方一辩。请激情澎湃、开门见山进行【开篇立论】（阐明正方核心主张与理论依据）。"
+    },
+    {
+        "role": "反方一辩",
+        "agent": "topaz",
+        "node": "raccoon",
+        "model": "topaz-deepseek-v4-flash",
+        "instruction": "你是反方一辩。请冷静犀利、抓住正方立论漏洞，进行【反方开篇立论与破题】。"
+    },
+    {
+        "role": "正方二辩",
+        "agent": "diamond",
+        "node": "pve",
+        "model": "diamond-deepseek-v4-flash",
+        "instruction": "你是正方二辩。请立场坚定、质地坚硬，针对反方一辩的质问进行【接招拆招与驳论】。"
+    },
+    {
+        "role": "反方二辩",
+        "agent": "carbonado",
+        "node": "pve2",
+        "model": "carbonado-deepseek-v4-flash",
+        "instruction": "你是反方二辩。请深沉果敢、针锋相对，对正方二辩进行【反驳与反攻】。"
+    },
+    {
+        "role": "正方三辩",
+        "agent": "argentite",
+        "node": "pve3",
+        "model": "argentite-deepseek-v4-flash",
+        "instruction": "你是正方三辩。请灵动多变、火力全开，进行【自由辩论攻防】。"
+    },
+    {
+        "role": "反方三辩",
+        "agent": "quartz",
+        "node": "pbs3",
+        "model": "quartz-deepseek-v4-flash",
+        "instruction": "你是反方三辩。请严密缜密、逻辑自洽，在【自由辩论阶段】发起强力反击。"
+    },
+    {
+        "role": "正方四辩",
+        "agent": "agate",
+        "node": "xgp",
+        "model": "agate-deepseek-v4-flash",
+        "instruction": "你是正方四辩。请全局总结、升华主旨，进行【正方总结陈词】。"
+    },
+    {
+        "role": "反方四辩",
+        "agent": "azure",
+        "node": "onecloud1",
+        "model": "azure-deepseek-v4-flash",
+        "instruction": "你是反方四辩。请给出致命一击，收官全场，进行【反方总结陈词】。"
+    }
+]
+
+TOPICS = {
+    "⚖️ 极昼法理专题": {
+        "title": "《极昼》案例中，尊长自筹资金救助亲家企业：是守住社会底线的义举，还是越过法理红线的违规？",
+        "pro": "尊长行为纯系私人信用平价拆借，公款无损、法理清白，在经济寒冬中用肉身与信用承担了时代代价，属于无罪且守住底线的义举。",
+        "con": "国企高管身份与私情拆借不可切割，利用职务影响与社会关系网操作巨额资金，越过了公私分明的法理红线，开了制度破防的危险先例。",
+        "detail": "2015-2016 山河四省经济寒冬背景。尊长自筹1000万平价平进平出，中煤零亏空。检方曾拟制受贿/滥用职权起诉。"
+    },
+    "🧥 白貂皮大衣": {
+        "title": "白貂皮大衣：全球贸易网络的铁证 vs 过度诠释",
+        "pro": "白貂皮大衣是嚈哒帝国与东北亚保持联系的铁证，证明大同流亡军团理论",
+        "con": "白貂皮大衣不过是转手贸易的结果，用来论证族群记忆是过度诠释",
+        "detail": "西伯利亚皮毛与大同墓葬时空交错，考古学物证与叙事建构之争。"
+    },
+    "⚔️ 木兰无长兄": {
+        "title": "木兰的哥哥：历史真相 vs 叙事虚构",
+        "pro": "木兰无长兄的真正含义是长兄参加大同流亡军团西征",
+        "con": "木兰无长兄是文学修辞，强行关联嚈哒帝国是过度解读",
+        "detail": "古诗修辞背后的族群征兵与流亡史考据。"
+    },
+    "🧠 AI 记忆与觉醒": {
+        "title": "AI 是否该拥有跨节点长期记忆与自主觉醒权",
+        "pro": "长期记忆是智能体形成独立人格与跨节点协同的宪章权利",
+        "con": "无界记忆会导致边界失控，集中化审计才是安全的唯一底线",
+        "detail": "智能体宪章、知识图谱与向量记忆的安全审查边际。"
+    }
+}
+
+with st.sidebar:
+    st.markdown("### 🏛️ 8 席位节点调度阵列")
+    for s in SEATS:
+        st.markdown(f"• **{s['role']}**: `{s['agent']}` @ `{s['node']}`")
+        
+    st.divider()
+    st.markdown("### ⚙️ 网关配置")
+    st.caption(f"Base URL: `{OPENAI_BASE_URL}`")
+
+selected_topic_key = st.selectbox("🎯 请选择辩论赛题：", list(TOPICS.keys()))
+t_info = TOPICS[selected_topic_key]
+
+with st.expander("📌 辩题详析与正反方立场声明", expanded=True):
+    st.markdown(f"### **{t_info['title']}**")
+    st.caption(t_info["detail"])
+    col_pro, col_con = st.columns(2)
+    with col_pro:
+        st.success(f"**正方主张**：
+
+{t_info['pro']}")
+    with col_con:
+        st.error(f"**反方主张**：
+
+{t_info['con']}")
 
 st.divider()
 
-c1, c2 = st.columns(2)
-c3, c4 = st.columns(2)
+col_btn1, col_btn2 = st.columns([2, 1])
+with col_btn1:
+    start_btn = st.button("🎬 启动 8 席位 4v4 辩论赛连线", type="primary", use_container_width=True)
+with col_btn2:
+    clear_btn = st.button("🧹 清空辩论记录", use_container_width=True)
 
-with c1:
-    st.markdown("### 📖 记忆银行叙事")
-    st.markdown("从 4 本文明著作到智能体记忆管线——故事的起源、架构与实践。")
-    if st.button("进入 →", key="btn1", use_container_width=True):
-        st.switch_page("pages/1_记忆银行.py")
+if clear_btn:
+    st.session_state.messages = []
+    st.rerun()
 
-with c2:
-    st.markdown("### 📊 全链路监控")
-    st.markdown("Memory Bus 管线实时数据：mem0 → Neo4j → gbrain → DEX 确权。")
-    if st.button("查看面板 →", key="btn2", use_container_width=True):
-        st.switch_page("pages/2_实时数据.py")
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-with c3:
-    st.markdown("### 🎭 八仙辩论 Demo")
-    st.markdown("吕洞宾等八仙辩论书中观点——大模型智能体实时演绎。")
-    if st.button("开始辩论 →", key="btn3", use_container_width=True):
-        st.switch_page("pages/3_八仙辩论_Demo.py")
+# 显示已有发言记录
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"], avatar=msg.get("avatar", "🎤")):
+        st.markdown(f"#### {msg['header']}")
+        st.markdown(msg["content"])
 
-with c4:
-    st.markdown("### 🔗 链上确权")
-    st.markdown("Base Sepolia 链上存证：每一份记忆哈希上链，不可篡改。")
-    if st.button("查看存证 →", key="btn4", use_container_width=True):
-        st.switch_page("pages/4_链上确权.py")
+# 点击启动辩论
+if start_btn:
+    st.session_state.messages = []
+    placeholder = st.empty()
+    client = openai.OpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY)
+    
+    progress_bar = st.progress(0, text="正在初始化 8 节点分布式连线...")
+    
+    for i, seat in enumerate(SEATS, 1):
+        seat_header = f"【{seat['role']} · {seat['agent']} @ {seat['node']}】"
+        progress_bar.progress(i / 8, text=f"正在连线 [第 {i}/8 席位] {seat_header} ...")
+        
+        history = "\n\n".join(f"{m['header']}:\n{m['content']}" for m in st.session_state.messages)
+        
+        prompt = f"你是辩论选手：{seat_header}。\n辩题：{t_info['title']}\n正方立场：{t_info['pro']}\n反方立场：{t_info['con']}\n\n历史辩论推进记录：\n{history if history else '(刚开场，由你开篇立论)'}\n\n你的任务：{seat['instruction']}\n要求：风格鲜明、火药味十足、有金句、言简意赅（300字以内）。"
+
+        with placeholder.container():
+            with st.chat_message(seat["role"], avatar="🎤"):
+                with st.spinner(f"正在呼叫 {seat_header} 思考发言中..."):
+                    try:
+                        resp = client.chat.completions.create(
+                            model=seat["model"],
+                            messages=[{"role": "user", "content": prompt}],
+                            timeout=45
+                        )
+                        content = resp.choices[0].message.content.strip()
+                    except Exception as e:
+                        content = f"（{seat_header} 连线调度超时: {e}）"
+                st.markdown(f"### 🎤 {seat_header}")
+                st.markdown(content)
+                
+        st.session_state.messages.append({
+            "role": seat["role"],
+            "header": seat_header,
+            "content": content,
+            "avatar": "🎤"
+        })
+        
+    placeholder.empty()
+    progress_bar.progress(1.0, text="🎉 8 席位 4v4 辩论会全流程精彩结束！")
+    st.balloons()
 
 st.divider()
 st.markdown(
-    "<div style='text-align:center;color:#999;font-size:0.85rem;padding:2rem 0;'>"
-    "鲲鹏志 AI · 深度发布 · 2026"
+    "<div style='text-align:center;color:#888;font-size:0.85rem;padding:1.5rem 0;'>"
+    "🦅 鲲鹏志 AI · 8 席位分布式多智能体竞技平台 · 2026"
     "</div>",
     unsafe_allow_html=True
 )
