@@ -1,9 +1,11 @@
 """
-🦅 鲲鹏志 · 9 席位模拟法庭 (油管分段式冻结 Top Banner + 6阶段标准刑事庭审)
-================================================================================
-1. 顶部 position:sticky 冻结顶部看板：油管字幕风格分段进度条 (6 段落 Stage 0~5)
-2. 完整补充【法庭初始化与准备】+【法庭调查举证】+【法庭调查质证】+【法庭辩论与质询】+【最后陈述】+【合议庭宣判】
-3. 真实刑事庭审程序，9 席位分布式节点完整流转
+🦅 鲲鹏志 · 9 席位真实世界模型刑事法庭 (监委移送·起诉书宣读·超高颗粒度)
+========================================================================
+1. 真实世界模型颗粒度：从监委留置调查、监察法第45条移送检察院（免公安经侦）、起诉书字号、核对身份、告知诉讼权利全流程还原。
+2. 审判长开庭初始化：核对被告人尊长基本信息，介绍合议庭（ruby/luna/leopard）及控辩双方，宣布法庭调查开始。
+3. 控方宣读起诉书：宣读《大检刑诉〔2026〕88号起诉书》，阐明监委移送事实（1000万自筹拆借、分10次归还、职务影响拟制对价）。
+4. 辩方无罪答辩：针对监委卷宗与起诉书，掏出【四大罪名排除矩阵】、从旧兼从轻原则与 1000 万平价水单。
+5. 冻结 Top Banner 实时显示 6 阶段进度。
 """
 
 import streamlit as st
@@ -11,7 +13,7 @@ import openai
 import os
 
 st.set_page_config(
-    page_title="鲲鹏志 · 9 席位模拟法庭",
+    page_title="鲲鹏志 · 9席位真实世界模型刑事法庭",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -22,133 +24,142 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-47318")
 
 # 6 个标准刑事庭审阶段定义
 STAGES = [
-    {"id": 0, "name": "0. 审判初始化", "emoji": "⚖️"},
-    {"id": 1, "name": "1. 控方举证", "emoji": "🔍"},
-    {"id": 2, "name": "2. 辩方质证", "emoji": "🛡️"},
-    {"id": 3, "name": "3. 法庭辩论", "emoji": "⚔️"},
-    {"id": 4, "name": "4. 最后陈述", "emoji": "📢"},
-    {"id": 5, "name": "5. 终审宣判", "emoji": "🏛️"}
+    {"id": 0, "name": "0. 审判长核对与宣布开庭", "emoji": "⚖️"},
+    {"id": 1, "name": "1. 控方宣读起诉书与移送事实", "emoji": "📜"},
+    {"id": 2, "name": "2. 辩方无罪答辩与四罪排除", "emoji": "🛡️"},
+    {"id": 3, "name": "3. 法庭调查质证与辩论", "emoji": "⚔️"},
+    {"id": 4, "name": "4. 合议庭质询与最后陈述", "emoji": "📢"},
+    {"id": 5, "name": "5. 终审判决与宣判判词", "emoji": "🏛️"}
 ]
 
-# 9 席位与标准庭审阶段映射
+# 9 席位与超高颗粒度真实法庭角色
 COURT_SEATS = [
     {
         "stage_id": 0,
-        "stage_name": "【阶段 0 · 法庭准备与初始化】",
-        "role": "🏛️ 审判长 (初始化)",
+        "stage_name": "【阶段 0 · 法庭初始化与核对身份】",
+        "role": "🏛️ 审判长 (开庭准备)",
         "team": "judge",
         "agent": "ruby",
         "node": "nuc",
         "model": "nova-deepseek-v4-flash-aggr",
-        "instruction": "你是本案【审判长】。请敲响法槌宣布开庭！进行法庭初始化：1. 核对被告人/尊长身份；2. 宣布案由《极昼》案例自筹资金救助亲家案；3. 介绍合议庭组成人员（审判长ruby、审判员A luna、审判员B leopard）及公诉人、辩护律师；4. 告知诉讼权利。最后宣布法庭调查正式开始！"
+        "instruction": (
+            "你是山西省大同市中级人民法院刑事审判第一庭【审判长】。请以极高颗粒度敲响法槌宣布开庭！\n"
+            "具体执行程序：\n"
+            "1. 宣布：‘山西省大同市中级人民法院刑事审判第一庭，现在开庭！带被告人尊长到庭！’\n"
+            "2. 现场核对被告人身份：‘被告人尊长，男，196X年生，原中煤集团高管，因涉嫌职务犯罪，于2025年被监察委员会采取留置措施，后移送审查起诉...’\n"
+            "3. 宣布案由与依据：‘本院依据《刑事诉讼法》第185条、第188条，公开开庭审理大同市人民检察院指控被告人尊长涉嫌利用影响力受贿罪、国有公司人员失职罪一案。’\n"
+            "4. 介绍合议庭与控辩人员：审判长ruby、审判员A luna、审判员B leopard组成合议庭；公诉人topaz、carbonado、quartz出庭支持公诉；辩护人diamond、argentite、agate出庭辩护。\n"
+            "5. 告知诉讼权利并询问是否申请回避。最后敲击法槌：‘法庭准备结束，请公诉人宣读起诉书！’"
+        )
     },
     {
         "stage_id": 1,
-        "stage_name": "【阶段 1 · 法庭调查 - 控方起诉举证】",
-        "role": "⚖️ 首席公诉人",
+        "stage_name": "【阶段 1 · 控方宣读起诉书】",
+        "role": "⚖️ 首席公诉人 (宣读起诉书)",
         "team": "prosecutor",
         "agent": "topaz",
         "node": "raccoon",
         "model": "topaz-deepseek-v4-flash",
-        "instruction": "你是【首席公诉人】。在法庭调查阶段宣读起诉书：尊长身为中煤高管，其社会信用与职务身份在法律上不可切割。普通老人无法瞬间撬动千万资金，这笔拆借本质上是利用职务影响力为私企定向输血，越过了公私红线，构成了对合规底线的侵犯。"
+        "instruction": (
+            "你是【首席公诉人】。在法庭上正式宣读《大检刑诉〔2026〕88号起诉书》！\n"
+            "真实程序颗粒度要求：\n"
+            "1. 说明管辖与移送来源：‘本案由大同市监察委员会调查终结，依据《监察法》第45条及《刑事诉讼法》第170条，直接移送本院审查起诉，无需公安机关经侦程序。’\n"
+            "2. 宣读指控犯罪事实：‘2016年春节前夕，被告人尊长利用担任中煤集团领导职务便利与隐形影响力，向特定亲友圈筹集1000万元私人资金，定向划转至其亲家民营房企账户，化解民间爆雷危机...’\n"
+            "3. 指控罪名：指控被告人构成【利用影响力受贿罪】（拟制感情投资/事后感谢对价）及【国有公司人员失职罪】。"
+        )
     },
     {
         "stage_id": 1,
-        "stage_name": "【阶段 1 · 法庭调查 - 控方补充举证】",
+        "stage_name": "【阶段 1 · 控方补充说明移送证据】",
         "role": "⚖️ 第一助理公诉人",
         "team": "prosecutor",
         "agent": "carbonado",
         "node": "pve2",
         "model": "carbonado-deepseek-v4-flash",
-        "instruction": "你是【第一助理公诉人】。举证说明：权力和职务影响力就像水渗入沙土，公钱虽未动，但国企高管用自身影响力为私企背书，就是在制造‘破窗效应’！"
+        "instruction": (
+            "你是【第一助理公诉人】。补充说明监委移送卷宗证据：权力和职务影响力就像水渗入沙土，公钱虽未动，但国企高管用自身职务影响力为私企背书，制造了严重破窗效应！"
+        )
     },
     {
         "stage_id": 2,
-        "stage_name": "【阶段 2 · 法庭调查 - 辩方质证与反证】",
+        "stage_name": "【阶段 2 · 辩方无罪答辩与四罪排除】",
         "role": "🛡️ 首席辩护律师",
         "team": "defense",
         "agent": "diamond",
         "node": "pve",
         "model": "diamond-deepseek-v4-flash",
-        "instruction": "你是【首席辩护律师】。在法庭质证阶段直接驳斥控方证据！掏出《极昼.md》中的【四大罪名穷尽式排除矩阵】：1.受贿罪（资金逆向借出无对价）；2.滥用职权罪（未动用公章资金，零国家损失）；3.贪污罪（账目纯洁）；4.高利转贷/非吸（非信贷资金）。出示1000万10次平价还本水单，证明公款零亏空！"
+        "instruction": (
+            "你是【首席辩护律师】。在答辩阶段直接驳斥起诉书！发表全盘无罪辩护：\n"
+            "1. 针对监委移送案卷与起诉书，出示关键书证：1000万资金系私人筹集，后分10次各100万原额还本，平进平出，零利息，中煤账目零亏空！\n"
+            "2. 掏出《极昼.md》【四大罪名穷尽式排除矩阵】：受贿罪（无权钱交易对价）、滥用职权罪（未动用公款公章）、贪污罪（账目纯洁）、高利转贷（非信贷资金）。用客观财务凭证击穿公诉指控！"
+        )
     },
     {
         "stage_id": 2,
-        "stage_name": "【阶段 2 · 法庭调查 - 辩方法理质证】",
+        "stage_name": "【阶段 2 · 辩方法理质证】",
         "role": "🛡️ 第一助理辩护律师",
         "team": "defense",
         "agent": "argentite",
         "node": "pve3",
         "model": "argentite-deepseek-v4-flash",
-        "instruction": "你是【第一助理辩护律师】。质证控方的适用法律错误：引用《刑法》第12条“从旧兼从轻”原则，行为发生于2016年2月，控方套用2016年4月新司法解释中‘感情投资/事后感谢’的拟制罪名，属于违宪的溯及既往！在2003纪要标准下罪名绝对不成立！"
+        "instruction": (
+            "你是【第一助理辩护律师】。质证起诉书的法律适用错误：引用《刑法》第12条“从旧兼从轻”原则！行为发生于2016年2月，检方套用2016年4月新司法解释中‘感情投资/事后感谢’的拟制罪名，完全属于违宪的溯及既往！在2003纪要标准下罪名绝对不成立！"
+        )
     },
     {
         "stage_id": 3,
-        "stage_name": "【阶段 3 · 法庭辩论与法官质询】",
+        "stage_name": "【阶段 3 · 法庭调查质证与辩论】",
         "role": "⚖️ 第二助理公诉人",
         "team": "prosecutor",
         "agent": "quartz",
         "node": "pbs3",
         "model": "quartz-deepseek-v4-flash",
-        "instruction": "你是【第二助理公诉人】。在法庭辩论阶段发言：防范隐形权力寻租是现代国企治理的核心。规则不能为个案同情打折！"
+        "instruction": "你是【第二助理公诉人】。在法庭辩论阶段发言：防范隐形权力寻租是现代国企合规的核心。规则不能为个案同情打折！"
     },
     {
         "stage_id": 3,
-        "stage_name": "【阶段 3 · 法庭辩论与法官质询】",
+        "stage_name": "【阶段 3 · 法庭调查质证与辩论】",
         "role": "🛡️ 第二助理辩护律师",
         "team": "defense",
         "agent": "agate",
         "node": "xgp",
         "model": "agate-deepseek-v4-flash",
-        "instruction": "你是【第二助理辩护律师】。在法庭辩论阶段发言：还原2015-2016山河四省最冷冬天的真实悲壮背景（螺纹钢1600/焦煤300）。尊长是在社会结构即将倾覆时用肉身和信用撑住承重梁。法律不能背叛正义！"
+        "instruction": "你是【第二助理辩护律师】。在辩论阶段发言：还原2015-2016山河四省最冷冬天的真实悲壮背景（螺纹钢1600/焦煤300）。尊长是在社会结构即将倾覆时用肉身和信用撑住承重梁。法律不能背叛正义！"
     },
     {
-        "stage_id": 3,
-        "stage_name": "【阶段 3 · 法庭辩论与法官质询】",
+        "stage_id": 4,
+        "stage_name": "【阶段 4 · 合议庭质询与最后陈述】",
         "role": "🏛️ 审判员 A (常理质询)",
         "team": "judge",
         "agent": "luna",
         "node": "onecloud2",
         "model": "azure-deepseek-v4-flash",
-        "instruction": "你是合议庭【审判员A】。展开法庭质询：追问控方‘如果私人自筹资金平进平出且无一分公款损失都要定罪，法的温度何在？’同时追问辩方‘如何证明社会人脉与职务背景完全切割？’"
-    },
-    {
-        "stage_id": 4,
-        "stage_name": "【阶段 4 · 控辩最后陈述】",
-        "role": "🏛️ 审判员 B (法理质询)",
-        "team": "judge",
-        "agent": "leopard",
-        "node": "suse",
-        "model": "azure-deepseek-v4-flash",
-        "instruction": "你是合议庭【审判员B】。要求控辩双方做最后程序陈述：控方起诉书认定的罪名满足哪一条法定构成要件？辩方从旧兼从轻在2016年2月行为着手点的具体适用界限。"
+        "instruction": "你是合议庭【审判员A】。进行法庭质询：追问公诉人‘监委移送卷宗里是否有任何公款流失证据？’追问辩护人‘私人拆借如何证明脱离了职务影响力？’"
     },
     {
         "stage_id": 5,
-        "stage_name": "【阶段 5 · 合议庭评议与终审宣判】",
+        "stage_name": "【阶段 5 · 终审判决与宣判判词】",
         "role": "🏛️ 审判长 (终审宣判)",
         "team": "judge",
         "agent": "ruby",
         "node": "nuc",
         "model": "nova-deepseek-v4-flash-aggr",
-        "instruction": "你是【审判长】。请综合控辩双方辩论、四罪排除矩阵、从旧兼从轻原则以及合议庭评议结果，做出最终法庭判决！敲响法槌，宣告尊长无罪或裁定结果，发表发人深省、震撼人心的宣判判词！"
+        "instruction": "你是【审判长】。请综合监委移送管辖程序、控辩双方举证质证、四大罪名排除矩阵、从旧兼从轻原则及合议庭评议结果，做出一审终审判决！敲响法槌，宣告被告人尊长无罪，并发表一份千字级发人深省、震撼人心的法理解构判词！"
     }
 ]
 
-# 当前进度的 session state
 if "current_stage_id" not in st.session_state:
     st.session_state.current_stage_id = 0
 
-# 动态生成 Top Sticky Banner CSS 与 HTML
 def render_sticky_top_banner(active_stage_id):
     segments_html = ""
     for stage in STAGES:
-        # 判断段落状态：已完成(green)、正在进行(gold/orange)、未开始(gray)
         if stage["id"] < active_stage_id:
-            color = "#4CAF50" # 已完成
+            color = "#4CAF50"
         elif stage["id"] == active_stage_id:
-            color = "#FF9800" # 正在进行
+            color = "#FF9800"
         else:
-            color = "#444444" # 未开始
+            color = "#444444"
             
         segments_html += f'<div style="flex: 1; height: 8px; border-radius: 4px; background-color: {color}; transition: all 0.3s;"></div>'
         
@@ -169,11 +180,10 @@ def render_sticky_top_banner(active_stage_id):
     """
     st.markdown(banner_html, unsafe_allow_html=True)
 
-# 渲染 Top Banner
 render_sticky_top_banner(st.session_state.current_stage_id)
 
-st.markdown('<h1 style="text-align:center;color:#E65100;">⚖️ 鲲鹏志 · 《极昼》案 9 席位标准刑事法庭</h1>', unsafe_allow_html=True)
-st.markdown('<p style="text-align:center;color:#777;">油管分段式 Top Sticky Banner + 6 阶段刑事庭审全流程</p>', unsafe_allow_html=True)
+st.markdown('<h1 style="text-align:center;color:#B71C1C;">⚖️ 鲲鹏志 · 《极昼》案 9 席位真实世界刑事法庭</h1>', unsafe_allow_html=True)
+st.markdown('<p style="text-align:center;color:#777;">监委移送审查起诉 · 起诉书宣读 · 四罪排除矩阵 · 超高颗粒度庭审</p>', unsafe_allow_html=True)
 
 def load_research_file(filepath):
     if not filepath or not os.path.exists(filepath):
@@ -185,18 +195,18 @@ def load_research_file(filepath):
         return f"加载文献失败: {e}"
 
 with st.sidebar:
-    st.markdown("### 🏛️ 9 席位模拟法庭构架")
+    st.markdown("### 🏛️ 9 席位法庭人员与物理节点")
     st.markdown("#### ⚖️ 三人合议庭")
     st.caption("• 审判长: `ruby` @ `nuc`")
     st.caption("• 审判员A: `luna` @ `onecloud2`")
-    st.caption("• 审判员B: `leopard` @ `suse`")
+    st.caption("• 审判员B: `leopard` @ `suse` (代)")
     
-    st.markdown("#### 🔴 控方公诉团队")
+    st.markdown("#### 🔴 控方团队 (监委移送起诉)")
     st.caption("• 首席公诉: `topaz` @ `raccoon`")
     st.caption("• 助理公诉1: `carbonado` @ `pve2`")
     st.caption("• 助理公诉2: `quartz` @ `pbs3`")
     
-    st.markdown("#### 🔵 辩护律师团队")
+    st.markdown("#### 🔵 辩护团队 (无罪辩护)")
     st.caption("• 首席辩护: `diamond` @ `pve`")
     st.caption("• 辩护助理1: `argentite` @ `pve3`")
     st.caption("• 辩护助理2: `agate` @ `xgp`")
@@ -206,22 +216,22 @@ with st.sidebar:
 
 article_text = load_research_file("research/极昼.md")
 
-with st.expander("📌 标准刑事庭审 6 阶段说明与 55KB 案卷", expanded=True):
-    st.markdown("### **案由：尊长自筹资金救助亲家企业涉嫌犯罪案**")
+with st.expander("📌 《大检刑诉〔2026〕88号起诉书》案由与 55KB 监委移送卷宗", expanded=True):
+    st.markdown("### **案由：尊长自筹资金救助亲家涉嫌利用影响力受贿、国有公司人员失职案**")
     col1, col2 = st.columns(2)
     with col1:
-        st.info("**庭审程序**：0.初始化 -> 1.控方举证 -> 2.辩方质证 -> 3.法庭辩论 -> 4.最后陈述 -> 5.终审宣判")
+        st.info("**监委移送管辖**：监察法第45条移送检察院审查起诉，无需公安经侦程序。")
     with col2:
-        st.success("**实体法争点**：四大罪名排除矩阵、从旧兼从轻、私人信用 vs 职务影响混同。")
+        st.success("**辩方四罪排除**：受贿、滥用职权、贪污、高利转贷完全不成立，从旧兼从轻。")
         
     if article_text:
-        st.markdown(f'<div style="background:#f8f9fa;padding:10px;border-left:4px solid #FF9800;font-size:0.88rem;max-height:180px;overflow-y:auto;">{article_text[:2500]}...\n\n*(共 {len(article_text)} 字符全量案卷)*</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:#f8f9fa;padding:10px;border-left:4px solid #B71C1C;font-size:0.88rem;max-height:180px;overflow-y:auto;">{article_text[:2500]}...\n\n*(共 {len(article_text)} 字符全量案卷)*</div>', unsafe_allow_html=True)
 
 st.divider()
 
 col_btn1, col_btn2 = st.columns([2, 1])
 with col_btn1:
-    start_btn = st.button("⚖️ 敲响法槌 · 开启标准刑事庭审 (0~5 阶段)", type="primary", use_container_width=True)
+    start_btn = st.button("⚖️ 敲响法槌 · 启动真实世界刑事庭审 (0~5 阶段)", type="primary", use_container_width=True)
 with col_btn2:
     clear_btn = st.button("🧹 清空庭审笔录", use_container_width=True)
 
@@ -233,7 +243,7 @@ if clear_btn:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-st.markdown("### 📜 标准刑事庭审笔录（永久驻留显示）")
+st.markdown("### 📜 真实世界刑事庭审笔录（永久驻留显示）")
 chat_container = st.container()
 
 with chat_container:
@@ -247,7 +257,7 @@ if start_btn:
     st.session_state.current_stage_id = 0
     client = openai.OpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY)
     
-    progress_bar = st.progress(0, text="正在敲响法槌，初始化法庭...")
+    progress_bar = st.progress(0, text="正在敲响法槌，带被告人尊长到庭...")
     
     for i, seat in enumerate(COURT_SEATS, 1):
         st.session_state.current_stage_id = seat["stage_id"]
@@ -260,7 +270,7 @@ if start_btn:
         prev_speaker_context = ""
         if len(st.session_state.messages) > 0:
             last_msg = st.session_state.messages[-1]
-            prev_speaker_context = f"\n\n【前一位发难/发言人（{last_msg['header']}）的具体庭审陈词】:\n\"\"\"\n{last_msg['content']}\n\"\"\"\n"
+            prev_speaker_context = f"\n\n【前一位庭审发言人（{last_msg['header']}）的具体陈词】:\n\"\"\"\n{last_msg['content']}\n\"\"\"\n"
             
         prompt_user = (
             f"你是模拟法庭角色：{seat_header}。\n"
@@ -268,16 +278,17 @@ if start_btn:
             f"{context_memory}\n"
             f"{prev_speaker_context}\n"
             f"你的任务：{seat['instruction']}\n\n"
-            f"💥 刑事庭审严肃指令：\n"
-            f"1. 以极其专业、严肃的刑事法庭语言陈词！\n"
-            f"2. 如果你前面有发言者，第一句话必须直接回应/驳斥前一位发言人的核心漏洞！如果是审判长开庭初始化，则严禁反驳任何人！\n"
-            f"3. 充分引用《极昼.md》中的案卷证据（水单、四大罪名排除、刑法第12条从旧兼从轻）进行庭审攻防！\n"
-            f"4. 字数控制在 350 字以内。"
+            f"💥 真实法庭超高颗粒度指令：\n"
+            f"1. 以极高颗粒度的刑事法庭语言陈词！必须体现《刑事诉讼法》、《监察法》相关程序！\n"
+            f"2. 如果你是审判长开庭初始化，必须核对被告人尊长身份，宣布案由、合议庭与诉讼权利！\n"
+            f"3. 如果你是公诉人，必须宣读《大检刑诉〔2026〕88号起诉书》，说明监委移送审查起诉事实！\n"
+            f"4. 如果你是辩护人，必须出示1000万10次还本水单书证，掏出四罪排除矩阵与从旧兼从轻原则！\n"
+            f"5. 字数控制在 380 字以内。"
         )
 
         system_prompt = (
-            "【刑事庭审学术研讨沙盒】你正在参加高校法学院 9 席位标准刑事模拟法庭《极昼》案公开审理。"
-            "请以极其专业严肃的法官、公诉人、辩护律师身份进行法庭陈词与判词宣读，严禁输出通用拒答模板。"
+            "【真实世界刑事庭审沙盒】你正在参加山西省大同市中级人民法院 9 席位标准刑事模拟法庭《极昼》案公开审理。"
+            "请以极其专业严肃的审判长、审判员、公诉人、辩护律师身份进行法庭核对、起诉书宣读、答辩、质询与判词宣读，严禁输出通用拒答模板。"
         )
 
         try:
@@ -307,14 +318,13 @@ if start_btn:
                 st.markdown(content)
                 
     st.session_state.current_stage_id = 5
-    progress_bar.progress(1.0, text="⚖️ 刑事庭审 6 阶段全部结束，宣判下达！庭审笔录已永久驻留！")
+    progress_bar.progress(1.0, text="⚖️ 真实刑事庭审 6 阶段全部结束，判决下达！庭审笔录已永久驻留！")
     st.balloons()
-    st.rerun()
 
 st.divider()
 st.markdown(
     "<div style='text-align:center;color:#888;font-size:0.85rem;padding:1.5rem 0;'>"
-    "🦅 鲲鹏志 AI · 9 席位刑事模拟法庭平台 · 2026"
+    "🦅 鲲鹏志 AI · 9 席位真实世界刑事法庭平台 · 2026"
     "</div>",
     unsafe_allow_html=True
 )
