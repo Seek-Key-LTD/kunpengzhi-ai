@@ -1,9 +1,9 @@
 """
-🦅 鲲鹏志 · 《极昼》案 10 席位沉静法庭 (云端/Heroku 环境变量注入与 ash3 支持版)
-========================================================================
-1. 支持云端 Heroku / Docker 部署：自动优先读取 ASH3_IPV4 与 OPENAI_BASE_URL 环境变量。
-2. 避免公网依赖 Tailscale，解耦网络限制。
-3. 保留 10 席位沉静庭审、起诉书自主撰写、从旧兼从轻与 1000 万平价还本凭证。
+🦅 鲲鹏志 · 《极昼》案 10 席位沉静法庭 (美区 3 号节点 DNS 修正版 litellm.seekkey.eu.org)
+=================================================================================
+1. 修正 DNS 解析域名：美区 3 号 (ash3c) 专用公网出口域名为 https://litellm.seekkey.eu.org/v1！
+2. 避免 Cloudflare 无法解析 capitaltrain.cn 的美区问题，Heroku 及海外容器直连 litellm.seekkey.eu.org！
+3. 保持 10 席位沉静庭审、起诉书自主撰写、四大罪名排除与 1000 万平价还本凭证。
 """
 
 import streamlit as st
@@ -18,9 +18,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 动态环境变量解耦与 ash3 IPv4 支持
+# 美区 3 号 (ash3c) 正确公网出口域名
 ASH3_IPV4 = os.getenv("ASH3_IPV4", "129.213.28.125")
-DEFAULT_BASE_URL = f"http://{ASH3_IPV4}:4000/v1" if os.getenv("USE_ASH3_DIRECT") else "https://litellm.capitaltrain.cn/v1"
+DEFAULT_BASE_URL = "https://litellm.seekkey.eu.org/v1"
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", DEFAULT_BASE_URL)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-47318")
 
@@ -201,7 +201,7 @@ class RobertTokenRingEngine:
         return header, content
 
 st.markdown('<div class="main-title">⚖️ 鲲鹏志 · 《极昼》案 沉静严肃法庭</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">为家族关怀与严密法理演练倾力打造 · 独立起诉书撰写 · 沉静有度的 10 席位模拟</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">为家族关怀与严密法理演练倾力打造 · 独立起诉书撰写 · 10 席位沉静模拟</div>', unsafe_allow_html=True)
 
 def load_research_file(filepath):
     if not filepath or not os.path.exists(filepath):
@@ -232,8 +232,7 @@ with st.sidebar:
     st.caption("• 辩护助理2: `agate` @ `xgp`")
 
     st.divider()
-    st.markdown("#### 🌐 云端 / Heroku 环境变量")
-    st.caption(f"• `ASH3_IPV4`: `{ASH3_IPV4}`")
+    st.markdown("#### 🌐 美区 3 号 (ash3c) 正确公网出口")
     st.caption(f"• `OPENAI_BASE_URL`: `{OPENAI_BASE_URL}`")
 
 article_text = load_research_file("research/极昼.md")
