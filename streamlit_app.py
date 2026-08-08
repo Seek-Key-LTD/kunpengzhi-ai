@@ -169,7 +169,7 @@ def render_sticky_top_banner(active_stage_id):
         titles_html += f'<span style="{style}">{stage["emoji"]} {stage["name"]}</span>'
 
     banner_html = f"""
-    <div style="position: sticky; top: 0rem; z-index: 99999; background: #121214; border-bottom: 2px solid #FF9800; padding: 10px 16px; margin-bottom: 1rem; border-radius: 0 0 8px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+    <div style="position: fixed; top: 0; left: 0; right: 0; z-index: 99999; background: #121214; border-bottom: 2px solid #FF9800; padding: 10px 16px; margin-bottom: 1rem; border-radius: 0 0 8px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
       <div style="display: flex; gap: 8px; margin-bottom: 8px;">
         {segments_html}
       </div>
@@ -181,6 +181,7 @@ def render_sticky_top_banner(active_stage_id):
     st.markdown(banner_html, unsafe_allow_html=True)
 
 render_sticky_top_banner(st.session_state.current_stage_id)
+st.markdown('<div style="height: 74px;"></div>', unsafe_allow_html=True)
 
 st.markdown('<h1 style="text-align:center;color:#B71C1C;">⚖️ 鲲鹏志 · 《极昼》案 9 席位真实世界刑事法庭</h1>', unsafe_allow_html=True)
 st.markdown('<p style="text-align:center;color:#777;">监委移送审查起诉 · 起诉书宣读 · 四罪排除矩阵 · 超高颗粒度庭审</p>', unsafe_allow_html=True)
