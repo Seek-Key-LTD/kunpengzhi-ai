@@ -1,10 +1,9 @@
 """
-🦅 鲲鹏志 · 《极昼》案 10 席位沉静严肃法庭 (阜阳起诉书独立撰写·有温度的模拟)
+🦅 鲲鹏志 · 《极昼》案 10 席位沉静法庭 (云端/Heroku 环境变量注入与 ash3 支持版)
 ========================================================================
-1. 沉静严肃·人文关怀：专为家族关怀与法理演练设计，拒绝急躁喷字，保障每一阶段严谨推演。
-2. 阜阳市检察院独立起诉书撰写：首席公诉人 (topaz@raccoon) 独立自主撰写完整的《安徽省阜阳市人民检察院起诉书》(阜检刑诉〔2026〕88号)。
-3. 被告人尊长 (leopard@suse) 现场实时应答核对身份与告知权利。
-4. 10 席位令牌环 (Token Ring) 共享上下文逐步推进。
+1. 支持云端 Heroku / Docker 部署：自动优先读取 ASH3_IPV4 与 OPENAI_BASE_URL 环境变量。
+2. 避免公网依赖 Tailscale，解耦网络限制。
+3. 保留 10 席位沉静庭审、起诉书自主撰写、从旧兼从轻与 1000 万平价还本凭证。
 """
 
 import streamlit as st
@@ -13,13 +12,16 @@ import os
 import time
 
 st.set_page_config(
-    page_title="鲲鹏志 · 《极昼》阜阳案沉静模拟法庭",
+    page_title="鲲鹏志 · 《极昼》沉静法庭",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://litellm.capitaltrain.cn/v1")
+# 动态环境变量解耦与 ash3 IPv4 支持
+ASH3_IPV4 = os.getenv("ASH3_IPV4", "129.213.28.125")
+DEFAULT_BASE_URL = f"http://{ASH3_IPV4}:4000/v1" if os.getenv("USE_ASH3_DIRECT") else "https://litellm.capitaltrain.cn/v1"
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", DEFAULT_BASE_URL)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-47318")
 
 st.markdown(
@@ -134,7 +136,6 @@ class RobertTokenRingEngine:
         return "\n\n".join(f"【{m['header']}】:\n{m['content']}" for m in self.shared_context)
 
     def draft_official_indictment(self):
-        """公诉机关独立自主撰写完整起诉书"""
         prompt = (
             "你是安徽省阜阳市人民检察院首席公诉人。请以正式公文格式自主撰写《安徽省阜阳市人民检察院起诉书》（字号：阜检刑诉〔2026〕88号）。\n"
             "案卷根据《极昼.md》：\n"
@@ -230,6 +231,11 @@ with st.sidebar:
     st.caption("• 辩护助理1: `argentite` @ `pve3`")
     st.caption("• 辩护助理2: `agate` @ `xgp`")
 
+    st.divider()
+    st.markdown("#### 🌐 云端 / Heroku 环境变量")
+    st.caption(f"• `ASH3_IPV4`: `{ASH3_IPV4}`")
+    st.caption(f"• `OPENAI_BASE_URL`: `{OPENAI_BASE_URL}`")
+
 article_text = load_research_file("research/极昼.md")
 
 with st.expander("📌 安徽省阜阳市监委移送案卷与《极昼.md》研究全文", expanded=True):
@@ -324,7 +330,7 @@ if "indictment_text" in st.session_state and st.session_state.indictment_text an
             with st.chat_message(seat["role"], avatar=avatar):
                 st.markdown(f"### {header}")
                 st.markdown(content)
-        time.sleep(0.5) # 沉静节奏感调控
+        time.sleep(0.5)
                 
     progress_bar.progress(1.0, text="⚖️ 阜阳案沉静刑事庭审演练落幕！全案笔录已永久驻留！")
     st.balloons()
