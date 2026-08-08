@@ -8,10 +8,12 @@
 |----|-----|
 | **环境** | dev（nuc 本地运行） |
 | **框架** | Streamlit（记忆银行 Memory Bank） |
-| **地址** | `nuc:8501`（127.0.0.1:8501） |
+| **地址** | `nuc:8501`（0.0.0.0 监听） |
+| **访问** | `http://100.116.169.46:8501`（tailscale）/ `http://192.168.31.239:8501`（内网） |
+| **服务** | systemd `kunpengzhi-dev`（开机自启 + 自动重启） |
 | **域名** | ⏳ 待路由（宣告中，由 infra 协作方配置，建议 `kunpengzhi-dev.capitaltrain.cn`） |
 | **分支** | `dev`（Gitea: seekkey/kunpengzhi-ai） |
-| **启动** | `~/Projects/github/kunpengzhi-ai` → `uv run streamlit run streamlit_app.py --server.port 8501 --server.address 127.0.0.1` |
+| **启动** | `sudo systemctl start kunpengzhi-dev`（或 `~/Projects/github/kunpengzhi-ai` → `uv run streamlit run streamlit_app.py --server.port 8501 --server.address 0.0.0.0`） |
 | **日志** | `/tmp/kunpengzhi-dev.log` |
 | **PID** | `/tmp/kunpengzhi-dev.pid` |
 
