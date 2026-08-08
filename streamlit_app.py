@@ -33,13 +33,6 @@ st.markdown(
         font-size: 1.1rem;
         margin-bottom: 1.5rem;
     }
-    .seat-badge {
-        background-color: #f0f2f6;
-        padding: 0.4rem 0.8rem;
-        border-radius: 0.5rem;
-        font-size: 0.85rem;
-        margin-bottom: 0.3rem;
-    }
     </style>
     """,
     unsafe_allow_html=True
@@ -154,13 +147,9 @@ with st.expander("📌 辩题详析与正反方立场声明", expanded=True):
     st.caption(t_info["detail"])
     col_pro, col_con = st.columns(2)
     with col_pro:
-        st.success(f"**正方主张**：
-
-{t_info['pro']}")
+        st.success(f"**正方主张**：{t_info['pro']}")
     with col_con:
-        st.error(f"**反方主张**：
-
-{t_info['con']}")
+        st.error(f"**反方主张**：{t_info['con']}")
 
 st.divider()
 
@@ -197,7 +186,16 @@ if start_btn:
         
         history = "\n\n".join(f"{m['header']}:\n{m['content']}" for m in st.session_state.messages)
         
-        prompt = f"你是辩论选手：{seat_header}。\n辩题：{t_info['title']}\n正方立场：{t_info['pro']}\n反方立场：{t_info['con']}\n\n历史辩论推进记录：\n{history if history else '(刚开场，由你开篇立论)'}\n\n你的任务：{seat['instruction']}\n要求：风格鲜明、火药味十足、有金句、言简意赅（300字以内）。"
+        prompt = (
+            f"你是辩论选手：{seat_header}。\n"
+            f"辩题：{t_info['title']}\n"
+            f"正方立场：{t_info['pro']}\n"
+            f"反方立场：{t_info['con']}\n\n"
+            f"历史辩论推进记录：\n"
+            f"{history if history else '(刚开场，由你开篇立论)'}\n\n"
+            f"你的任务：{seat['instruction']}\n"
+            f"要求：风格鲜明、火药味十足、有金句、言简意赅（300字以内）。"
+        )
 
         with placeholder.container():
             with st.chat_message(seat["role"], avatar="🎤"):
