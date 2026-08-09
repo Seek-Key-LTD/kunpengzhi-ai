@@ -1,9 +1,9 @@
 """
-🦅 鲲鹏志 · 《极昼》案 10 席位沉静法庭 (美区 3 号节点 DNS 修正版 litellm.seekkey.eu.org)
+🦅 鲲鹏志 · 《极昼》案 10 席位沉静法庭 (双进度指示：顶部油管 Banner + 右下角悬浮圆环)
 =================================================================================
-1. 修正 DNS 解析域名：美区 3 号 (ash3c) 专用公网出口域名为 https://litellm.seekkey.eu.org/v1！
-2. 避免 Cloudflare 无法解析 capitaltrain.cn 的美区问题，Heroku 及海外容器直连 litellm.seekkey.eu.org！
-3. 保持 10 席位沉静庭审、起诉书自主撰写、四大罪名排除与 1000 万平价还本凭证。
+1. 顶部 Sticky Top Banner：分段式进度条（已完成-绿，进行中-橙，未开始-灰）。
+2. 右下角 Dynamic Circular Badge：CSS 环形渐变进度圆环 (conic-gradient)，实时显示充盈百分比与阶段。
+3. 10 席位沉静庭审、起诉书自主撰写、从旧兼从轻与 1000 万平价还本凭证。
 """
 
 import streamlit as st
@@ -18,42 +18,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 美区 3 号 (ash3c) 正确公网出口域名
-ASH3_IPV4 = os.getenv("ASH3_IPV4", "129.213.28.125")
-DEFAULT_BASE_URL = "https://litellm.seekkey.eu.org/v1"
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", DEFAULT_BASE_URL)
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://litellm.seekkey.eu.org/v1")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-47318")
 
-st.markdown(
-    """
-    <style>
-    .main-title {
-        font-size: 2.3rem;
-        font-weight: 800;
-        color: #B71C1C;
-        text-align: center;
-        margin-top: 0.5rem;
-    }
-    .sub-title {
-        text-align: center;
-        color: #555;
-        font-size: 1rem;
-        margin-bottom: 1.2rem;
-    }
-    .indictment-box {
-        background-color: #FFFDE7;
-        border: 2px solid #FBC02D;
-        border-radius: 8px;
-        padding: 1.5rem;
-        font-family: "SimSun", "Songti SC", serif;
-        color: #212121;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        margin-bottom: 1.5rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# 5 个核心庭审阶段定义
+STAGES = [
+    {"id": 1, "name": "1. 准备与核对身份", "emoji": "⚖️", "desc": "审判长核对尊长基本信息，告知回避权，被告人现场应答"},
+    {"id": 2, "name": "2. 控方起诉与举证", "emoji": "📜", "desc": "阜阳市检察院独立撰写并宣读《阜检刑诉〔2026〕88号起诉书》"},
+    {"id": 3, "name": "3. 辩方无罪质证", "emoji": "🛡️", "desc": "辩护团队掏出【四大罪名排除矩阵】与从旧兼从轻水单质证"},
+    {"id": 4, "name": "4. 法庭辩论与质询", "emoji": "⚔️", "desc": "合议庭追问公款损失凭证，控辩双方展开剧烈法理交锋"},
+    {"id": 5, "name": "5. 尊长陈述与宣判", "emoji": "🏛️", "desc": "尊长发表问心无愧陈述，审判长敲响法槌宣告无罪"}
+]
 
 SEATS_DICT = {
     "judge_chief": {
@@ -120,6 +95,135 @@ SEATS_DICT = {
         "team": "judge"
     }
 }
+
+if "current_stage_id" not in st.session_state:
+    st.session_state.current_stage_id = 0
+
+def render_custom_css():
+    st.markdown(
+        """
+        <style>
+        .main-title {
+            font-size: 2.3rem;
+            font-weight: 800;
+            color: #B71C1C;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        .sub-title {
+            text-align: center;
+            color: #555;
+            font-size: 1rem;
+            margin-bottom: 1.2rem;
+        }
+        .indictment-box {
+            background-color: #FFFDE7;
+            border: 2px solid #FBC02D;
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: "SimSun", "Songti SC", serif;
+            color: #212121;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* 右下角悬浮圆形进度组件 */
+        .circle-progress-widget {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #1A1A1D;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .circle-progress-widget:hover {
+            transform: scale(1.08);
+            box-shadow: 0 12px 32px rgba(230, 81, 0, 0.5);
+        }
+        .circle-inner {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: #121214;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #FFFFFF;
+            font-weight: bold;
+            font-size: 0.78rem;
+            text-align: center;
+            line-height: 1.1;
+        }
+        .circle-percent {
+            font-size: 0.95rem;
+            color: #FF9800;
+            font-weight: 800;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+def render_progress_components(current_stage):
+    # 计算充盈百分比 (1~5 阶段)
+    pct = int((current_stage / 5) * 100) if current_stage > 0 else 0
+    
+    # 1. 顶部悬浮分段条 (Sticky Top Banner)
+    segments_html = ""
+    for stage in STAGES:
+        if stage["id"] < current_stage:
+            color = "#4CAF50" # 已完成-绿
+        elif stage["id"] == current_stage:
+            color = "#FF9800" # 当前-橙
+        else:
+            color = "#333333" # 未开始-灰
+            
+        segments_html += f'<div style="flex: 1; height: 8px; border-radius: 4px; background-color: {color}; transition: all 0.4s;"></div>'
+        
+    titles_html = ""
+    for stage in STAGES:
+        if stage["id"] == current_stage:
+            style = "color: #FF9800; font-weight: 800;"
+        elif stage["id"] < current_stage:
+            style = "color: #81C784;"
+        else:
+            style = "color: #666;"
+        titles_html += f'<span style="{style}">{stage["emoji"]} {stage["name"]}</span>'
+
+    top_banner = f"""
+    <div style="position: sticky; top: 0rem; z-index: 99999; background: #121214; border-bottom: 2px solid #FF9800; padding: 10px 16px; margin-bottom: 1rem; border-radius: 0 0 8px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+      <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+        {segments_html}
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.82rem; overflow-x: auto;">
+        {titles_html}
+      </div>
+    </div>
+    """
+    st.markdown(top_banner, unsafe_allow_html=True)
+    
+    # 2. 右下角悬浮圆形进度徽章 (conic-gradient 环形充盈)
+    deg = int((pct / 100) * 360)
+    circle_bg = f"conic-gradient(#FF9800 0deg {deg}deg, #333333 {deg}deg 360deg)"
+    
+    circle_widget = f"""
+    <div class="circle-progress-widget" style="background: {circle_bg};" title="当前庭审进度：{pct}% ({current_stage}/5 阶段)">
+      <div class="circle-inner">
+        <span class="circle-percent">{pct}%</span>
+        <span style="font-size: 0.65rem; color: #AAA;">{current_stage}/5 阶段</span>
+      </div>
+    </div>
+    """
+    st.markdown(circle_widget, unsafe_allow_html=True)
 
 class RobertTokenRingEngine:
     def __init__(self, base_url, api_key, article_text=""):
@@ -200,8 +304,11 @@ class RobertTokenRingEngine:
         self.add_to_shared_context(seat_key, content)
         return header, content
 
+render_custom_css()
+render_progress_components(st.session_state.current_stage_id)
+
 st.markdown('<div class="main-title">⚖️ 鲲鹏志 · 《极昼》案 沉静严肃法庭</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">为家族关怀与严密法理演练倾力打造 · 独立起诉书撰写 · 10 席位沉静模拟</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">为家族关怀与严密法理演练倾力打造 · 独立起诉书撰写 · 5阶段双进度指示模拟</div>', unsafe_allow_html=True)
 
 def load_research_file(filepath):
     if not filepath or not os.path.exists(filepath):
@@ -232,8 +339,9 @@ with st.sidebar:
     st.caption("• 辩护助理2: `agate` @ `xgp`")
 
     st.divider()
-    st.markdown("#### 🌐 美区 3 号 (ash3c) 正确公网出口")
-    st.caption(f"• `OPENAI_BASE_URL`: `{OPENAI_BASE_URL}`")
+    st.markdown("#### 🎯 5 大核心庭审阶段")
+    for s in STAGES:
+        st.caption(f"{s['emoji']} **{s['name']}**: {s['desc']}")
 
 article_text = load_research_file("research/极昼.md")
 
@@ -252,13 +360,14 @@ st.divider()
 
 col_btn1, col_btn2 = st.columns([2, 1])
 with col_btn1:
-    start_btn = st.button("⚖️ 敲响法槌 · 开启沉静严肃庭审演练", type="primary", use_container_width=True)
+    start_btn = st.button("⚖️ 敲响法槌 · 开启 5 阶段沉静严肃庭审演练", type="primary", use_container_width=True)
 with col_btn2:
     clear_btn = st.button("🧹 清空庭审笔录", use_container_width=True)
 
 if clear_btn:
     st.session_state.messages = []
     st.session_state.indictment_text = ""
+    st.session_state.current_stage_id = 0
     st.rerun()
 
 if "messages" not in st.session_state:
@@ -280,39 +389,47 @@ with chat_container:
 
 if start_btn:
     st.session_state.messages = []
+    st.session_state.current_stage_id = 1
     engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text)
     
-    # 步骤 1：公诉机关独立撰写起诉书
+    # 阶段 2 触发独立起诉书
+    st.session_state.current_stage_id = 2
     with st.spinner("⚖️ 安徽省阜阳市人民检察院公诉团队正在独立撰写《起诉书》(阜检刑诉〔2026〕88号)..."):
         indictment_text = engine.draft_official_indictment()
         st.session_state.indictment_text = indictment_text
         st.rerun()
 
-# 如果已经生成起诉书且消息为空，开始流转庭审
 if "indictment_text" in st.session_state and st.session_state.indictment_text and len(st.session_state.messages) == 0:
     engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text)
     engine.add_to_shared_context("prosecutor_chief", f"【起诉书全景】:\n{st.session_state.indictment_text}")
     
     progress_bar = st.progress(0, text="正在敲响法槌，沉静带被告人尊长到庭...")
     
+    # 5 个核心阶段精准流转
     ROBERTS_STEPS = [
-        ("judge_chief", "敲响法槌！宣布：‘安徽省阜阳市中级人民法院刑事审判第一庭，现在开庭！带被告人尊长到庭！’现场核对尊长基本信息（2026年8月3日带至阜阳留置等），告知诉讼权利与回避权，将令牌派给被告人！"),
-        ("defendant", "【被告人尊长实时应答】向审判长明确回答：‘报告审判长，我叫尊长，原中煤集团党组成员，退休两年。2026年8月3日被带至安徽阜阳留置... 身份属实！我听清了权利，不申请回避！’归还令牌！"),
-        ("judge_chief", "收回令牌！宣布法庭准备结束，正式进入法庭调查阶段，请安徽省阜阳市人民检察院公诉人宣读刚刚独立撰写完成的《阜检刑诉〔2026〕88号起诉书》！将令牌派发给首席公诉人！"),
-        ("prosecutor_chief", "拿到了令牌！宣读《阜检刑诉〔2026〕88号起诉书》：说明由阜阳市监委调查终结移送起诉，指控2016年春节尊长利用职务影响筹措1000万划转亲家企业，构成利用影响力受贿罪与失职罪！归还令牌！"),
-        ("prosecutor_asst1", "受公诉人指派补充举证：强调职务影响与私情拆借的隐形背书与破窗效应！归还令牌！"),
-        ("defense_chief", "拿到了令牌！发表全盘无罪答辩：针对阜阳起诉书，掏出《极昼.md》【四大罪名排除矩阵】与1000万10次平价还本水单书证！归还令牌！"),
-        ("defense_asst1", "补充辩护：引用《刑法》第12条从旧兼从轻原则，阻断2016年4月新司法解释在阜阳案中的违宪追溯！归还令牌！"),
-        ("defense_asst2", "还原2015-2016山河四省最冷冬天背景，致敬时代的承重梁！归还令牌！"),
-        ("judge_a", "合议庭审判员A发难质询：追问阜阳公诉人有无公款损失凭证，追问辩护人如何证明脱离职务影响？归还令牌！"),
-        ("defendant", "【被告人尊长最后陈述】发表最后陈述：‘在阜阳留置室的这半年极昼里我问心无愧，我救的是企业和工人，未占公家一分钱！’归还令牌！"),
-        ("judge_chief", "收回令牌！综合合议庭评议，敲响法槌，宣告被告人尊长无罪，发表判词！")
+        # 阶段 1
+        (1, "judge_chief", "敲响法槌！宣布：‘安徽省阜阳市中级人民法院刑事审判第一庭，现在开庭！带被告人尊长到庭！’现场核对尊长基本信息（2026年8月3日带至阜阳留置等），告知诉讼权利与回避权，将令牌派给被告人！"),
+        (1, "defendant", "【被告人尊长实时应答】向审判长明确回答：‘报告审判长，我叫尊长，原中煤集团党组成员，退休两年。2026年8月3日被带至安徽阜阳留置... 身份属实！我听清了权利，不申请回避！’归还令牌！"),
+        # 阶段 2
+        (2, "judge_chief", "收回令牌！宣布法庭准备结束，正式进入法庭调查阶段，请安徽省阜阳市人民检察院公诉人宣读刚刚独立撰写完成的《阜检刑诉〔2026〕88号起诉书》！将令牌派发给首席公诉人！"),
+        (2, "prosecutor_chief", "拿到了令牌！宣读《阜检刑诉〔2026〕88号起诉书》：说明由阜阳市监委调查终结移送起诉，指控2016年春节尊长利用职务影响筹措1000万划转亲家企业，构成利用影响力受贿罪与失职罪！归还令牌！"),
+        (2, "prosecutor_asst1", "受公诉人指派补充举证：强调职务影响与私情拆借的隐形背书与破窗效应！归还令牌！"),
+        # 阶段 3
+        (3, "defense_chief", "拿到了令牌！发表全盘无罪答辩：针对阜阳起诉书，掏出《极昼.md》【四大罪名排除矩阵】与1000万10次平价还本水单书证！归还令牌！"),
+        (3, "defense_asst1", "补充辩护：引用《刑法》第12条从旧兼从轻原则，阻断2016年4月新司法解释在阜阳案中的违宪追溯！归还令牌！"),
+        (3, "defense_asst2", "还原2015-2016山河四省最冷冬天背景，致敬时代的承重梁！归还令牌！"),
+        # 阶段 4
+        (4, "judge_a", "合议庭审判员A发难质询：追问阜阳公诉人有无公款损失凭证，追问辩护人如何证明脱离职务影响？归还令牌！"),
+        # 阶段 5
+        (5, "defendant", "【被告人尊长最后陈述】发表最后陈述：‘在阜阳留置室的这半年极昼里我问心无愧，我救的是企业和工人，未占公家一分钱！’归还令牌！"),
+        (5, "judge_chief", "收回令牌！综合合议庭评议，敲响法槌，宣告被告人尊长无罪，发表判词！")
     ]
     
     total_steps = len(ROBERTS_STEPS)
-    for idx, (seat_key, instruction) in enumerate(ROBERTS_STEPS, 1):
+    for idx, (stage_id, seat_key, instruction) in enumerate(ROBERTS_STEPS, 1):
+        st.session_state.current_stage_id = stage_id
         seat = SEATS_DICT[seat_key]
-        progress_bar.progress(idx / total_steps, text=f"【沉静庭审推进 -> {seat['role']}】({seat['agent']} @ {seat['node']}) ...")
+        progress_bar.progress(idx / total_steps, text=f"【阶段 {stage_id}/5 推进 -> {seat['role']}】({seat['agent']} @ {seat['node']}) ...")
         
         header, content = engine.execute_token_speech(seat_key, instruction)
         avatar = "🏛️" if seat["team"] == "judge" else ("👤" if seat["team"] == "defendant" else ("⚖️" if seat["team"] == "prosecutor" else "🛡️"))
@@ -331,13 +448,15 @@ if "indictment_text" in st.session_state and st.session_state.indictment_text an
                 st.markdown(content)
         time.sleep(0.5)
                 
-    progress_bar.progress(1.0, text="⚖️ 阜阳案沉静刑事庭审演练落幕！全案笔录已永久驻留！")
+    st.session_state.current_stage_id = 5
+    progress_bar.progress(1.0, text="⚖️ 阜阳案 5 阶段沉静刑事庭审演练落幕！全案笔录已永久驻留！")
     st.balloons()
+    st.rerun()
 
 st.divider()
 st.markdown(
     "<div style='text-align:center;color:#888;font-size:0.85rem;padding:1.5rem 0;'>"
-    "🦅 鲲鹏志 AI · 沉静严肃法庭 Simulation · 2026"
+    "🦅 鲲鹏志 AI · 5 阶段沉静严肃法庭 Simulation · 2026"
     "</div>",
     unsafe_allow_html=True
 )
