@@ -12,6 +12,7 @@ import streamlit as st
 import openai
 import os
 import time
+from core.token_ring import RobertTokenRingEngine
 
 st.set_page_config(
     page_title="鲲鹏志 · 12黄道内阁与紫罗兰掌门法庭",
@@ -341,6 +342,12 @@ def build_court_markdown():
     for msg in st.session_state.get("messages", []):
         lines += [f"## {msg['header']}", msg["content"], ""]
     return "\n".join(lines)
+
+def render_progress_components(current_stage):
+    """庭审进度条（6 阶段：0初始化~5宣判）"""
+    stages = ["初始化", "起诉书", "质证", "法庭辩论", "合议", "宣判"]
+    idx = max(0, min(int(current_stage or 0), 5))
+    st.progress(idx / 5.0, text=f"庭审进度：{stages[idx]} ({idx}/5)")
 
 render_progress_components(st.session_state.current_stage_id)
 
