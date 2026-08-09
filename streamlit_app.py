@@ -358,17 +358,17 @@ def render_custom_css():
         max-width: min(25vw, 480px) !important;
         min-width: 300px;
       }
-      /* 右栏：可滚动信息流（像 sidebar 一样独立滚动） */
+      /* order flow（右）：可滚动信息流（像 ticker 一样独立滚动） */
       .stMain [data-testid="stColumn"]:last-child > div {
         max-height: calc(100vh - 140px);
         overflow-y: auto;
         padding-right: 6px;
       }
-      /* ===== 看盘式 fixed 布局：中区只显示「此刻」一个画面（用户核心诉求） ===== */
-      /* 中区核心焦点：固定视口，只渲染当前阶段/当前发言，不堆叠历史 */
-      .court-focus {
-        height: calc((100vh - 300px) * 0.60);
-        min-height: 260px;
+      /* ===== 看盘式 fixed 布局（用户术语：ticker | trading panel + news feed | order flow） ===== */
+      /* trading panel（中区上半）：固定视口，只渲染当前阶段/当前发言，不堆叠历史。高度 = 黄金分割 0.618 */
+      .trading-panel {
+        height: calc((100vh - 300px) * 0.618);
+        min-height: 300px;
         border: 2px solid #FF9800;
         border-radius: 10px;
         padding: 12px 16px;
@@ -376,19 +376,19 @@ def render_custom_css():
         overflow-y: auto;
         box-shadow: 0 2px 10px rgba(0,0,0,0.06);
       }
-      .court-focus .focus-stage { font-size: 0.82rem; color: #FF9800; font-weight: 700; border-bottom: 1px solid #FFE0B2; padding-bottom: 6px; margin-bottom: 8px; }
-      .court-focus .focus-speaker { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
-      .court-focus .focus-content { font-size: 0.92rem; line-height: 1.65; color: #222; white-space: pre-wrap; }
-      /* 中区 newsfeed：固定高度内部可滚 */
-      .court-newsfeed {
-        height: calc((100vh - 300px) * 0.33);
-        min-height: 130px;
+      .trading-panel .focus-stage { font-size: 0.82rem; color: #FF9800; font-weight: 700; border-bottom: 1px solid #FFE0B2; padding-bottom: 6px; margin-bottom: 8px; }
+      .trading-panel .focus-speaker { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
+      .trading-panel .focus-content { font-size: 0.92rem; line-height: 1.65; color: #222; white-space: pre-wrap; }
+      /* news feed（中区下半）：固定高度内部可滚（黄金分割 0.382） */
+      .news-feed {
+        height: calc((100vh - 300px) * 0.382);
+        min-height: 140px;
         border: 1px solid #ddd; border-radius: 8px;
         padding: 10px 14px; background: #f8f9fa; overflow-y: auto;
         font-size: 0.84rem;
       }
-      /* 右栏庭审笔录：全量历史可滚 */
-      .court-transcript {
+      /* order flow（右栏）：全量历史可滚 */
+      .order-flow {
         max-height: calc(100vh - 420px); min-height: 180px;
         overflow-y: auto; border: 1px solid #eee; border-radius: 8px;
         padding: 10px; background: #fff; font-size: 0.83rem;
@@ -492,8 +492,8 @@ def render_stage_progress():
             mark, style = "⏳", "color:#888;"
         st.markdown(f"<div style='{style}padding:6px 8px;border-radius:4px;margin:2px 0;'>{mark} {stage['emoji']} {stage['name']}</div>", unsafe_allow_html=True)
 
-def render_focus():
-    """中区核心（fixed 视口）：只显示「此刻」——当前阶段 + 当前发言（不堆叠历史）"""
+def render_trading_panel():
+    """trading panel（fixed 视口）：只显示「此刻」——当前阶段 + 当前发言（不堆叠历史）"""
     cur = st.session_state.get("current_stage_id", 0)
     stage = next((s for s in STAGES if s["id"] == cur), None)
     if stage:
@@ -511,7 +511,7 @@ def render_focus():
             speaker = speaker[len(avatar):].strip()
         content = html.escape(str(msg.get("content", "")))
         html_out = f"""
-        <div class="court-focus">
+        <div class="trading-panel">
           {stage_html}
           <div class="focus-speaker">{avatar} {speaker}</div>
           <div class="focus-content">{content}</div>
@@ -519,7 +519,7 @@ def render_focus():
         """
     else:
         html_out = f"""
-        <div class="court-focus">
+        <div class="trading-panel">
           {stage_html}
           <div class="focus-speaker" style="color:#999;">👁️ 静候法槌——当前发言将在此固定呈现</div>
         </div>
@@ -527,9 +527,9 @@ def render_focus():
     st.markdown(html_out, unsafe_allow_html=True)
 
 
-def render_newsfeed():
-    """中区下方 newsfeed（固定高度）：实时总结流 + 小花组媒体评论"""
-    parts = ['<div class="court-newsfeed">']
+def render_news_feed():
+    """news feed（中区下半，固定高度）：实时总结流 + 小花组媒体评论"""
+    parts = ['<div class="news-feed">']
     parts.append("<b>📰 场外媒体评论团（小花组 · 异步）</b>")
     media_views = {
         "🌸 玫瑰（BBC 视角）": "程序正义与证据链：'利用影响力'与'私人信用'的边界是本案法理核心。",
@@ -552,8 +552,8 @@ def render_newsfeed():
     st.markdown("\n".join(parts), unsafe_allow_html=True)
 
 
-def render_transcript():
-    """右栏：全量历史笔录（可滚）——历史移去滚动区，中区只留「此刻」"""
+def render_order_flow():
+    """order flow（右）：全量历史笔录（可滚）——历史移去滚动区，trading panel 只留「此刻」"""
     msgs = st.session_state.get("messages", [])
     if not msgs:
         st.caption("庭审尚未开始——全量笔录将在此滚动呈现。")
@@ -567,7 +567,7 @@ def render_transcript():
             f"<div style='margin:6px 0;padding:6px 8px;border-left:3px solid #FF9800;background:#fdfdfd;border-radius:4px;'>"
             f"<b>{avatar} {head}</b><br/><span style='color:#555;'>{content}…</span></div>"
         )
-    st.markdown(f'<div class="court-transcript">{"".join(parts)}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="order-flow">{"".join(parts)}</div>', unsafe_allow_html=True)
 
 
 def build_court_markdown() -> str:
@@ -594,9 +594,9 @@ mid_col, right_col = st.columns([2, 1], gap="small")
 with right_col:
     render_stage_progress()
     st.markdown("### 📜 庭审笔录（全量 · 可滚）")
-    transcript_ph = st.empty()
-    with transcript_ph.container():
-        render_transcript()
+    order_flow_ph = st.empty()
+    with order_flow_ph.container():
+        render_order_flow()
 
 
 
@@ -675,14 +675,14 @@ with mid_col:
         st.markdown("### 📜 公诉机关独立撰写之正式起诉书")
         st.markdown(f'<div class="indictment-box">{st.session_state.indictment_text}</div>', unsafe_allow_html=True)
 
-    # ===== 中区看盘式 fixed：只渲染「此刻」一个画面（当前阶段 + 当前发言） =====
-    # 历史不在此堆叠——已移去右栏滚动区（render_transcript）
-    focus_ph = st.empty()
-    newsfeed_ph = st.empty()
-    with focus_ph.container():
-        render_focus()
-    with newsfeed_ph.container():
-        render_newsfeed()
+    # ===== trading panel + news feed（用户术语）：只渲染「此刻」一个画面 =====
+    # 历史不在此堆叠——已移去 order flow（右）滚动区（render_order_flow）
+    trading_panel_ph = st.empty()
+    news_feed_ph = st.empty()
+    with trading_panel_ph.container():
+        render_trading_panel()
+    with news_feed_ph.container():
+        render_news_feed()
 
     if start_btn:
         st.session_state.messages = []
@@ -777,13 +777,13 @@ with mid_col:
                 from core.archive import append_stream
                 append_stream(st.session_state["stream_path"], header, content)
         
-            # 看盘式：中区只替换「此刻」画面，不堆叠历史；历史进右栏滚动区
-            with focus_ph.container():
-                render_focus()
-            with newsfeed_ph.container():
-                render_newsfeed()
-            with transcript_ph.container():
-                render_transcript()
+            # 看盘式：trading panel 只替换「此刻」画面，不堆叠历史；历史进 order flow（右）滚动区
+            with trading_panel_ph.container():
+                render_trading_panel()
+            with news_feed_ph.container():
+                render_news_feed()
+            with order_flow_ph.container():
+                render_order_flow()
             time.sleep(0.5)
                 
         st.session_state.current_stage_id = 5
@@ -793,8 +793,7 @@ with mid_col:
             fname = close_stream(
                 st.session_state["stream_path"], st.session_state["stream_file"],
                 st.session_state["stream_ts"], "法庭", "极昼-阜阳中院",
-                {"steps": len(st.session_state.get("messages", [])), "scenario": selected_scenario_key,
-                 "_steps": engine.steps},
+                {"steps": len(st.session_state.get("messages", [])), "scenario": selected_scenario_key},
             )
             st.success(f"💾 庭审实录已流式落盘 (本地 + MinIO + lake1): {fname}")
         except Exception as e:
@@ -804,7 +803,7 @@ with mid_col:
 
     # ============ 底部 newsfeed：实时总结流 + 小花组媒体评论（异步） ============
     st.divider()
-    # ============ newsfeed 已并入中区固定区域（render_newsfeed） ============
+    # ============ news feed 已并入中区固定区域（render_news_feed） ============
 
     st.divider()
     st.markdown(

@@ -20,6 +20,19 @@
 
 ## 二、认知要点（务必先理解，别急着写码）
 
+
+### 用户术语（必须用！⚠️ 用户很在意，禁止用通用叫法）
+```
+左 = ticker            （可滚发言流；禁止叫 sidebar）
+右 = order flow        （可滚进度/证据/笔录；禁止叫右栏）
+中上半 = trading panel （fixed 视口：当前阶段+当前发言，61.8%）
+中下半 = news feed     （实时总结流+媒体评论，38.2%）
+中上下分割 = 黄金分割 0.618（61.8% / 38.2%）
+```
+用户说 ticker/order flow/trading panel/news feed 时，直接对应代码：
+`render_speaker_ticker` / `render_order_flow` / `render_trading_panel` / `render_news_feed`；
+CSS 类 `.trading-panel` / `.news-feed` / `.order-flow`；占位符 `trading_panel_ph` / `news_feed_ph` / `order_flow_ph`
+
 ### 看盘的本质（用户反复强调）
 ```
 中间 2/3 trading panel = FIXED，不滚动（进化论/大脑驯化：核心焦点锚定「现在」）
@@ -31,7 +44,7 @@ fixed 的要义 = 只显示「此刻」的一个画面（当前阶段/当前发�
 
 ### 布局目标（用户定的比例）
 ```
-左 25% sidebar（可滚 ticker）| 中 50%（fixed 核心 + 下方 33% newsfeed）| 右 25%（可滚进度/证据）
+左 25% ticker（可滚）| 中 50%（trading panel 61.8% + news feed 38.2%，黄金分割 0.618）| 右 25% order flow（可滚）
 ```
 
 ### 架构愿景
