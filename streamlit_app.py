@@ -33,9 +33,9 @@ def check_password():
     if not st.session_state.authenticated:
         st.markdown(
             """
-            <div style="max-width: 420px; margin: 5rem auto; padding: 2rem; background: #1E1E24; border: 2px solid #FF9800; border-radius: 12px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
+            <div style="max-width: 420px; margin: 5rem auto; padding: 2rem; background: #fff7e6; border: 2px solid #FF9800; border-radius: 12px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
                 <h2 style="color: #FF9800; margin-bottom: 0.5rem;">🔐 鲲鹏志 · 预发环境访问锁</h2>
-                <p style="color: #AAA; font-size: 0.9rem;">本环境受 Group Policy 保护，请输入访问 PIN 码</p>
+                <p style="color: #666; font-size: 0.9rem;">本环境受 Group Policy 保护，请输入访问 PIN 码</p>
             </div>
             """,
             unsafe_allow_html=True
@@ -323,8 +323,10 @@ FLOWER_PLEIADES_TABLE = {
 def render_custom_css():
     st.markdown("""
     <style>
-      .stApp { background: #0f1115; }
+      /* 纯白模式（暗黑切换后续加） */
+      .stApp { background: #ffffff; color: #1a1a1a; }
       .block-container { padding-top: 3.2rem; }
+      .stMarkdown, .stText, .stMarkdown p { color: #1a1a1a !important; }
     </style>
     """, unsafe_allow_html=True)
 
