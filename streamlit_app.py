@@ -319,6 +319,15 @@ FLOWER_PLEIADES_TABLE = {
     }
 }
 
+def render_custom_css():
+    """自定义全局样式（基础美化，避免 NameError）"""
+    st.markdown("""
+    <style>
+      .stApp { background: #0f1115; }
+      .block-container { padding-top: 3.2rem; }
+    </style>
+    """, unsafe_allow_html=True)
+
 render_custom_css()
 
 # 场景选择
