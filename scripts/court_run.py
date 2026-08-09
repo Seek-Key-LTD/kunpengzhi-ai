@@ -22,27 +22,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 ARTICLE_PATH = REPO_ROOT / "research" / "极昼.md"
 
 
-def build_transcript_md(indictment: str, records: list) -> str:
-    lines = [
-        "# 🦅 鲲鹏志 · 《极昼》案 模拟法庭实录",
-        "**法庭**：安徽省阜阳市中级人民法院刑事审判第一庭",
-        "**模式**：10 席位令牌环（罗伯特议事规则）· 沉静严肃",
-        "",
-        "## 📜 公诉机关独立撰写之起诉书（阜检刑诉〔2026〕88号）",
-        indictment,
-        "",
-        "## 🎤 庭审笔录（令牌环 11 步）",
-        "",
-    ]
-    for header, content in records:
-        lines += [f"### {header}", "", content, ""]
-    return "\n".join(lines)
-
-
 async def main():
     article_text = ARTICLE_PATH.read_text(encoding="utf-8")
     base_url = os.getenv("OPENAI_BASE_URL", "https://litellm.capitaltrain.cn/v1")
     api_key = os.getenv("OPENAI_API_KEY", "sk-47318")
+
+    from core.archive import open_stream, append_stream, close_stream
+    path, filename, ts = open_stream("法庭", "极昼-阜阳中院")
 
     engine = RobertTokenRingEngine(base_url, api_key, article_text)
     records = []
@@ -52,6 +38,7 @@ async def main():
     indictment = engine.draft_official_indictment()
     models.add(SEATS_DICT["prosecutor_chief"]["model"])
     print(f"   ✅ 起诉书 {len(indictment)} 字符")
+    append_stream(path, "📜 公诉机关独立撰写之起诉书（阜检刑诉〔2026〕88号）", indictment)
     engine.add_to_shared_context("prosecutor_chief", f"【起诉书全景】:\n{indictment}", team="indictment")
 
     total = len(ROBERTS_STEPS)
@@ -61,21 +48,17 @@ async def main():
         print(f"⚖️ 步骤 {idx}/{total + 1} · {seat['role']} ({seat['agent']} @ {seat['node']})...")
         header, content = engine.execute_token_speech(seat_key, instruction)
         records.append((header, content))
+        append_stream(path, header, content)
         print(f"   ✅ {len(content)} 字符")
 
-    transcript = build_transcript_md(indictment, records)
-
-    from core.archive import save_run
-    filename = save_run(
-        "法庭",
-        "极昼-阜阳中院",
-        transcript,
+    filename = close_stream(
+        path, filename, ts, "法庭", "极昼-阜阳中院",
         {"models": ",".join(sorted(models)), "steps": total + 1},
     )
 
     print(f"\n{'=' * 60}")
     print(f"🎬 模拟法庭落幕 · 共 {len(records)} 席发言 / {sum(len(c) for _, c in records)} 字符")
-    print(f"💾 已落盘: {filename}")
+    print(f"💾 已流式落盘: {filename}")
 
 
 if __name__ == "__main__":

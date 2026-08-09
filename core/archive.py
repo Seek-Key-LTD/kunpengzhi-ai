@@ -52,31 +52,14 @@ def _push_to_ssd(archive_dir: Path, relpath: str) -> bool:
         return False
 
 
-def save_run(kind: str, title: str, markdown: str, meta: dict, archive_dir: str | Path | None = None) -> str:
-    """
-    统一落盘一次运行实录。
-
-    kind: 运行类别（辩论 / 法庭 / 擂台 / 测试）
-    title: 辩题或案卷标题（取前 12 字符作文件名）
-    meta: 附加索引字段（model / topic_id 等）
-    archive_dir: 本地存档目录，默认项目根 擂台存档/
-
-    返回文件名（不含目录），如 擂台-白貂皮大衣：全球贸易网络-20260609_120000.md
-    """
-    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    safe_title = "".join(c for c in title[:12] if c not in "/\\:*?\"<>|")
-    filename = f"擂台-{safe_title}-{ts}.md"
-
-    target_dir = Path(archive_dir) if archive_dir else ARCHIVE_DIR
-    target_dir.mkdir(parents=True, exist_ok=True)
-    (target_dir / filename).write_text(markdown, encoding="utf-8")
-
+def _finalize(target_dir: Path, filename: str, ts: str, kind: str, title: str, meta: dict, text: str) -> None:
+    """存档收尾（save_run 与 close_stream 共用）：索引 + MinIO + lake1 + 指标。"""
     entry = {
         "kind": kind,
         "title": title,
         "ts": ts,
         "file": filename,
-        "chars": len(markdown),
+        "chars": len(text),
         "commit": _git_commit(),
         "env": os.environ.get("HOSTNAME", os.environ.get("COMPUTERNAME", "unknown")),
     }
@@ -96,9 +79,62 @@ def save_run(kind: str, title: str, markdown: str, meta: dict, archive_dir: str 
 
     try:
         from core.metrics import record_metrics
-        record_metrics(markdown, filename, target_dir)
+        record_metrics(text, filename, target_dir)
     except Exception as e:
         log.warning(f"Archive: metrics 扫描失败: {e}")
 
     log.info(f"📝 已落盘存档: {filename} ({entry['chars']} 字符, commit {entry['commit']})")
+
+
+def save_run(kind: str, title: str, markdown: str, meta: dict, archive_dir: str | Path | None = None) -> str:
+    """
+    统一落盘一次运行实录（一次性：文本已完整时用）。
+
+    kind: 运行类别（辩论 / 法庭 / 擂台 / 测试）
+    title: 辩题或案卷标题（取前 12 字符作文件名）
+    meta: 附加索引字段（model / topic_id 等）
+    archive_dir: 本地存档目录，默认项目根 擂台存档/
+
+    返回文件名（不含目录），如 擂台-白貂皮大衣：全球贸易网络-20260609_120000.md
+    """
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_title = "".join(c for c in title[:12] if c not in "/\\:*?\"<>|")
+    filename = f"擂台-{safe_title}-{ts}.md"
+
+    target_dir = Path(archive_dir) if archive_dir else ARCHIVE_DIR
+    target_dir.mkdir(parents=True, exist_ok=True)
+    (target_dir / filename).write_text(markdown, encoding="utf-8")
+
+    _finalize(target_dir, filename, ts, kind, title, meta, markdown)
+    return filename
+
+
+def open_stream(kind: str, title: str, archive_dir: str | Path | None = None) -> tuple[str, str, str]:
+    """创建流式会话文件（法庭实录边跑边写），返回 (path, filename, ts)。
+
+    配合 append_stream / close_stream 使用；中途崩溃则会话文件保留在前半段。
+    """
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_title = "".join(c for c in title[:12] if c not in "/\\:*?\"<>|")
+    filename = f"擂台-{safe_title}-{ts}.md"
+
+    target_dir = Path(archive_dir) if archive_dir else ARCHIVE_DIR
+    target_dir.mkdir(parents=True, exist_ok=True)
+    path = target_dir / filename
+    path.write_text(f"# 🦅 鲲鹏志 · {kind}实录 · 流式会话\n\n", encoding="utf-8")
+    return str(path), filename, ts
+
+
+def append_stream(path: str, header: str, content: str) -> None:
+    """流式追加一轮发言。"""
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(f"### {header}\n\n{content}\n\n")
+
+
+def close_stream(path: str, filename: str, ts: str, kind: str, title: str, meta: dict,
+                 archive_dir: str | Path | None = None) -> str:
+    """流式会话收尾：正文已逐轮写入，此处做索引 + MinIO + lake1 + 指标。"""
+    target_dir = Path(archive_dir) if archive_dir else ARCHIVE_DIR
+    text = Path(path).read_text(encoding="utf-8")
+    _finalize(target_dir, filename, ts, kind, title, meta, text)
     return filename
