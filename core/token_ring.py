@@ -7,6 +7,9 @@ token_holder 令牌持有 / 定向接话共享上下文 / 前发言人陈词 / �
 - 前一位发言人陈词：始终注入（后手必须接话）
 - 同阵营既往陈词：按 team 定向注入（prosecutor/defense/judge/court）
 - 小花组：普通成员只接前一位（独立维度防复读），violet 注入全部小花（汇总所需）
+
+MVP 契约驱动：execute_contract() 消费 Session Contract（Coding Agent 编译产物），
+取代 streamlit_app 里写死的 COURT_FLOW 循环。
 """
 import datetime
 import time
@@ -54,7 +57,22 @@ class RobertTokenRingEngine:
         return blocks
 
     # ---- 起诉书 ----
-    def draft_official_indictment(self):
+    def draft_official_indictment(self, meta=None):
+        """公诉机关起诉书。meta（Session Contract 的 meta 字段）存在时按素材插值。"""
+        if meta:
+            defendant = meta.get("defendant") or "被告人"
+            charge = meta.get("charge") or "涉嫌违法犯罪"
+            court = meta.get("court_name") or "人民法院"
+            org = meta.get("prosecutor_org") or "检察机关"
+            case_no = meta.get("case_number") or ""
+            facts = meta.get("key_facts") or ""
+            claim = meta.get("prosecution_claim") or ""
+            case_str = f"（{case_no}）" if case_no else ""
+            return (
+                f"【起诉书】{org}就《{meta.get('title', '本案')}》案{case_str}，指控{defendant}涉嫌{charge}。"
+                f"关键事实：{facts}。控方主张：{claim}。"
+                f"（审理机构：{court}；完整指控与证据链由令牌环庭审逐阶段生成）"
+            )
         return (
             f"【起诉书】就《极昼》案，指控尊长（原中煤集团党组成员，2026年8月3日被带至"
             f"安徽省阜阳市留置）涉嫌违规参与民间借贷、利用职务影响力为亲友企业拆借资金。"
@@ -74,7 +92,7 @@ class RobertTokenRingEngine:
         ctx_str = "\n\n".join(f"【{label}】:\n{content}" for label, content in blocks) or "(空)"
 
         doc_mem = (
-            f"\n【《极昼.md》全量案卷记忆】:\n{self.article_text[:18000]}\n"
+            f"\n【素材全量记忆】:\n{self.article_text[:18000]}\n"
             if self.article_text else ""
         )
 
@@ -112,3 +130,51 @@ class RobertTokenRingEngine:
         })
         self.add_to_shared_context(header, content, team)
         return (header, content)
+
+    # ---- 契约驱动执行（MVP：Coding Agent 编译的 Session Contract） ----
+    @staticmethod
+    def _avatar_for(seat_info):
+        team = seat_info.get("team", "")
+        if team == "judge":
+            return "🏛️"
+        if team == "prosecutor":
+            return "⚖️"
+        if team == "defense":
+            return "🛡️"
+        if team == "court":
+            return "📜"
+        return "👤" if seat_info.get("en_key") == "leopard" else "🌸"
+
+    def execute_contract(self, contract, seat_registry, progress_cb=None, emit_cb=None):
+        """按 Session Contract 执行全部 acts。
+        seat_registry: {en_key: seat_info}（VAULT_ZODIAC_CABINETS + FLOWER_PLEIADES_TABLE + 附席）
+        progress_cb(idx, total, act, header): 每步进度回调
+        emit_cb(msg, idx, total, act): 每步发言产出回调（UI 实时落地用）
+        返回 messages: [{role, header, content, avatar}]
+        """
+        acts = contract.get("acts", [])
+        total = len(acts)
+        messages = []
+        for idx, act in enumerate(acts, 1):
+            seat_key = act.get("seat")
+            seat_info = seat_registry.get(seat_key)
+            if seat_info is None:
+                content = f"（席位 {seat_key} 未注册，跳过）"
+                msg = {
+                    "role": seat_key, "header": seat_key,
+                    "content": content, "avatar": "❓",
+                }
+            else:
+                header, content = self.execute_speech(seat_info, act.get("instruction", ""))
+                msg = {
+                    "role": header,
+                    "header": header,
+                    "content": content,
+                    "avatar": self._avatar_for(seat_info),
+                }
+            messages.append(msg)
+            if progress_cb:
+                progress_cb(idx, total, act, msg["header"])
+            if emit_cb:
+                emit_cb(msg, idx, total, act)
+        return messages

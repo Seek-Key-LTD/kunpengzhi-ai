@@ -14,6 +14,8 @@ import os
 import time
 import html
 from core.token_ring import RobertTokenRingEngine
+from core.contract import default_contract, summarize_contract
+from core.script_compiler import compile_contract
 
 st.set_page_config(
     page_title="鲲鹏志 · 12黄道内阁与紫罗兰掌门法庭",
@@ -407,14 +409,19 @@ render_custom_css()
 # 场景选择
 selected_scenario_key = "court"  # 模式由 Coding Agent 剧本决定（暂固定 court）
 
-# 5 个核心庭审阶段定义（刑事诉讼法流程）
-STAGES = [
-    {"id": 1, "name": "1. 准备与核对身份", "emoji": "⚖️", "desc": "审判长核对尊长基本信息，告知回避权，被告人现场应答"},
-    {"id": 2, "name": "2. 控方起诉与举证", "emoji": "📜", "desc": "阜阳市检察院独立撰写并宣读《阜检刑诉〔2026〕88号起诉书》"},
-    {"id": 3, "name": "3. 辩方无罪质证", "emoji": "🛡️", "desc": "辩护团队掏出【四大罪名排除矩阵】与从旧兼从轻水单质证"},
-    {"id": 4, "name": "4. 法庭辩论与质询", "emoji": "⚔️", "desc": "合议庭追问公款损失凭证，控辩双方展开剧烈法理交锋"},
-    {"id": 5, "name": "5. 尊长陈述与宣判", "emoji": "🏛️", "desc": "尊长发表问心无愧陈述，审判长敲响法槌宣告无罪"}
-]
+# Session Contract：Coding Agent（编剧室）编译产物，驱动阶段流与发言序列
+if "contract" not in st.session_state:
+    st.session_state.contract = default_contract()
+if "material_text" not in st.session_state:
+    st.session_state.material_text = ""
+
+
+def get_stages():
+    """阶段流从当前契约读取（无契约时回退内置极昼）"""
+    c = st.session_state.get("contract")
+    if c and c.get("stage_flow"):
+        return c["stage_flow"]
+    return default_contract()["stage_flow"]
 
 def render_progress_components(current_stage):
     if "current_stage_id" not in st.session_state:
@@ -425,7 +432,7 @@ def render_progress_components(current_stage):
 
     # 1. 顶部 Sticky Banner：分段式进度条
     segments_html = ""
-    for stage in STAGES:
+    for stage in get_stages():
         if stage["id"] < current_stage:
             color = "#4CAF50"
         elif stage["id"] == current_stage:
@@ -434,7 +441,7 @@ def render_progress_components(current_stage):
             color = "#444444"
         segments_html += f'<div style="flex: 1; height: 8px; border-radius: 4px; background-color: {color}; transition: all 0.3s;"></div>'
     titles_html = ""
-    for stage in STAGES:
+    for stage in get_stages():
         style = "color: #FF9800; font-weight: bold;" if stage["id"] == current_stage else ("color: #81C784;" if stage["id"] < current_stage else "color: #777;")
         titles_html += f'<span style="{style}">{stage["emoji"]} {stage["name"]}</span>'
 
@@ -482,7 +489,7 @@ def render_stage_progress():
     """右区（25%）：刑事诉讼法流程进度——当前步高亮（给 layperson）"""
     st.markdown("### ⚖️ 刑事诉讼法·庭审进度")
     cur = st.session_state.get("current_stage_id", 0)
-    for stage in STAGES:
+    for stage in get_stages():
         sid = stage["id"]
         if sid < cur:
             mark, style = "✅", "color:#4CAF50;"
@@ -495,7 +502,7 @@ def render_stage_progress():
 def render_trading_panel():
     """trading panel（fixed 视口）：只显示「此刻」——当前阶段 + 当前发言（不堆叠历史）"""
     cur = st.session_state.get("current_stage_id", 0)
-    stage = next((s for s in STAGES if s["id"] == cur), None)
+    stage = next((s for s in get_stages() if s["id"] == cur), None)
     if stage:
         stage_html = f'<div class="focus-stage">{stage["emoji"]} 阶段 {stage["id"]}/5：{stage["name"]} — {stage["desc"]}</div>'
     else:
@@ -518,10 +525,16 @@ def render_trading_panel():
         </div>
         """
     else:
+        contract = st.session_state.get("contract") or default_contract()
+        meta = contract.get("meta", {})
+        note = meta.get("compile_note", "")
+        summary = summarize_contract(contract)
         html_out = f"""
         <div class="trading-panel">
           {stage_html}
-          <div class="focus-speaker" style="color:#999;">👁️ 静候法槌——当前发言将在此固定呈现</div>
+          <div class="focus-speaker" style="color:#999;">🎬 剧本已就绪 —— 敲响法槌开演</div>
+          <div class="focus-content" style="font-size:0.85rem;color:#555;">{html.escape(summary)}</div>
+          <div class="focus-content" style="font-size:0.8rem;color:#c62828;">{html.escape(note)}</div>
         </div>
         """
     st.markdown(html_out, unsafe_allow_html=True)
@@ -571,8 +584,10 @@ def render_order_flow():
 
 
 def build_court_markdown() -> str:
+    contract = st.session_state.get("contract") or default_contract()
+    meta = contract.get("meta", {})
     lines = ["# 🦅 鲲鹏志 · 法庭实录", ""]
-    lines.append(f"场景: {SCENARIOS.get(selected_scenario_key, selected_scenario_key)}")
+    lines.append(f"剧本: {meta.get('title', '?')} · 协议: {contract.get('protocol')}")
     lines.append(f"阶段进度: {st.session_state.get('current_stage_id', 0)}/5")
     lines.append("")
     if st.session_state.get("indictment_text"):
@@ -603,8 +618,10 @@ with right_col:
 
 
 with mid_col:
-    st.markdown('<div class="main-title">⚖️ 鲲鹏志 · 《极昼》案 12 黄道与紫罗兰掌门法庭</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="sub-title">☀️ 12 黄道内阁 (Jasper规划落宫至vault) + 🌸 昴宿七姐妹 (紫罗兰Manager规划落宫至warden) · 场景：<b>{SCENARIOS[selected_scenario_key]}</b></div>', unsafe_allow_html=True)
+    cur_c = st.session_state.get("contract") or default_contract()
+    st.markdown(f'<div class="main-title">⚖️ 鲲鹏志 · 《{cur_c["meta"].get("title", "极昼")}》 12 黄道与紫罗兰掌门法庭</div>', unsafe_allow_html=True)
+    cur_c = st.session_state.get("contract") or default_contract()
+    st.markdown(f'<div class="sub-title">☀️ 12 黄道内阁 + 🌸 昴宿七姐妹 · 剧本：<b>{cur_c["meta"].get("title", "?")}</b> · 协议：<b>{cur_c.get("protocol")}</b> · {len(cur_c.get("acts", []))} 幕</div>', unsafe_allow_html=True)
 
     def load_research_file(filepath):
         if not filepath or not os.path.exists(filepath):
@@ -616,6 +633,40 @@ with mid_col:
             return f"加载文献失败: {e}"
 
     with st.sidebar:
+        # 🎬 Coding Agent 编剧室：任意文本 → 剧本编译（Session Contract）
+        with st.expander("🎬 Coding Agent 编剧室 · 剧本编译", expanded=False):
+            new_material = st.text_area("📝 新素材（粘贴案件/纪实/章节文本）", height=120, key="new_material_input")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                compile_btn = st.button("🧪 编译剧本", use_container_width=True)
+            with col_b:
+                load_jizhou_btn = st.button("📥 载入《极昼》", use_container_width=True)
+            if compile_btn:
+                if new_material.strip():
+                    with st.spinner("🎬 编剧室编译中（解析→绑定→挂载→校验）..."):
+                        c = compile_contract(new_material, OPENAI_BASE_URL, OPENAI_API_KEY)
+                    st.session_state.contract = c
+                    st.session_state.material_text = new_material
+                    st.session_state.messages = []
+                    st.session_state.indictment_text = ""
+                    st.session_state.current_stage_id = 0
+                    note = c["meta"].get("compile_note", "")
+                    st.success(f"✅ 编译完成：{c['meta'].get('title')} · {c.get('protocol')} · {len(c.get('acts', []))} 幕")
+                    if note:
+                        st.warning(f"回退说明：{note}")
+                    st.rerun()
+                else:
+                    st.warning("请先粘贴素材文本")
+            if load_jizhou_btn:
+                st.session_state.contract = default_contract()
+                st.session_state.material_text = ""
+                st.session_state.messages = []
+                st.session_state.indictment_text = ""
+                st.session_state.current_stage_id = 0
+                st.rerun()
+            cur_c = st.session_state.get("contract") or default_contract()
+            st.caption(f"当前剧本：{cur_c['meta'].get('title', '?')} · 协议 {cur_c.get('protocol')} · {len(cur_c.get('acts', []))} 幕")
+
         st.markdown("### 📊 席位实时状态（ticker）")
         render_speaker_ticker()
         st.divider()
@@ -641,9 +692,10 @@ with mid_col:
             else:
                 st.warning("暂无庭审笔录可保存")
 
-    article_text = load_research_file("research/极昼.md")
+    article_text = st.session_state.get("material_text") or load_research_file("research/极昼.md")
+    cur_title = (st.session_state.get("contract") or default_contract())["meta"].get("title", "极昼")
 
-    with st.expander("📌 安徽省阜阳市监委移送案卷与《极昼.md》研究全文", expanded=False):
+    with st.expander(f"📌 当前素材全文（{cur_title}）", expanded=False):
         st.markdown("### **案由：尊长涉嫌利用影响力受贿罪、国有公司人员失职罪案**")
         col1, col2 = st.columns(2)
         with col1:
@@ -685,103 +737,55 @@ with mid_col:
         render_news_feed()
 
     if start_btn:
+        contract = st.session_state.get("contract") or default_contract()
+        meta = contract.get("meta", {})
         st.session_state.messages = []
         st.session_state.current_stage_id = 1
         engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text, selected_scenario_key)
     
         st.session_state.current_stage_id = 2
         topaz_avatar = VAULT_ZODIAC_CABINETS["topaz"]["avatars"].get(selected_scenario_key, VAULT_ZODIAC_CABINETS["topaz"]["avatars"]["court"])
-        with st.spinner(f"⚖️ 公诉团队 ({topaz_avatar}) 正在独立撰写《起诉书》(阜检刑诉〔2026〕88号)..."):
-            indictment_text = engine.draft_official_indictment()
+        case_no = meta.get("case_number") or ""
+        with st.spinner(f"⚖️ 公诉团队 ({topaz_avatar}) 正在独立撰写《起诉书》..."):
+            indictment_text = engine.draft_official_indictment(meta)
             st.session_state.indictment_text = indictment_text
             # 流式会话文件：边跑边写，中断不丢已发言
             from core.archive import open_stream, append_stream
-            path, filename, ts = open_stream("法庭", "极昼-阜阳中院")
+            title = meta.get("title") or "极昼"
+            court = meta.get("court_name") or "阜阳中院"
+            path, filename, ts = open_stream("法庭", f"{title}-{court}")
             st.session_state.stream_path, st.session_state.stream_file, st.session_state.stream_ts = path, filename, ts
-            append_stream(path, f"📜 起诉书 (阜检刑诉〔2026〕88号)", indictment_text)
+            append_stream(path, f"📜 起诉书 ({case_no or '未编号'})", indictment_text)
             st.rerun()
 
     if "indictment_text" in st.session_state and st.session_state.indictment_text and len(st.session_state.messages) == 0:
+        contract = st.session_state.get("contract") or default_contract()
+        meta = contract.get("meta", {})
         engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text, selected_scenario_key)
         topaz_avatar = VAULT_ZODIAC_CABINETS["topaz"]["avatars"].get(selected_scenario_key, VAULT_ZODIAC_CABINETS["topaz"]["avatars"]["court"])
         engine.add_to_shared_context(topaz_avatar, f"【起诉书全景】:\n{st.session_state.indictment_text}", team="indictment")
     
-        progress_bar = st.progress(0, text="正在敲响法槌，带被告人尊长到庭...")
-    
-        # Vault 内阁流转
-        COURT_FLOW = [
-            # 阶段 1
-            (1, VAULT_ZODIAC_CABINETS["ruby"], "敲响法槌！宣布：‘安徽省阜阳市中级人民法院刑事审判第一庭，现在开庭！带被告人尊长到庭！’核对尊长基本信息，告知回避权！"),
-            (1, DEFENDANT_SEAT, "【被告人尊长实时应答】回答：‘报告审判长，我叫尊长，原中煤党组成员，2026年8月3日被带至阜阳留置... 身份属实！听清了权利，不申请回避！’"),
-        
-            # 阶段 2
-            (2, VAULT_ZODIAC_CABINETS["ruby"], "宣布准备结束，请阜阳市检察院公诉团队宣读《阜检刑诉〔2026〕88号起诉书》！"),
-            (2, VAULT_ZODIAC_CABINETS["topaz"], "宣读《阜检刑诉〔2026〕88号起诉书》：指控2016年春节尊长筹措1000万划转亲家企业，构成利用影响力受贿罪与失职罪！"),
-            (2, VAULT_ZODIAC_CABINETS["carbonado"], "受公诉人指派主动进攻质证：抓住辩方尚未回答的三个命门逐一逼问——①1000万为何借道第三方筹集、分10次归还，若问心无愧为何不堂堂正正走公开程序？②尊长作为党组成员，是否向组织报备过此次筹资？不报备本身就是对‘职务影响可能外溢’的明知！③水单只是归还记录，谁证明筹款来源清白？要求辩方当庭出示筹款来源凭证！语气沉静但刀刀见血，绝不自我软化！"),
-            (2, VAULT_ZODIAC_CABINETS["obsidian"], "【黑曜石监察特派员】监察法务补强举证：强调监委调查留置移送卷宗合规性！"),
-        
-            # 阶段 3
-            (3, VAULT_ZODIAC_CABINETS["diamond"], "发表无罪答辩：针对起诉书，掏出《极昼.md》【四大罪名排除矩阵】与1000万10次平价还本水单书证！"),
-            (3, VAULT_ZODIAC_CABINETS["jasper"], "【碧石大律师 (vault LXC)】补充资深合规辩护：引用《刑法》第12条从旧兼从轻原则，阻断2016年4月新司法解释的违宪追溯！"),
-            (3, VAULT_ZODIAC_CABINETS["quartz"], "法理分析：证明主观非法占有目的为零，客观中煤财产零亏空！"),
-            (3, VAULT_ZODIAC_CABINETS["argentite"], "伦理与法理双重质证：还原2015-2016山河四省最冷冬天背景，致敬时代的承重梁！"),
-        
-            # 阶段 4
-            (4, LUNA_JUDGE, "【合议庭质询】审判员月华石发难质询：追问公诉人有无公款损失凭证，追问辩护人如何证明脱离职务影响？"),
-            (4, VAULT_ZODIAC_CABINETS["azure"], "【合议庭质询】审判员天蓝石质询：要求控辩双方说明从旧兼从轻在2016年2月行为着手点的适用边界！"),
-            (4, VAULT_ZODIAC_CABINETS["emerald"], "【资产审计质询】祖母绿审计师核查账目审计书证！"),
+        progress_bar = st.progress(0, text="正在敲响法槌，传唤当事人到庭...")
 
-            # 质询回应轮：控辩双方必须正面回应合议庭质询，不得哑火
-            (4, VAULT_ZODIAC_CABINETS["carbonado"], "【回应合议庭质询】必须正面回答审判员关于‘损失凭证’的质询：失职罪的构成不以损失已现实发生为限，监委调查终结认定的‘重大损失风险’即为损害后果；并反守为攻，提请法庭注意：辩方至今未能解释借道第三方与不报备的程序缺口。不得回避质询，不得答非所问！"),
-            (4, VAULT_ZODIAC_CABINETS["diamond"], "【回应合议庭质询】必须正面回答审判员关于‘脱离职务影响’的质询：论证标准为三项排除——未动用公章、未批公文、未动用公权意志，资金全程在私人信用网络闭环流转；并回应公诉人逼问：借道第三方系因2016年银行全面抽贷的金融现实，报备并非刑事义务。不得回避质询！"),
+        # 座位注册表：12 石 + 附席 + 7 花（契约 seat 引用 → 座位信息）
+        seat_registry = {}
+        seat_registry.update(VAULT_ZODIAC_CABINETS)
+        seat_registry.update(FLOWER_PLEIADES_TABLE)
+        seat_registry["luna"] = LUNA_JUDGE
+        seat_registry["leopard"] = DEFENDANT_SEAT
 
-            (4, FLOWER_PLEIADES_TABLE["meigui"], FLOWER_PLEIADES_TABLE["meigui"]["instruction"]),
-            (4, FLOWER_PLEIADES_TABLE["qiangwei"], FLOWER_PLEIADES_TABLE["qiangwei"]["instruction"]),
-            (4, FLOWER_PLEIADES_TABLE["tumi"], FLOWER_PLEIADES_TABLE["tumi"]["instruction"]),
-            (4, FLOWER_PLEIADES_TABLE["zhuyu"], FLOWER_PLEIADES_TABLE["zhuyu"]["instruction"]),
-            (4, FLOWER_PLEIADES_TABLE["moli"], FLOWER_PLEIADES_TABLE["moli"]["instruction"]),
-            (4, FLOWER_PLEIADES_TABLE["muxu"], FLOWER_PLEIADES_TABLE["muxu"]["instruction"]),
-            (4, FLOWER_PLEIADES_TABLE["violet"], FLOWER_PLEIADES_TABLE["violet"]["instruction"]),
-        
-            # 阶段 5
-            (5, DEFENDANT_SEAT, "【被告人尊长最后陈述】发表最后陈述：‘在阜阳留置室的这半年极昼里我问心无愧，我救的是企业和工人，未占公家一分钱！’"),
-            (5, VAULT_ZODIAC_CABINETS["ruby"], "收回发言权！发表判词：必须逐项检验两项罪名的构成要件——①利用影响力受贿罪：有无财物对价？尊长系借出方而非收受方，权力与财物是否发生交换？②国有公司人员失职罪：有无‘重大损失’这一实害要件？‘风险’能否替代‘损失’？每一要件均须给出明确判断，然后依据《刑事诉讼法》第二百条第（二）项或第一百九十五条第（一）项作出有罪或无罪结论——结论必须基于要件检验的结果，不得预设立场！")
-        ]
-    
-        total_steps = len(COURT_FLOW)
-        for idx, (stage_id, seat_info, instruction) in enumerate(COURT_FLOW, 1):
-            st.session_state.current_stage_id = stage_id
-            avatar_name = seat_info["avatars"].get(selected_scenario_key, seat_info["avatars"]["court"])
-        
-            progress_bar.progress(idx / total_steps, text=f"【阶段 {stage_id}/5 推进 -> {avatar_name}】 ...")
-        
-            header, content = engine.execute_speech(seat_info, instruction)
-        
-            if "team" in seat_info and seat_info["team"] == "judge":
-                avatar = "🏛️"
-            elif "team" in seat_info and seat_info["team"] == "prosecutor":
-                avatar = "⚖️"
-            elif "team" in seat_info and seat_info["team"] == "defense":
-                avatar = "🛡️"
-            elif "team" in seat_info and seat_info["team"] == "court":
-                avatar = "📜"
-            else:
-                avatar = "👤" if seat_info["en_key"] == "leopard" else "🌸"
-        
-            msg_obj = {
-                "role": avatar_name,
-                "header": header,
-                "content": content,
-                "avatar": avatar
-            }
-            st.session_state.messages.append(msg_obj)
+        stage_count = len(contract.get("stage_flow", []))
 
+        def _on_emit(msg, idx, total_steps, act):
+            """每步发言落地：入库 + 进度 + 看盘三区刷新 + 流式落盘"""
+            st.session_state.messages.append(msg)
+            st.session_state.current_stage_id = act.get("stage", 0)
+            progress_bar.progress(idx / total_steps, text=f"【阶段 {act.get('stage')}/{stage_count} 推进 -> {msg['header']}】 ...")
             # 流式落盘：每席发言实时追加，不等待整轮结束
             if st.session_state.get("stream_path"):
                 from core.archive import append_stream
-                append_stream(st.session_state["stream_path"], header, content)
-        
-            # 看盘式：trading panel 只替换「此刻」画面，不堆叠历史；历史进 order flow（右）滚动区
+                append_stream(st.session_state["stream_path"], msg["header"], msg["content"])
+            # 看盘式：trading panel 只替换「此刻」画面，不堆叠历史；历史进 order flow（右）
             with trading_panel_ph.container():
                 render_trading_panel()
             with news_feed_ph.container():
@@ -789,15 +793,20 @@ with mid_col:
             with order_flow_ph.container():
                 render_order_flow()
             time.sleep(0.5)
-                
-        st.session_state.current_stage_id = 5
-        progress_bar.progress(1.0, text="⚖️ 5 阶段 Vault 权威 12 黄道内阁法庭与紫罗兰掌门合议全流程落幕！全案笔录已永久驻留！")
+
+        # 契约驱动：Coding Agent 编译的 Session Contract 决定发言序列（不再写死 COURT_FLOW）
+        engine.execute_contract(contract, seat_registry, emit_cb=_on_emit)
+
+        st.session_state.current_stage_id = stage_count
+        progress_bar.progress(1.0, text="⚖️ 全流程落幕！全案笔录已永久驻留！")
         try:
             from core.archive import close_stream
+            title = meta.get("title") or "极昼"
+            court = meta.get("court_name") or "阜阳中院"
             fname = close_stream(
                 st.session_state["stream_path"], st.session_state["stream_file"],
-                st.session_state["stream_ts"], "法庭", "极昼-阜阳中院",
-                {"steps": len(st.session_state.get("messages", [])), "scenario": selected_scenario_key},
+                st.session_state["stream_ts"], "法庭", f"{title}-{court}",
+                {"steps": len(st.session_state.get("messages", [])), "protocol": contract.get("protocol"), "scenario": selected_scenario_key},
             )
             st.success(f"💾 庭审实录已流式落盘 (本地 + MinIO + lake1): {fname}")
         except Exception as e:
