@@ -12,6 +12,7 @@ import streamlit as st
 import openai
 import os
 import time
+import html
 from core.token_ring import RobertTokenRingEngine
 
 st.set_page_config(
@@ -350,11 +351,51 @@ def render_custom_css():
         font-weight: bold; font-size: 0.78rem; text-align: center; line-height: 1.1;
       }
       .circle-percent { font-size: 0.95rem; color: #FF9800; font-weight: 800; }
+      /* 左 sidebar = 25%（用户目标 25/50/25） */
+      [data-testid="stSidebar"] {
+        width: 25vw !important;
+        min-width: 300px;
+      }
       /* 右栏：可滚动信息流（像 sidebar 一样独立滚动） */
       .stMain [data-testid="stColumn"]:last-child > div {
         max-height: calc(100vh - 140px);
         overflow-y: auto;
         padding-right: 6px;
+      }
+      /* ===== 看盘式 fixed 布局：中区只显示「此刻」一个画面（用户核心诉求） ===== */
+      /* 中区核心焦点：固定视口，只渲染当前阶段/当前发言，不堆叠历史 */
+      .court-focus {
+        height: calc((100vh - 300px) * 0.60);
+        min-height: 260px;
+        border: 2px solid #FF9800;
+        border-radius: 10px;
+        padding: 12px 16px;
+        background: #fafafa;
+        overflow-y: auto;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      }
+      .court-focus .focus-stage { font-size: 0.82rem; color: #FF9800; font-weight: 700; border-bottom: 1px solid #FFE0B2; padding-bottom: 6px; margin-bottom: 8px; }
+      .court-focus .focus-speaker { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
+      .court-focus .focus-content { font-size: 0.92rem; line-height: 1.65; color: #222; white-space: pre-wrap; }
+      /* 中区 newsfeed：固定高度内部可滚 */
+      .court-newsfeed {
+        height: calc((100vh - 300px) * 0.33);
+        min-height: 130px;
+        border: 1px solid #ddd; border-radius: 8px;
+        padding: 10px 14px; background: #f8f9fa; overflow-y: auto;
+        font-size: 0.84rem;
+      }
+      /* 右栏庭审笔录：全量历史可滚 */
+      .court-transcript {
+        max-height: calc(100vh - 420px); min-height: 180px;
+        overflow-y: auto; border: 1px solid #eee; border-radius: 8px;
+        padding: 10px; background: #fff; font-size: 0.83rem;
+      }
+      /* 中区起诉书：限高内部滚，不撑破 fixed 视口 */
+      .indictment-box {
+        max-height: 200px; overflow-y: auto;
+        background: #fff8f0; border-left: 4px solid #B71C1C;
+        padding: 10px; border-radius: 6px; font-size: 0.88rem;
       }
     </style>
     """, unsafe_allow_html=True)
@@ -449,6 +490,84 @@ def render_stage_progress():
             mark, style = "⏳", "color:#888;"
         st.markdown(f"<div style='{style}padding:6px 8px;border-radius:4px;margin:2px 0;'>{mark} {stage['emoji']} {stage['name']}</div>", unsafe_allow_html=True)
 
+def render_focus():
+    """中区核心（fixed 视口）：只显示「此刻」——当前阶段 + 当前发言（不堆叠历史）"""
+    cur = st.session_state.get("current_stage_id", 0)
+    stage = next((s for s in STAGES if s["id"] == cur), None)
+    if stage:
+        stage_html = f'<div class="focus-stage">{stage["emoji"]} 阶段 {stage["id"]}/5：{stage["name"]} — {stage["desc"]}</div>'
+    else:
+        stage_html = '<div class="focus-stage">⚖️ 庭审尚未开始 —— 敲响法槌后，「此刻」画面将在此固定呈现（看盘式 fixed 核心）</div>'
+
+    msgs = st.session_state.get("messages", [])
+    if msgs:
+        msg = msgs[-1]
+        speaker = html.escape(str(msg.get("role", "")))
+        avatar = html.escape(str(msg.get("avatar", "🗣️")))
+        # role 常已带头像 emoji（如 "🏛️ 审判长 · 红宝石尊者"），避免与 avatar 重复
+        if speaker.startswith(avatar) and len(speaker) > len(avatar):
+            speaker = speaker[len(avatar):].strip()
+        content = html.escape(str(msg.get("content", "")))
+        html_out = f"""
+        <div class="court-focus">
+          {stage_html}
+          <div class="focus-speaker">{avatar} {speaker}</div>
+          <div class="focus-content">{content}</div>
+        </div>
+        """
+    else:
+        html_out = f"""
+        <div class="court-focus">
+          {stage_html}
+          <div class="focus-speaker" style="color:#999;">👁️ 静候法槌——当前发言将在此固定呈现</div>
+        </div>
+        """
+    st.markdown(html_out, unsafe_allow_html=True)
+
+
+def render_newsfeed():
+    """中区下方 newsfeed（固定高度）：实时总结流 + 小花组媒体评论"""
+    parts = ['<div class="court-newsfeed">']
+    parts.append("<b>📰 场外媒体评论团（小花组 · 异步）</b>")
+    media_views = {
+        "🌸 玫瑰（BBC 视角）": "程序正义与证据链：'利用影响力'与'私人信用'的边界是本案法理核心。",
+        "🌸 茉莉（CCTV 视角）": "国企合规与党纪要求：未报备的救急行为存在程序瑕疵。",
+        "🌸 紫罗兰（Flower Manager）": "汇总：事实层面资金闭环无亏空，程序层面存在'未报备'瑕疵——法理与情理对峙。",
+    }
+    for k, v in media_views.items():
+        parts.append(f"<div style='margin:3px 0;'><b>{html.escape(k)}</b>：{html.escape(v)}</div>")
+    parts.append("<hr style='border-color:#ddd;margin:8px 0;'/>")
+    parts.append("<b>📜 庭审实时总结流</b>")
+    msgs = st.session_state.get("messages", [])
+    if msgs:
+        for msg in msgs[-6:]:
+            head = html.escape((msg.get("header") or "")[:40])
+            snippet = html.escape(((msg.get("content") or "").replace("\n", " "))[:70])
+            parts.append(f"<div style='margin:3px 0;'>• <b>{head}</b>：{snippet}…</div>")
+    else:
+        parts.append("<div style='color:#999;'>庭审尚未开始——每步发言将实时滚动总结。</div>")
+    parts.append("</div>")
+    st.markdown("\n".join(parts), unsafe_allow_html=True)
+
+
+def render_transcript():
+    """右栏：全量历史笔录（可滚）——历史移去滚动区，中区只留「此刻」"""
+    msgs = st.session_state.get("messages", [])
+    if not msgs:
+        st.caption("庭审尚未开始——全量笔录将在此滚动呈现。")
+        return
+    parts = []
+    for msg in msgs:
+        head = html.escape(str(msg.get("header") or msg.get("role") or ""))
+        avatar = html.escape(str(msg.get("avatar", "🗣️")))
+        content = html.escape(((msg.get("content") or "").replace("\n", " "))[:400])
+        parts.append(
+            f"<div style='margin:6px 0;padding:6px 8px;border-left:3px solid #FF9800;background:#fdfdfd;border-radius:4px;'>"
+            f"<b>{avatar} {head}</b><br/><span style='color:#555;'>{content}…</span></div>"
+        )
+    st.markdown(f'<div class="court-transcript">{"".join(parts)}</div>', unsafe_allow_html=True)
+
+
 def build_court_markdown() -> str:
     lines = ["# 🦅 鲲鹏志 · 法庭实录", ""]
     lines.append(f"场景: {SCENARIOS.get(selected_scenario_key, selected_scenario_key)}")
@@ -472,6 +591,10 @@ def save_court_transcript() -> str:
 mid_col, right_col = st.columns([2, 1], gap="small")
 with right_col:
     render_stage_progress()
+    st.markdown("### 📜 庭审笔录（全量 · 可滚）")
+    transcript_ph = st.empty()
+    with transcript_ph.container():
+        render_transcript()
 
 
 
@@ -518,7 +641,7 @@ with mid_col:
 
     article_text = load_research_file("research/极昼.md")
 
-    with st.expander("📌 安徽省阜阳市监委移送案卷与《极昼.md》研究全文", expanded=True):
+    with st.expander("📌 安徽省阜阳市监委移送案卷与《极昼.md》研究全文", expanded=False):
         st.markdown("### **案由：尊长涉嫌利用影响力受贿罪、国有公司人员失职罪案**")
         col1, col2 = st.columns(2)
         with col1:
@@ -550,14 +673,14 @@ with mid_col:
         st.markdown("### 📜 公诉机关独立撰写之正式起诉书")
         st.markdown(f'<div class="indictment-box">{st.session_state.indictment_text}</div>', unsafe_allow_html=True)
 
-    st.markdown("### 📜 阜阳中院 12 黄道内阁与紫罗兰掌门笔录 (Shared Memory 永久驻留)")
-    chat_container = st.container()
-
-    with chat_container:
-        for msg in st.session_state.messages:
-            with st.chat_message(msg["role"], avatar=msg.get("avatar", "⚖️")):
-                st.markdown(f"### {msg['header']}")
-                st.markdown(msg["content"])
+    # ===== 中区看盘式 fixed：只渲染「此刻」一个画面（当前阶段 + 当前发言） =====
+    # 历史不在此堆叠——已移去右栏滚动区（render_transcript）
+    focus_ph = st.empty()
+    newsfeed_ph = st.empty()
+    with focus_ph.container():
+        render_focus()
+    with newsfeed_ph.container():
+        render_newsfeed()
 
     if start_btn:
         st.session_state.messages = []
@@ -642,10 +765,13 @@ with mid_col:
             }
             st.session_state.messages.append(msg_obj)
         
-            with chat_container:
-                with st.chat_message(avatar_name, avatar=avatar):
-                    st.markdown(f"### {header}")
-                    st.markdown(content)
+            # 看盘式：中区只替换「此刻」画面，不堆叠历史；历史进右栏滚动区
+            with focus_ph.container():
+                render_focus()
+            with newsfeed_ph.container():
+                render_newsfeed()
+            with transcript_ph.container():
+                render_transcript()
             time.sleep(0.5)
                 
         st.session_state.current_stage_id = 5
@@ -660,22 +786,7 @@ with mid_col:
 
     # ============ 底部 newsfeed：实时总结流 + 小花组媒体评论（异步） ============
     st.divider()
-    st.markdown("### 📰 场外媒体评论团（小花组 · 异步）")
-    media_views = {
-        "🌸 玫瑰（BBC 视角）": "西方法理强调程序正义与证据链，此案核心在'利用影响力'与'私人信用'的边界。",
-        "🌸 茉莉（CCTV 视角）": "官方叙事关注国企合规与党纪要求，未报备的救急行为存在程序瑕疵。",
-        "🌸 紫罗兰（Flower Manager）": "汇总各立场：事实层面资金闭环无亏空，但程序层面存在'未报备'瑕疵——法理与情理在此对峙。",
-    }
-    for k, v in media_views.items():
-        st.markdown(f"**{k}**：{v}")
-
-    st.markdown("### 📜 庭审实时总结流（newsfeed）")
-    if st.session_state.get("messages"):
-        for msg in st.session_state.messages[-6:]:
-            st.markdown(f"- **{msg['header']}**：{(msg['content'] or '')[:80]}...")
-    else:
-        st.caption("庭审尚未开始——敲响法槌后，每步发言将实时滚动总结。")
-    # ============ newsfeed 结束 ============
+    # ============ newsfeed 已并入中区固定区域（render_newsfeed） ============
 
     st.divider()
     st.markdown(
