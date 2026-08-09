@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """
-🦅 鲲鹏志 · 《极昼》案 模拟法庭 headless CLI
-============================================
+🦅 鲲鹏志 · 《极昼》案 模拟法庭 headless CLI（Event 2）
+====================================================
 与网页 streamlit_app.py 同源（debate/court_engine.py）：
-独立起诉书 → 11 步令牌环庭审 → 统一落盘存档（本地 + MinIO + runs.jsonl）
+独立起诉书 → 13 步令牌环庭审 → 统一落盘存档（本地 + MinIO + runs.jsonl）
+
+事件链：
+    庭前会议 (pretrial_run.py) → 庭审 (本脚本，--pretrial 注入庭前笔录锚)
 
 用法:
     uv run python scripts/court_run.py
+    uv run python scripts/court_run.py --pretrial 擂台存档/擂台-庭前会议-*.md
 """
 
+import argparse
 import asyncio
 import os
 import sys
@@ -23,6 +28,10 @@ ARTICLE_PATH = REPO_ROOT / "research" / "极昼.md"
 
 
 async def main():
+    parser = argparse.ArgumentParser(description="《极昼》案模拟法庭 headless（Event 2 庭审）")
+    parser.add_argument("--pretrial", default=None, help="庭前会议笔录 md 路径（注入证据固定锚）")
+    args = parser.parse_args()
+
     article_text = ARTICLE_PATH.read_text(encoding="utf-8")
     base_url = os.getenv("OPENAI_BASE_URL", "https://litellm.capitaltrain.cn/v1")
     api_key = os.getenv("OPENAI_API_KEY", "sk-47318")
@@ -33,6 +42,12 @@ async def main():
     engine = RobertTokenRingEngine(base_url, api_key, article_text)
     records = []
     models = set()
+
+    if args.pretrial:
+        pretrial_md = Path(args.pretrial).read_text(encoding="utf-8")
+        print(f"📋 注入庭前会议笔录锚: {Path(args.pretrial).name}")
+        append_stream(path, "📋 庭前会议笔录（Event 1 · 固定证据）", pretrial_md)
+        engine.add_to_shared_context("judge_chief", pretrial_md, team="pretrial")
 
     print("⚖️ 步骤 0/12 · 阜阳市检察院独立撰写起诉书...")
     indictment = engine.draft_official_indictment()

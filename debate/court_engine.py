@@ -100,6 +100,18 @@ ROBERTS_STEPS = [
 ]
 
 
+# 庭前会议流程（圆桌协商 · 去客套 · 固定证据 Event）
+# 真实依据：刑诉法第187条——庭前会议固定证据、处理排非申请、归纳争议焦点；
+# 庭审阶段双方只能使用庭前固定之证据。
+PRETRIAL_STEPS = [
+    ("prosecutor_chief", "【庭前会议·控方证据目录】直接陈述：提交《公诉证据目录》，逐项列明证据名称与证明目的——①银行资金流水（去程划转记录）②任职文件与党组职责分工③证人证言（出借人证言）④被告人供述与辩解⑤亲家企业工商登记资料⑥审计报告（如有）⑦监察留置程序卷宗。每项证据必须说明拟证明的待证事实。不寒暄，不客套，就事论事。"),
+    ("defense_chief", "【庭前会议·辩方质证异议与证据目录】直接陈述：对控方证据目录逐项提出证据能力异议（真实性/合法性/关联性）——重点：①银行流水完整性异议（仅出示去程未出示回程）②证人证言合法性异议（出借人身份不明，证人是否出庭接受质证）③审计报告的证明范围异议④留置程序卷宗的合法性异议（据此申请排除非法证据）。同时提交《辩方证据目录》：①10次还本回程银行流水②借款协议/无息约定书证③2016年司法解释文本（从旧兼从轻依据）④亲家企业财务困境证明（银行抽贷记录）。不寒暄，直接谈。"),
+    ("prosecutor_chief", "【庭前会议·控方回应异议】直接陈述：对辩方异议逐项回应——是否补充提交回程流水、是否安排证人出庭、留置程序合法性的说明。可让步可坚持，但必须明确表态，不得含糊。不客套。"),
+    ("judge_chief", "【庭前会议·主持人归纳争议焦点】直接陈述：归纳本案争议焦点清单（3-4项）——①1000万元资金路由与性质是否构成受贿罪的财物对价；②尊长党组成员身份与筹款成功的关联性；③《刑法》第12条从旧兼从轻在本案的时间适用边界；④失职罪中'重大损失风险'能否替代'重大损失'实害要件。明确宣布：庭审阶段双方仅能使用本次会议固定之证据，未经固定的新证据不予采纳。不客套。"),
+    ("judge_chief", "【庭前会议·程序决定】直接陈述：对辩方提出的排除非法证据申请作出裁定（支持/驳回及理由），对证人出庭申请作出安排，宣布庭前会议结束，证据固定完毕。不客套。"),
+]
+
+
 class RobertTokenRingEngine:
     """令牌环法庭引擎：共享上下文 (Shared Memory) + 令牌发言执行"""
 
@@ -119,13 +131,17 @@ class RobertTokenRingEngine:
         return "\n\n".join(f"【{m['header']}】:\n{m['content']}" for m in self.shared_context)
 
     def _build_context_blocks(self, seat_key):
-        """定向接话上下文：起诉书锚 + 前一位陈词 + 同阵营既往陈词。"""
+        """定向接话上下文：起诉书锚 + 庭前笔录锚 + 前一位陈词 + 同阵营既往陈词。"""
         seat = SEATS_DICT[seat_key]
         team = seat.get("team", "")
         blocks = []
         for m in self.shared_context:
             if m.get("team") == "indictment":
                 blocks.append(("起诉书（全局控方立场锚）", m["content"]))
+                break
+        for m in self.shared_context:
+            if m.get("team") == "pretrial":
+                blocks.append(("庭前会议笔录（已固定证据清单·争议焦点·程序决定）", m["content"]))
                 break
         if self.shared_context and self.shared_context[-1].get("team") != "indictment":
             last = self.shared_context[-1]
@@ -182,10 +198,74 @@ class RobertTokenRingEngine:
             f"2. 语言必须极其沉静、严肃、专业，带有法理温度与力量，严禁急躁喧嚣！\n"
             f"3. 发言完毕后，宣告归还令牌给审判长。字数控制在 380 字以内。"
         )
+        if any(label.startswith("庭前会议笔录") for label, _ in blocks):
+            prompt_user += (
+                "\n4. 证据固定约束：本案已经过庭前会议固定证据，你只能引用庭前会议笔录中"
+                "已固定的证据与争议焦点，不得抛出庭前未固定的新证据，不得引入新争议焦点。"
+            )
 
         system_prompt = (
             "【安徽省阜阳市中级人民法院 沉静法庭沙盒】你正在参加安徽省阜阳市中级人民法院《极昼》案公开审理。"
             "本案关乎一个人、一个家族与时代的承重。请以极其严肃专业、沉静有力的语气陈词与答辩。"
+        )
+
+        start_ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        t0 = time.time()
+        try:
+            resp = self.client.chat.completions.create(
+                model=seat["model"],
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt_user}
+                ],
+                timeout=55
+            )
+            content = resp.choices[0].message.content.strip()
+            ok = True
+        except Exception as e:
+            content = f"（{header} 连线超时: {e}）"
+            ok = False
+
+        self.steps.append({
+            "seat": seat_key,
+            "header": header,
+            "team": seat.get("team", ""),
+            "model": seat["model"],
+            "start_ts": start_ts,
+            "duration_sec": round(time.time() - t0, 2),
+            "chars": len(content),
+            "ok": ok,
+            "ctx": [{"label": label, "chars": len(c)} for label, c in blocks],
+        })
+        self.add_to_shared_context(seat_key, content)
+        return header, content
+
+    def execute_plain_speech(self, seat_key, specific_instruction):
+        """庭前会议圆桌协商执行器：无令牌、无法槌、无客套，直接谈逻辑。"""
+        seat = SEATS_DICT[seat_key]
+        header = f"{seat['role']} ({seat['agent']} @ {seat['node']})"
+
+        blocks = self._build_context_blocks(seat_key)
+        ctx_str = "\n\n".join(f"【{label}】:\n{content}" for label, content in blocks) or "(庭前会议开场)"
+
+        doc_mem = f"\n【《极昼.md》案卷记忆】:\n{self.article_text[:18000]}\n" if self.article_text else ""
+
+        prompt_user = (
+            f"你是模拟法庭庭前会议参与者：【{header}】。\n"
+            f"{doc_mem}\n"
+            f"【会议上下文 (Shared Memory)】:\n{ctx_str}\n"
+            f"你的会议任务：{specific_instruction}\n\n"
+            f"💥 庭前会议风格指令：\n"
+            f"1. 这是庭前会议，不是庭审：没有法槌、没有令牌、没有‘审判长’称谓，不寒暄不客套，直接谈逻辑；\n"
+            f"2. 严格尊重《极昼.md》案卷真实事实：尊长于2026年8月3日从住处被带走送至【安徽省阜阳市】留置！起诉机关为【安徽省阜阳市人民检察院】！\n"
+            f"3. 语言必须沉静、专业、就事论事，紧扣证据与程序问题，不进行价值煽情；\n"
+            f"4. 字数控制在 400 字以内。"
+        )
+
+        system_prompt = (
+            "【庭前会议圆桌】你正在参加安徽省阜阳市中级人民法院《极昼》案庭前会议。"
+            "本次会议固定证据、处理程序申请、归纳争议焦点，为庭审做准备。"
+            "请以专业、直接、就事论事的风格陈述，去掉一切仪式性客套。"
         )
 
         start_ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
