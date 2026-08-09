@@ -327,6 +327,21 @@ def render_custom_css():
       .stApp { background: #ffffff; color: #1a1a1a; }
       .block-container { padding-top: 3.2rem; }
       .stMarkdown, .stText, .stMarkdown p { color: #1a1a1a !important; }
+      .circle-progress-widget {
+        position: fixed; bottom: 28px; right: 28px; z-index: 999999;
+        display: flex; align-items: center; justify-content: center;
+        width: 72px; height: 72px; border-radius: 50%;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .circle-progress-widget:hover { transform: scale(1.08); }
+      .circle-inner {
+        width: 58px; height: 58px; border-radius: 50%;
+        background: #121214; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; color: #FFFFFF;
+        font-weight: bold; font-size: 0.78rem; text-align: center; line-height: 1.1;
+      }
+      .circle-percent { font-size: 0.95rem; color: #FF9800; font-weight: 800; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -335,13 +350,61 @@ render_custom_css()
 # 场景选择
 selected_scenario_key = st.sidebar.radio("🎭 请选择场景化身模式：", list(SCENARIOS.keys()), format_func=lambda x: SCENARIOS[x])
 
+# 5 个核心庭审阶段定义（刑事诉讼法流程）
+STAGES = [
+    {"id": 1, "name": "1. 准备与核对身份", "emoji": "⚖️", "desc": "审判长核对尊长基本信息，告知回避权，被告人现场应答"},
+    {"id": 2, "name": "2. 控方起诉与举证", "emoji": "📜", "desc": "阜阳市检察院独立撰写并宣读《阜检刑诉〔2026〕88号起诉书》"},
+    {"id": 3, "name": "3. 辩方无罪质证", "emoji": "🛡️", "desc": "辩护团队掏出【四大罪名排除矩阵】与从旧兼从轻水单质证"},
+    {"id": 4, "name": "4. 法庭辩论与质询", "emoji": "⚔️", "desc": "合议庭追问公款损失凭证，控辩双方展开剧烈法理交锋"},
+    {"id": 5, "name": "5. 尊长陈述与宣判", "emoji": "🏛️", "desc": "尊长发表问心无愧陈述，审判长敲响法槌宣告无罪"}
+]
+
 def render_progress_components(current_stage):
     if "current_stage_id" not in st.session_state:
         st.session_state.current_stage_id = 0
         current_stage = 0
-    stages = ["初始化", "起诉书", "质证", "法庭辩论", "合议", "宣判"]
-    idx = max(0, min(int(current_stage or 0), 5))
-    st.progress(idx / 5.0, text="庭审进度：" + stages[idx] + " (" + str(idx) + "/5)")
+    current_stage = int(current_stage or 0)
+    pct = min(int((current_stage / 5.0) * 100), 100)
+
+    # 1. 顶部 Sticky Banner：分段式进度条
+    segments_html = ""
+    for stage in STAGES:
+        if stage["id"] < current_stage:
+            color = "#4CAF50"
+        elif stage["id"] == current_stage:
+            color = "#FF9800"
+        else:
+            color = "#444444"
+        segments_html += f'<div style="flex: 1; height: 8px; border-radius: 4px; background-color: {color}; transition: all 0.3s;"></div>'
+    titles_html = ""
+    for stage in STAGES:
+        style = "color: #FF9800; font-weight: bold;" if stage["id"] == current_stage else ("color: #81C784;" if stage["id"] < current_stage else "color: #777;")
+        titles_html += f'<span style="{style}">{stage["emoji"]} {stage["name"]}</span>'
+
+    top_banner = f"""
+    <div style="position: sticky; top: 0rem; z-index: 99999; background: #121214; border-bottom: 2px solid #FF9800; padding: 10px 16px; margin-bottom: 1rem; border-radius: 0 0 8px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+      <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+        {segments_html}
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.82rem; overflow-x: auto;">
+        {titles_html}
+      </div>
+    </div>
+    """
+    st.markdown(top_banner, unsafe_allow_html=True)
+
+    # 2. 右下角悬浮圆形进度徽章 (conic-gradient 环形充盈)
+    deg = int((pct / 100) * 360)
+    circle_bg = f"conic-gradient(#FF9800 0deg {deg}deg, #333333 {deg}deg 360deg)"
+    circle_widget = f"""
+    <div class="circle-progress-widget" style="background: {circle_bg};" title="当前庭审进度：{pct}% ({current_stage}/5 阶段)">
+      <div class="circle-inner">
+        <span class="circle-percent">{pct}%</span>
+        <span style="font-size: 0.65rem; color: #AAA;">{current_stage}/5 阶段</span>
+      </div>
+    </div>
+    """
+    st.markdown(circle_widget, unsafe_allow_html=True)
 
 render_progress_components(st.session_state.get("current_stage_id", 0))
 
