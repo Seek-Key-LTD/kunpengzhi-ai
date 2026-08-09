@@ -57,7 +57,7 @@ fixed 的要义 = 只显示「此刻」的一个画面（当前阶段/当前发�
 布局：streamlit_app.py（render_speaker_ticker / render_stage_progress / 三列）
 设计文档：docs/zodiac-cabinet-architecture.md（12 内阁/花名/落宫）
 Vision：docs/flow-engine-vision.md（#4）、auction-allocation-vision.md（#6）、production-analysis-design.md（#7）
-Gitea issues：seekkey/kunpengzhi-ai（#4 Flow 引擎 / #6 Auction / #7 产出分析 / #8 RFC 雷达图）
+Gitea issues：seekkey/kunpengzhi-ai（#4 Flow 引擎 / #6 Auction / #7 产出分析 / #8 RFC 雷达图 / #9 看盘式庭审重构）
 ```
 
 ## 五、环境
