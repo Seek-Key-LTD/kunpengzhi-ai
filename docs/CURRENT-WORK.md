@@ -1,6 +1,6 @@
 # 当前工作状态（交接给下一个 Session）
 
-> 更新：2026-08-09 | 目标：看盘式庭审 · 一个人办成凤凰卫视
+> 更新：2026-08-09（晚间 · 中区真 fixed 已完成） | 目标：看盘式庭审 · 一个人办成凤凰卫视
 > 环境：dev = nuc :8501（systemd kunpengzhi-dev）｜ staging = Heroku
 
 ---
@@ -12,7 +12,11 @@
 - 极昼案卷事实（2026.8.3 阜阳留置）+ 起诉书模块
 - 5 阶段双进度（顶部 banner + 右下角圆环）
 - PIN 锁（dev 跳过，staging 需 3131）
-- **对称看盘布局（初版）**：左 sidebar ticker（300px 可滚）/ 中核心 / 右进度（CSS 可滚）
+- **✅ 看盘式真 fixed 布局（#9 已完成，CDP 实测）**：
+  - 中区 = fixed 视口，只渲染「当前阶段 + 当前发言」一个画面（st.empty() 占位替换，零堆叠）
+  - 全量历史笔录 → 右栏 `.court-transcript` 可滚；newsfeed 并入中区固定高度 `.court-newsfeed`（33%）
+  - 比例实测 25 / 48 / 24（sidebar 25vw 封顶 480px）；`pageScrolls=false`（视口恒定 905px 不滚）
+  - 案卷 expander 默认折叠、起诉书限高 200px 内部滚
 
 ## 二、认知要点（务必先理解，别急着写码）
 
@@ -38,10 +42,10 @@ fixed 的要义 = 只显示「此刻」的一个画面（当前阶段/当前发�
 
 ## 三、接下来要做（TODO）
 
-1. **中区改真 fixed**：只渲染「当前阶段/当前发言」一个画面（固定视口），历史笔录移去滚动区/newsfeed —— **最高优先（用户当前最在意）**
-2. 中区 60% 高度核心 + 下方 33% newsfeed（固定高度分割）
-3. 比例微调（左 25 / 中 50 / 右 25）
-4. 右栏完善（进度/证据/法条，可滚动）
+1. ~~中区改真 fixed~~ ✅（2026-08-09 完成，见 issue #9）
+2. ~~中区 60% 高度核心 + 下方 33% newsfeed~~ ✅（court-focus 60% + court-newsfeed 33%，固定视口）
+3. ~~比例微调（左 25 / 中 50 / 右 25）~~ ✅（实测 25/48/24）
+4. ~~右栏完善（进度/证据/法条，可滚动）~~ ✅（进度 + 全量笔录可滚）
 5. **Coding Agent 剧本编译器**：选题 → 模式/角色/流程自动（Flow 引擎 #4）
 6. **令牌环动态化**：发言权按规则实时流转（打断/响应）
 7. **replay 模式**：不烧 token，回放之前成功笔录（调试用）
@@ -54,7 +58,7 @@ fixed 的要义 = 只显示「此刻」的一个画面（当前阶段/当前发�
 ```
 代码：nuc ~/Projects/github/kunpengzhi-ai（Gitea dev 分支）
 引擎：core/token_ring.py
-布局：streamlit_app.py（render_speaker_ticker / render_stage_progress / 三列）
+布局：streamlit_app.py（render_focus / render_newsfeed / render_transcript / st.empty() 占位替换）
 设计文档：docs/zodiac-cabinet-architecture.md（12 内阁/花名/落宫）
 Vision：docs/flow-engine-vision.md（#4）、auction-allocation-vision.md（#6）、production-analysis-design.md（#7）
 Gitea issues：seekkey/kunpengzhi-ai（#4 Flow 引擎 / #6 Auction / #7 产出分析 / #8 RFC 雷达图 / #9 看盘式庭审重构）
