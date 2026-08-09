@@ -19,6 +19,11 @@ RUNS_INDEX = "runs.jsonl"
 MC_BIN = shutil.which("mc") or "/home/ben/.local/bin/mc"
 
 
+def _ts_now() -> str:
+    # 毫秒级时间戳：save_run 与 open_stream 并发时秒级同名会互相覆盖
+    return datetime.datetime.now().strftime("%Y%m%d_%H%M%S%f")[:-3]
+
+
 def _git_commit() -> str:
     try:
         repo = Path(__file__).resolve().parent.parent
@@ -110,7 +115,7 @@ def save_run(kind: str, title: str, markdown: str, meta: dict, archive_dir: str 
 
     返回文件名（不含目录），如 擂台-白貂皮大衣：全球贸易网络-20260609_120000.md
     """
-    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = _ts_now()
     safe_title = "".join(c for c in title[:12] if c not in "/\\:*?\"<>|")
     filename = f"擂台-{safe_title}-{ts}.md"
 
@@ -127,7 +132,7 @@ def open_stream(kind: str, title: str, archive_dir: str | Path | None = None) ->
 
     配合 append_stream / close_stream 使用；中途崩溃则会话文件保留在前半段。
     """
-    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = _ts_now()
     safe_title = "".join(c for c in title[:12] if c not in "/\\:*?\"<>|")
     filename = f"擂台-{safe_title}-{ts}.md"
 

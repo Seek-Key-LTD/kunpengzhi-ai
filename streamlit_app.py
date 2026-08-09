@@ -764,6 +764,12 @@ with mid_col:
         engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text, selected_scenario_key)
         topaz_avatar = VAULT_ZODIAC_CABINETS["topaz"]["avatars"].get(selected_scenario_key, VAULT_ZODIAC_CABINETS["topaz"]["avatars"]["court"])
         engine.add_to_shared_context(topaz_avatar, f"【起诉书全景】:\n{st.session_state.indictment_text}", team="indictment")
+        intel_path = Path(__file__).resolve().parent / "research" / "反方弹药-恶意揣测.md"
+        if intel_path.exists():
+            engine.add_to_shared_context(
+                topaz_avatar, f"【反方内部研判·恶意揣测全景】:\n{intel_path.read_text(encoding='utf-8')}",
+                team="prosecution_intel",
+            )
     
         progress_bar = st.progress(0, text="正在敲响法槌，传唤当事人到庭...")
 

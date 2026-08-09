@@ -56,6 +56,15 @@ async def main():
     append_stream(path, "📜 公诉机关独立撰写之起诉书（阜检刑诉〔2026〕88号）", indictment)
     engine.add_to_shared_context("prosecutor_chief", f"【起诉书全景】:\n{indictment}", team="indictment")
 
+    intel_path = REPO_ROOT / "research" / "反方弹药-恶意揣测.md"
+    if intel_path.exists():
+        intel_text = intel_path.read_text(encoding="utf-8")
+        engine.add_to_shared_context(
+            "prosecutor_chief", f"【反方内部研判·恶意揣测全景】:\n{intel_text}",
+            team="prosecution_intel",
+        )
+        print("🔍 已注入《反方弹药·恶意揣测》情报（仅公诉席可见）")
+
     total = len(ROBERTS_STEPS)
     for idx, (seat_key, instruction) in enumerate(ROBERTS_STEPS, 1):
         seat = SEATS_DICT[seat_key]
