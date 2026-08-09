@@ -41,7 +41,7 @@
 | azure | 天蓝石 | ♒ 水瓶座 | 陪审法官·逻辑防线 | onecloud1 |
 | diamond | 金刚石 | ♎ 天秤座 | 首席辩护律师·铁壁 | pve |
 | obsidian | 黑曜石 | ♏ 天蝎座 | 监察调查员·深邃监察 | xgp |
-| jasper | 碧石 | —（**未落宫**） | 12 内阁补齐位 | ⏳ 规划：vault 宿主 LXC |
+| jasper | 碧石 | — | 12 内阁补齐位 | ✅ **已落宫**（vault LXC 111） |
 | carbonado | 黑金刚石 | ♈ 白羊座 | 助理公诉人·锐意 | pve2 |
 | argentite | 辉银矿 | ♒ 水瓶座 | 自由法国/敏捷断理 | pve3 |
 | agate | 玛瑙 | — | 四方辩手 | xgp |
@@ -53,7 +53,7 @@
 
 moli（茉莉）/ muxu（苜蓿）/ zhuyu（竹芋）/ tumi（土豆花？）/ meigui（玫瑰）/ qiangwei（蔷薇）/ violet（紫罗兰）
 
-- **Flower Manager = Violet（紫罗兰）**——小花组掌门人（⏳ **未落宫**）
+- **Flower Manager = Violet（紫罗兰）**——小花组掌门人（✅ **已落宫**：warden LXC 108）
 - 职责：针对大国划分做独立合议评议、人道主义与和平观察团
 
 ### Group Policy
@@ -66,8 +66,8 @@ moli（茉莉）/ muxu（苜蓿）/ zhuyu（竹芋）/ tumi（土豆花？）/ m
 
 | 工位 | 状态 | 规划 |
 |------|------|------|
-| **Jasper（碧石）** | ⏳ 未落宫 | 不能放德区（破坏主策略）；**同构 LXC 容器**，落宫 **vault 宿主**（vault 服务物理同源，密钥注入隔离最高） |
-| **Violet（紫罗兰）** | ⏳ 未落宫 | 同构 LXC 容器，落宫 **warden 宿主**（warden 具管理/主理属性，匹配 Flower Manager） |
+| **Jasper（碧石）** | ✅ 已落宫（2026-08-09） | vault LXC 111，nomad 节点 ，keyagent + 静态注入 |
+| **Violet（紫罗兰）** | ✅ 已落宫（2026-08-09） | warden LXC 108，nomad 节点 ，Flower Manager |
 
 XGP 资源充足（58GiB RAM / 21GiB 可用，有 debian-12 标准底包）——可直接在 XGP 拉起同构 LXC（VMID 121 jasper / 122 violet）。
 
@@ -84,8 +84,8 @@ XGP 资源充足（58GiB RAM / 21GiB 可用，有 debian-12 标准底包）—�
 
 ## 六、关键待办（tickets 待提）
 
-- [ ] jasper 落宫（vault 宿主同构 LXC + vault-agent 密钥注入 + nomad）
-- [ ] violet 落宫（warden 宿主同构 LXC + Flower Manager）
+- [x] jasper 落宫（✅ vault LXC 111，静态注入）
+- [x] violet 落宫（✅ warden LXC 108，Flower Manager）
 - [ ] staging PIN 3131 锁（云端）
 - [ ] Flow 引擎范式落地（通用解析 → 化身绑定 → 协议调度）
 - [ ] Underlay/Overlay 双层实现（编剧室博弈 + Credits + Session Contract）
