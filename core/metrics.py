@@ -145,7 +145,7 @@ def adversarial_scan(text: str, keywords: list[str] | None = None) -> dict:
 
     query_rounds, query_answered = 0, 0
     for i, (header, body) in enumerate(rounds[:-1]):
-        if _team_of(header) == "judge" and "质询" in body:
+        if _team_of(header) == "judge" and ("质询" in body or "发问" in body):
             query_rounds += 1
             hits = {k for k in keywords if k in body}
             if hits and any(k in rounds[i + 1][1] for k in hits):
