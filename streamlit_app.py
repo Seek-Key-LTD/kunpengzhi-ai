@@ -334,7 +334,7 @@ def render_custom_css():
     <style>
       /* 纯白模式（暗黑切换后续加） */
       .stApp { background: #ffffff; color: #1a1a1a; }
-      .block-container { padding-top: 3.2rem; }
+      .block-container { padding-top: 2.5rem; padding-left: 1rem; padding-right: 1rem; }
       .stMarkdown, .stText, .stMarkdown p { color: #1a1a1a !important; }
       .circle-progress-widget {
         position: fixed; bottom: 28px; right: 28px; z-index: 999999;
@@ -351,9 +351,11 @@ def render_custom_css():
         font-weight: bold; font-size: 0.78rem; text-align: center; line-height: 1.1;
       }
       .circle-percent { font-size: 0.95rem; color: #FF9800; font-weight: 800; }
-      /* 左 sidebar = 25%（用户目标 25/50/25） */
-      [data-testid="stSidebar"] {
-        width: 25vw !important;
+      /* 左 sidebar = 25%（用户目标 25/50/25）。展开态才生效，不破坏折叠功能；
+         max-width 覆盖 Streamlit 折叠态 emotion clamp（max-width:0），25vw 封顶 480px 防超宽屏 */
+      [data-testid="stSidebar"][aria-expanded="true"] {
+        width: min(25vw, 480px) !important;
+        max-width: min(25vw, 480px) !important;
         min-width: 300px;
       }
       /* 右栏：可滚动信息流（像 sidebar 一样独立滚动） */
