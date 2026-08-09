@@ -14,15 +14,15 @@
 
 | 层 | 技术 |
 |------|------|
-| Web UI | Chainlit (Python) |
+| Web UI | Chainlit (主线 app.py) + Streamlit (极昼支线 streamlit_app.py) |
 | 静态文件 | public/ (custom.js, custom.css) |
 | LLM | Gemini 2.5 Flash (via liteLLM proxy) |
-| 向量检索 | Cloudflare Vectorize |
-| 知识库搜索 | Vertex AI Agent Builder / Discovery Engine |
+| 向量检索 | Cloudflare Vectorize (bge-m3, 1024d) |
+| 对象存储 | Cloudflare R2 (TTS/实录) + 内网 MinIO SSD (归档) |
 | 包管理 | **uv** (仅 uv，不用 pip / requirements.txt) |
-| 部署 | Heroku + GitHub Actions CI/CD |
-| 存储 | Cloudflare R2 |
+| 部署 | Heroku (Procfile auto-deploy) + nuc 本地 systemd |
 | 语音 | edge-tts (微软免费 TTS) |
+| 链上确权 | Solidity VibeTicket ERC-20 (Base Sepolia) |
 
 ## 关键约定（Agent 必读）
 
@@ -34,10 +34,12 @@
 
 ### 项目结构
 ```
-├── app.py              # Chainlit 主应用（含辩论引擎、路由、API）
+├── app.py              # Chainlit 主线：4v4 鹰洋鱼盲测辩论 (v4.6)
+├── streamlit_app.py    # Streamlit 支线：极昼案模拟法庭（3 scenarios）
+├── arena.py            # CLI 擂台入口
 ├── pyproject.toml      # 项目配置 + 依赖
 ├── chainlit.md         # Chainlit 欢迎页面内容
-├── .chainlit/config.toml       # Chainlit 配置
+├── Procfile            # Heroku 部署入口（streamlit_app.py）
 ├── public/
 │   ├── custom.js       # 注入脚本（侧栏、🔍 按钮、Widget）
 │   └── custom.css      # 自定义样式
@@ -47,19 +49,25 @@
 │   ├── vectorize.py    # Vectorize 封装
 │   └── graph_rag.py    # GraphRAG 知识图谱
 ├── debate/
-│   ├── engine.py       # 辩论引擎（4v4 + 讲茶大堂）
-│   └── modern_engine.py
-└── scripts/
-    ├── checkpoint_runner.py    # 批处理调度
-    ├── burn_night.py           # 夜间批处理
-    ├── batch_processor.py      # 批量处理器
-    └── watchdog.py             # 状态监控
+│   └── engine.py       # 辩论引擎（4v4 + 讲茶大堂）
+├── scripts/
+│   ├── checkpoint_runner.py    # 批处理调度
+│   ├── burn_night.py           # 夜间批处理
+│   ├── batch_processor.py      # 批量处理器
+│   ├── index_books.py          # 书库索引
+│   └── watchdog.py             # 状态监控
+├── contracts/vibe-ticket/      # VibeTicket ERC-20 合约
+├── vibe-debating/              # 礼乐双轴评价设计稿
+└── docs/                       # 架构 / 会议 / 计划文档（见 docs/INDEX.md）
 ```
 
 ### 部署
-- **推 GitHub → GHA 自动部署 Heroku**（不要直接 git push heroku）
-- 审核流程：本地改 → staging 验证 → git push → GHA deploy
-- CI/CD 配置：`.github/workflows/deploy-heroku.yml`
+- **dev**: nuc 本地 systemd `kunpengzhi-dev`（streamlit_app.py :8501）
+- **staging+prod**: Heroku 自动部署（GitHub push → [Procfile](Procfile) → `streamlit run streamlit_app.py`）
+- **辩论主线 (app.py)**: 本地 `chainlit run app.py` 或独立部署
+- **Gitea 镜像**: `seekkey/kunpengzhi-ai` 分支 `dev`
+- **Codeup 镜像**: GHA [`.github/workflows/mirror-to-codeup.yml`](.github/workflows/mirror-to-codeup.yml)
+- **辩论实录归档**: `ssd/kunpengzhi-archive/擂台存档/`（`mc alias ssd = minio-s3`；本地 `擂台存档/` 同步 + `runs.jsonl` 版本索引，含 git commit，供逐版本质量对比）
 
 ### 环境变量
 | 变量 | 用途 |

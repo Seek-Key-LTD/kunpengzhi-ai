@@ -24,7 +24,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 🔑 极简 Staging 密码锁 (PIN: 3131)
+# 🔑 极简 Staging 密码锁 (PIN: 142857)
 def check_password():
     # dev 环境（本地）跳过 PIN；staging(Heroku) 需要
     import os
@@ -46,7 +46,7 @@ def check_password():
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             pin_input = st.text_input("🔑 访客 PIN 码：", type="password", key="pin_lock_input")
-            if pin_input == "3131":
+            if pin_input == "142857":
                 st.session_state.authenticated = True
                 st.success("🔓 验证通过！正在进入《极昼》演练界面...")
                 time.sleep(0.4)

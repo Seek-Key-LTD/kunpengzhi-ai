@@ -7,3 +7,6 @@ vtcode.toml
 package.json
 mem_ops_api.py
 .chainlit/
+
+# 运行时产物：辩论实录归档到 ssd/kunpengzhi-archive（mc alias ssd = minio-s3）
+擂台存档/

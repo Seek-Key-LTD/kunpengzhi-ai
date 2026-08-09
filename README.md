@@ -1,166 +1,265 @@
-# 🦅 鲲鹏志 AI 辩论系统 v2.0
+# 🦅 鲲鹏志 AI · 内容驱动辩论系统 v4.6
 
-4v4 大专辩论会 + 🍵 讲茶大堂 + 🔊 微软免费 TTS
+围绕《鲲鹏志》系列小说（牧人记 / 牧兰记 / 双约记 / 牧月记）的多场景 AI 辩论平台。
+三套子系统并行：**4v4 鹰洋鱼盲测辩论**、**极昼案模拟法庭**、**Vibe Debating 礼乐评价**。
 
-## 辩论全流程（一图流）
+---
 
-### 一、内容生产流水线（批处理 → 素材库）
+## 子系统全景
 
-由 `checkpoint_runner.py` / `burn_night.py` 批量执行：
+| 子系统 | 入口 | 框架 | 状态 |
+|--------|------|------|------|
+| 🥊 4v4 鹰洋鱼盲测辩论 | [`app.py`](app.py) | Chainlit | 主线（本地运行） |
+| ⚖️ 极昼案模拟法庭 | [`streamlit_app.py`](streamlit_app.py) | Streamlit | dev=nuc / staging+prod=Heroku |
+| 🎼 Vibe Debating 礼乐评价 | [`vibe-debating/`](vibe-debating/) | 设计稿 + ERC-20 | 设计阶段 |
+| 🎫 VibeTicket 链上确权 | [`contracts/vibe-ticket/`](contracts/vibe-ticket/) | Solidity | Base Sepolia 部署 |
+
+---
+
+## 一、4v4 鹰洋鱼盲测辩论（`app.py` · Chainlit）
+
+### 核心机制
+
+**🦅 鹰洋鱼 (China vs US) 100% 盲测对抗**
+- 中国模型池（DeepSeek / Qwen / GLM / Baichuan / Doubao / Moonshot / Hunyuan / Ernie）vs 美国模型池（GPT / Claude / Gemini / Llama）
+- 各池无重复抽 4 个，随机分配正反方
+- 盲测 ID `Model_1..8` 完全打乱，**辩论结束才解密**真实身份
+
+**📊 Moneyball 数据驱动教练**
+- 正反方双教练并行生成赛前策略（asyncio.gather 运筹学并发）
+- 实时耳语指导 (teacher model) 80 字以内
+- 历史辩论通过 Vectorize 检索作为数据参考
+
+**🏛️ 罗伯特议事规则**
+- 8 辩位 = 八仙八卦（乾☰坤☷艮☶兑☱离☲坎☵震☳巽☴）
+- 议事长每轮归纳交锋焦点
+- 每位辩手配词牌定场诗（鹊桥仙 / 卷珠帘 / 临江仙 / 苏幕遮 / 一剪梅 / 西江月 / 卜算子 / 虞美人）
+
+**🔊 微软免费 TTS**
+- edge-tts 合成 + 书面语→口头语转换
+- pydub 拼接（带静音间隔），失败回退二进制拼接
+- 上传 Cloudflare R2，生成完整辩论录音回放
+
+**📐 运筹学并发流水线**
+- 后台预取下一轮发言（关键路径并行）
+- 教练耳语 / 议事长总结 / TTS 三路并发
+- 打字机流式渲染 + 全局速度倍率（0.5x / 1x / 2x / 5x / 10x）+ 暂停
+
+### 三屏联动 UI
+
+| 路由 | 用途 |
+|------|------|
+| `/` (Chainlit 主界面) | 辩论交互 + 流式打字机 + TTS 回放 |
+| [`/bagua`](public/dashboard.html) | 八卦乾坤看板（SVG 太极 + 八卦节点实时高亮 + MIDI 律吕和声） |
+| [`/left-board`](public/kunpengzhi-qa.html) | CRT 终端风格监控（Bloomberg Telemetry + TTY Shell + Sequencer 灯条） |
+| `/status` | 系统健康检查 + 日志缓冲 |
+
+### 预设辩题
+
+| # | 辩题 | 出处 |
+|---|------|------|
+| 1 | 白貂皮大衣：全球贸易铁证 vs 过度诠释 | 牧人记·第08章 半江瑟瑟半江红 |
+| 2 | 木兰的哥哥：历史真相 vs 叙事虚构 | 牧人记·第07章 木兰无长兄 |
+| 3 | 产权分割：安史之乱的经济学本质 | 牧人记·第01章 玉玺 |
+
+---
+
+## 二、极昼案模拟法庭（`streamlit_app.py` · Streamlit）
+
+基于真实案卷 [`research/极昼.md`](research/极昼.md) 的多场景模拟法庭演练。
+
+### 三种 Scenario
+
+| Key | 场景 | 风格 |
+|-----|------|------|
+| `court` | ⚖️ 严肃刑事法庭模式 | 阜阳市中级人民法院刑事审判第一庭 |
+| `honglou` | 📿 红楼梦贾府大观园模式 | 大观园家宴议事 |
+| `fengyue` | 🍶 潇洒风月风流雅集模式 | 文人雅集品评 |
+
+### 角色阵容
+
+- **12 黄道内阁**（宝石命名：ruby/topaz/jasper/diamond/quartz/...）— 落宫规划至 `vault` LXC
+- **紫罗兰掌门带领的七姐妹星团**（Violet Petal Group）— 落宫规划至 `warden` LXC
+- 加锁访问（PIN `3131`），通过 `st.session_state` 保护 staging
+
+---
+
+## 三、Vibe Debating 礼乐评价（设计阶段）
+
+**图灵测试平方 (Turing Test²)**：机器能不能像文明的中国人一样，说话时知礼知乐？
+
+### 礼乐双轴评价
 
 ```
-[选章]
-   ↓ 从《牧人记》《牧兰记》《双约记》《牧月记》中选定章节
-   ↓ 注明：出自哪一卷、第几章、作者
-
-[第一阶段 · 双评]
-   ├ ❶ 彩虹屁 — AI 正面赏析：叙事手法、历史价值、文笔
-   ├ ❷ 拍砖 — AI 反面批判：逻辑漏洞、史料存疑、过度阐释
-   ↓
-
-[第二阶段 · 成题破题]
-   │ 综合双评的分歧点，提炼成可辩论的命题
-   │ 例如："白貂皮大衣是嚈哒与东北亚联系的铁证 vs 过度诠释"
-   │       "木兰无长兄是历史真相 vs 文学修辞"
-   ↓
-
-[第三阶段 · 八股辩论]
-   ├ ❶ 正方一辩 · 开篇立论
-   ├ ❷ 反方一辩 · 开篇立论
-   ├ ❸ 正方二辩 · 驳论
-   ├ ❹ 反方二辩 · 驳论
-   ├ ❺ 正方三辩 · 自由辩论
-   ├ ❻ 反方三辩 · 自由辩论
-   ├ ❼ 正方四辩 · 总结陈词
-   ├ ❽ 反方四辩 · 总结陈词
-   │ 每轮由议事长归纳交锋
-   ↓
-
-[第四阶段 · 讲茶大堂]
-   ├ 🍵 茶博士 — 德高望重老茶客，从宏观层面点评
-   ├ 🏃 店小二 — 消息灵通跑堂，爆料场外八卦
-   ├ 🕵️ 神秘客 — 意想不到的视角，打破常规思维
-   ├ 🧮 账房先生 — 算赔率、打分、统计命中率
-   ↓
-
-[存档]
-   │ Markdown 全文 + TTS 音频（edge-tts）+ Vectorize 索引
-   │ 存入 R2 / Git 仓库
+  言之有理（礼）          言之有乐（乐）
+  ─────────────          ─────────────
+  逻辑自洽               旋律美感
+  辞藻精准               和弦适配
+  回应切题               情绪连贯
+  典故运用               词牌韵律贴合度
 ```
 
-### 二、在线辩论系统（Chainlit Web 界面）
+**最终得分 = 礼 × 乐**（非简单相加，二者缺一不可）
 
-用户选择辩题后，系统自动运行：
+### 八席位词牌定基
+
+| 席位 | 词牌 | 基调 |
+|------|------|------|
+| ☰ 乾 | 鹊桥仙 | G 小调 ✅ |
+| ☷ 坤 | 卷珠帘 | TBD |
+| ☶ 艮 | 临江仙 | TBD |
+| ☱ 兑 | 苏幕遮 | TBD |
+| ☲ 离 | 一剪梅 | TBD |
+| ☵ 坎 | 西江月 | TBD |
+| ☳ 震 | 虞美人 | TBD |
+| ☴ 巽 | 卜算子 | TBD |
+
+详见 [`vibe-debating/`](vibe-debating/) 与 [`vibe-debating/issues/`](vibe-debating/issues/)。
+
+---
+
+## 技术栈
+
+| 层 | 技术 |
+|----|------|
+| Web UI | Chainlit (主线) + Streamlit (极昼支线) |
+| LLM | Gemini 2.5 Flash via LiteLLM Proxy |
+| 向量检索 | Cloudflare Vectorize (bge-m3, 1024d) |
+| 对象存储 | Cloudflare R2 (TTS/实录) + 内网 MinIO SSD (归档) |
+| TTS | edge-tts (微软免费) |
+| 包管理 | **uv**（唯一，禁用 pip / requirements.txt） |
+| 链上确权 | Solidity VibeTicket ERC-20 (Base Sepolia) |
+| 多智能体 | AutoGen + pyautogen |
+
+---
+
+## 部署链路
+
+| 环境 | 位置 | 入口 | 触发 |
+|------|------|------|------|
+| **dev** | nuc 本地 | `streamlit run streamlit_app.py --server.port 8501` | systemd `kunpengzhi-dev` |
+| **staging+prod** | Heroku | `streamlit run streamlit_app.py`（[Procfile](Procfile)） | GitHub push → Heroku auto-deploy |
+| **辩论主线** | 本地 / 独立部署 | `chainlit run app.py --port 8080` | 手动 |
+| **Gitea 镜像** | `seekkey/kunpengzhi-ai` | - | git push |
+| **Codeup 镜像** | 阿里云 Codeup | - | GHA [`mirror-to-codeup.yml`](.github/workflows/mirror-to-codeup.yml) |
+
+CI：
+- [`.github/workflows/issue-automation.yml`](.github/workflows/issue-automation.yml) — Issue 看板自动化
+- [`.github/workflows/mirror-to-codeup.yml`](.github/workflows/mirror-to-codeup.yml) — 镜像到阿里云 Codeup
+
+---
+
+## 项目结构
 
 ```
-[原文检索]
-   │ RAG 从书库检索相关章节全文
-   ↓
-[Moneyball 数据驱动]
-   │ Vectorize 搜索历史辩论实录（相似度排名）
-   ↓
-[双教练策略]
-   │ 正反方教练并行读取原文 + 历史数据，输出赛前策略
-   ↓
-[八股辩论]
-   │ 同上第三阶段，流式输出 + TTS 实时语音合成
-   ↓
-[议事长总结]
-   │ AI 归纳全场交锋焦点
-   ↓
-[存档 + 索引]
-   │ 自动保存到 R2，建立 Vectorize 索引以备后续 Moneyball 调用
+├── app.py                      # Chainlit 主线：4v4 鹰洋鱼盲测辩论 (v4.6)
+├── streamlit_app.py            # Streamlit 支线：极昼案模拟法庭
+├── arena.py                    # CLI 擂台入口
+├── chainlit.md                 # Chainlit 欢迎页内容
+├── pyproject.toml              # 项目配置 + 依赖（uv 管理）
+├── Procfile                    # Heroku 部署入口
+├── AGENT.md                    # Agent 协作约定
+├── DEV.md                      # 三环境（dev/staging/prod）运维总览
+│
+├── core/                       # 核心模块
+│   ├── config.py               # 配置
+│   ├── retriever.py            # 原文检索（本地优先 → GitHub raw 兜底）
+│   ├── vectorize.py            # Cloudflare Vectorize + R2 映射表 RAG
+│   └── graph_rag.py            # GraphRAG 知识图谱
+│
+├── debate/
+│   └── engine.py               # 4v4 辩论 + 讲茶大堂编排
+│
+├── scripts/                    # 批处理工具
+│   ├── checkpoint_runner.py    # 批处理调度
+│   ├── burn_night.py           # 夜间批处理
+│   ├── batch_processor.py      # 批量处理器
+│   ├── index_books.py          # 书库索引
+│   └── watchdog.py             # 状态监控
+│
+├── public/                     # 静态资源
+├── contracts/vibe-ticket/      # VibeTicket ERC-20 合约
+│
+├── docs/                       # 架构 / 会议 / 计划文档（见 docs/INDEX.md）
+│   ├── minutes/                # 8 agent 思辨会纪要
+│   ├── hierarchy-plan.md       # V2.0 5 层架构蓝图
+│   ├── whatif-analysis.md      # What-If 压力测试
+│   └── burn-5000-plan.md       # 5000 次烧录校准计划
+│
+├── research/                   # 内容研究
+│   ├── deep-research-brief.md  # 《鲲鹏志》深度研究简报
+│   └── 极昼.md                  # 极昼案模拟法庭案卷原文
+│
+└── vibe-debating/              # 礼乐双轴评价设计稿
+    ├── 0001-螺线谱与礼乐评价体系.md
+    └── issues/                 # 4 个议题
 ```
+
+**辩论实录归档**：迁移至 `ssd/kunpengzhi-archive/擂台存档/`（`mc alias ssd = minio-s3`），仓库不跟踪。
+
+---
 
 ## 快速开始
 
 ```bash
-# 安装依赖
-pip install -r requirements.txt
+# 安装依赖（仅 uv，禁用 pip）
+uv sync
 
-# 配置环境（复制并编辑）
+# 配置环境
 cp .env.example .env
 
-# 启动 Web 界面
-chainlit run app.py --host 0.0.0.0 --port 8080
+# 启动 4v4 辩论主线（Chainlit）
+uv run chainlit run app.py --host 0.0.0.0 --port 8080
+# → http://localhost:8080  密码: 3131
 
-# 打开浏览器 → http://localhost:8080
-# 密码: 3131
+# 启动极昼案模拟法庭（Streamlit）
+uv run streamlit run streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+# → http://localhost:8501  PIN: 3131
+
+# CLI 擂台（无 Web UI）
+uv run python arena.py 1                # 跑辩题 1
+uv run python arena.py --all            # 跑全部 3 个辩题
+uv run python arena.py 1 --no-tts       # 跑辩题 1，无语音
 ```
 
-## 功能
+---
 
-### 🎤 4v4 大专辩论会
-- 正方 4 人 vs 反方 4 人
-- 开篇立论 → 驳论 → 自由辩论 → 总结陈词
-- 预设 3 个辩题 + 自定义辩题
-- 使用 Gemini 2.5 Flash（或配置其他模型）
+## 环境变量
 
-## 辩论全流程
+| 变量 | 用途 | 默认值 |
+|------|------|--------|
+| `DEBATE_MODEL` | 辩论模型名 | `gemini-2.5-flash` |
+| `OPENAI_BASE_URL` | LiteLLM 代理地址 | `http://localhost:4000/v1` |
+| `OPENAI_API_KEY` | LiteLLM 密钥 | - |
+| `CLOUDFLARE_ACCOUNT_ID` | CF 账号 ID（Vectorize + R2） | - |
+| `CLOUDFLARE_API_TOKEN` | CF API Token | - |
+| `R2_BUCKET` | R2 桶名 | `kunpengzhi-tts` |
+| `R2_PUBLIC_BASE` | R2 公开基址 | `https://kunpengzhi-debate.seekkey.eu.org` |
+| `TTS_ENABLED` | 是否启用 TTS | `true` |
+| `TTS_VOICE` | TTS 语音 | `zh-CN-YunxiNeural` |
+| `CHAINLIT_AUTH_SECRET` | JWT 密钥 | - |
+| `CHAINLIT_AUTH_ENABLED` | 是否开启认证 | - |
+| `APP_PASSWORD` | 应用密码 | `3131` |
 
-### 一、内容生产流水线（批处理 → 素材库）
+---
 
-这部分由 `checkpoint_runner.py` / `burn_night.py` 批量执行，产出辩论素材：
+## 内容来源
 
-```
-[选章]
-   ↓ 从《牧人记》《牧兰记》《双约记》《牧月记》中选定章节
-   ↓ 注明：出自哪一卷、第几章、作者
+- **小说文本**：GitHub `Seek-Key-LTD/kunpengzhi`（raw 直读，`digest` 分支）
+- **评论文章**：`digest/彩虹屁/` 与 `digest/批判/`
+- **极昼案卷**：[`research/极昼.md`](research/极昼.md)
+- **深度研究**：[`research/deep-research-brief.md`](research/deep-research-brief.md)
 
+---
 
-### 🍵 讲茶大堂
-- 茶博士：德高望重的老茶客
-- 店小二：消息灵通的跑堂
-- 神秘客：意想不到的视角
-- 账房先生：算赔率、打分
+## 文档导航
 
-### 🔊 微软免费 TTS
-- 基于 edge-tts，无需 API Key
-- 支持多种中文语音
-- 辩论过程自动朗读
+见 [`docs/INDEX.md`](docs/INDEX.md)。
 
-### CLI 独立运行
+## Agent 协作
 
-```bash
-# 直接运行辩论赛
-python debate/engine.py 1 ./存档目录
+见 [`AGENT.md`](AGENT.md)。
 
-# 运行讲茶大堂
-python app.py --teahouse debate_output.md
-```
+## 运维总览
 
-## 预设辩题
-
-| # | 辩题 |
-|---|------|
-| 1 | 白貂皮大衣：全球贸易铁证 vs 过度诠释 |
-| 2 | 木兰的哥哥：历史真相 vs 叙事虚构 |
-| 3 | 产权分割：安史之乱的经济学本质 |
-
-## 架构
-
-```
-用户输入辩题
-    ↓
-Chainlit Web 界面
-    ↓
-pi --model gemini-2.5-flash 运行辩论
-    ↓
-逐人逐句流式输出 + TTS 语音朗读
-    ↓
-辩论完成后 → 讲茶大堂场外评论
-    ↓
-存档 Markdown 文件
-```
-
-## 录制脚本示例
-
-```python
-from debate.engine import DebateOrchestrator
-import asyncio
-
-result = asyncio.run(
-    DebateOrchestrator.run("1", save_dir="./擂台存档")
-)
-print(f"辩论完成: {result['file']}")
-```
+见 [`DEV.md`](DEV.md)。
