@@ -408,6 +408,54 @@ def render_progress_components(current_stage):
 
 render_progress_components(st.session_state.get("current_stage_id", 0))
 
+# ============ 看盘式布局：左 ticker / 中状态 / 右流程进度 ============
+def render_speaker_ticker(current_speaker=None):
+    """左区：发言者 ticker（谁在发言→高亮/blinking）"""
+    st.markdown("### 📊 席位实时状态")
+    st.caption("发言者会高亮闪烁")
+    spk = current_speaker or st.session_state.get("current_speaker", "")
+    for k, v in VAULT_ZODIAC_CABINETS.items():
+        avatar = v["avatars"].get(selected_scenario_key, v["avatars"].get("court", k))
+        if k == spk:
+            st.markdown(f"<div style='background:#FF980033;border-left:3px solid #FF9800;padding:4px 8px;border-radius:4px;margin:2px 0;'><b>💬 {avatar}</b></div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div style='color:#777;padding:4px 8px;border-left:3px solid transparent;'>💎 {avatar}</div>", unsafe_allow_html=True)
+    for k, v in FLOWER_PLEIADES_TABLE.items():
+        avatar = v.get("avatars", {}).get("court", k)
+        st.markdown(f"<div style='color:#9c27b0;padding:4px 8px;'>🌸 {avatar}</div>", unsafe_allow_html=True)
+
+def render_stage_progress():
+    """右区：刑事诉讼法流程进度（当前步高亮，给 layperson）"""
+    st.markdown("### ⚖️ 刑事诉讼法·庭审进度")
+    cur = st.session_state.get("current_stage_id", 0)
+    for stage in STAGES:
+        sid = stage["id"]
+        if sid < cur:
+            mark = "✅"
+            style = "color:#4CAF50;"
+        elif sid == cur:
+            mark = "▶️"
+            style = "color:#FF9800;font-weight:bold;background:#FF980022;"
+        else:
+            mark = "⏳"
+            style = "color:#888;"
+        st.markdown(f"<div style='{style}padding:6px 8px;border-radius:4px;margin:2px 0;'>{mark} {stage['emoji']} {stage['name']}</div>", unsafe_allow_html=True)
+
+tick_col, stat_col, prog_col = st.columns([1, 3, 1], gap="small")
+with tick_col:
+    render_speaker_ticker()
+with stat_col:
+    st.markdown("### ⚖️ 当前庭审")
+    cur = st.session_state.get("current_stage_id", 0)
+    spk = st.session_state.get("current_speaker", "—")
+    st.caption(f"阶段：{cur}/5 · 当前发言：{spk}")
+    st.caption("（中区为庭审主流程，见下方）")
+with prog_col:
+    render_stage_progress()
+st.divider()
+# ============ 看盘式布局结束 ============
+
+
 st.markdown('<div class="main-title">⚖️ 鲲鹏志 · 《极昼》案 12 黄道与紫罗兰掌门法庭</div>', unsafe_allow_html=True)
 st.markdown(f'<div class="sub-title">☀️ 12 黄道内阁 (Jasper规划落宫至vault) + 🌸 昴宿七姐妹 (紫罗兰Manager规划落宫至warden) · 场景：<b>{SCENARIOS[selected_scenario_key]}</b></div>', unsafe_allow_html=True)
 
@@ -569,6 +617,25 @@ if "indictment_text" in st.session_state and st.session_state.indictment_text an
     progress_bar.progress(1.0, text="⚖️ 5 阶段 Vault 权威 12 黄道内阁法庭与紫罗兰掌门合议全流程落幕！全案笔录已永久驻留！")
     st.balloons()
     st.rerun()
+
+# ============ 底部 newsfeed：实时总结流 + 小花组媒体评论（异步） ============
+st.divider()
+st.markdown("### 📰 场外媒体评论团（小花组 · 异步）")
+media_views = {
+    "🌸 玫瑰（BBC 视角）": "西方法理强调程序正义与证据链，此案核心在'利用影响力'与'私人信用'的边界。",
+    "🌸 茉莉（CCTV 视角）": "官方叙事关注国企合规与党纪要求，未报备的救急行为存在程序瑕疵。",
+    "🌸 紫罗兰（Flower Manager）": "汇总各立场：事实层面资金闭环无亏空，但程序层面存在'未报备'瑕疵——法理与情理在此对峙。",
+}
+for k, v in media_views.items():
+    st.markdown(f"**{k}**：{v}")
+
+st.markdown("### 📜 庭审实时总结流（newsfeed）")
+if st.session_state.get("messages"):
+    for msg in st.session_state.messages[-6:]:
+        st.markdown(f"- **{msg['header']}**：{(msg['content'] or '')[:80]}...")
+else:
+    st.caption("庭审尚未开始——敲响法槌后，每步发言将实时滚动总结。")
+# ============ newsfeed 结束 ============
 
 st.divider()
 st.markdown(
