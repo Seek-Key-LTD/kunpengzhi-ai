@@ -20,8 +20,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 🔑 极简 Staging 密码锁 (PIN: 3131)
+# 🔑 极简 Staging 密码锁 (PIN: 3131) — 仅 staging/production 启用，dev 本地跳过
 def check_password():
+    # dev 环境（本地）跳过 PIN 锁；staging(Heroku) 需要
+    import os
+    if os.environ.get("ENV", "") == "dev":
+        return True
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
         
@@ -320,6 +324,15 @@ render_custom_css()
 # 场景选择
 selected_scenario_key = st.sidebar.radio("🎭 请选择场景化身模式：", list(SCENARIOS.keys()), format_func=lambda x: SCENARIOS[x])
 
+def build_court_markdown():
+    """由 session state 笔录拼装存档 Markdown（供自动/手动落盘复用）"""
+    lines = ["# 🦅 鲲鹏志 · 法庭实录", f"场景：{SCENARIOS[selected_scenario_key]}", ""]
+    if st.session_state.get("indictment_text"):
+        lines += ["## 📜 起诉书", st.session_state.indictment_text, ""]
+    for msg in st.session_state.get("messages", []):
+        lines += [f"## {msg['header']}", msg["content"], ""]
+    return "\n".join(lines)
+
 render_progress_components(st.session_state.current_stage_id)
 
 st.markdown('<div class="main-title">⚖️ 鲲鹏志 · 《极昼》案 12 黄道与紫罗兰掌门法庭</div>', unsafe_allow_html=True)
@@ -346,6 +359,21 @@ with st.sidebar:
     for k, v in FLOWER_PLEIADES_TABLE.items():
         avatar = v["avatars"].get(selected_scenario_key, v["avatars"]["court"])
         st.caption(f"• **{v['base_flower']}**: **{avatar}** (`{v['node']}`)")
+
+    st.divider()
+    if st.button("💾 保存庭审实录"):
+        if st.session_state.get("messages"):
+            try:
+                from core.archive import save_run
+                scenario_name = SCENARIOS[selected_scenario_key].split(" ", 1)[-1]
+                st.session_state.last_save_file = save_run(
+                    "法庭", f"极昼-{scenario_name}", build_court_markdown(), {})
+            except Exception as e:
+                st.warning(f"存档失败: {e}")
+        else:
+            st.info("暂无笔录可保存")
+    if st.session_state.get("last_save_file"):
+        st.caption(f"💾 最近存档: `{st.session_state['last_save_file']}`")
 
 article_text = load_research_file("research/极昼.md")
 
@@ -481,6 +509,16 @@ if "indictment_text" in st.session_state and st.session_state.indictment_text an
                 
     st.session_state.current_stage_id = 5
     progress_bar.progress(1.0, text="⚖️ 5 阶段 Vault 权威 12 黄道内阁法庭与紫罗兰掌门合议全流程落幕！全案笔录已永久驻留！")
+
+    # 全流程落幕 → 自动落盘存档（本地 擂台存档/ + MinIO ssd + runs.jsonl）
+    try:
+        from core.archive import save_run
+        scenario_name = SCENARIOS[selected_scenario_key].split(" ", 1)[-1]
+        st.session_state.last_save_file = save_run(
+            "法庭", f"极昼-{scenario_name}", build_court_markdown(), {})
+    except Exception as e:
+        st.warning(f"存档失败: {e}")
+
     st.balloons()
     st.rerun()
 
