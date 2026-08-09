@@ -89,3 +89,34 @@ XGP 资源充足（58GiB RAM / 21GiB 可用，有 debian-12 标准底包）—�
 - [ ] staging PIN 3131 锁（云端）
 - [ ] Flow 引擎范式落地（通用解析 → 化身绑定 → 协议调度）
 - [ ] Underlay/Overlay 双层实现（编剧室博弈 + Credits + Session Contract）
+
+## 附：昴宿七姐妹（Flowers）权威映射表（固定）
+
+> 权威源：`infra/providers/vault/variables.tf`（agents 列表）+ vault gitea token 节点映射
+> 本表为**唯一真相**——所有人统一按此称呼，勿另起名。
+
+| agent | 花名 | 物理节点 | 定位 | 状态 |
+|-------|------|---------|------|------|
+| meigui | 玫瑰 | ash1 | 小花合议团 · 人道观察 | ✅ 落宫 |
+| qiangwei | 蔷薇 | ash2 | 小花合议团 · 人道观察 | ✅ 落宫 |
+| moli | 茉莉 | ch1 | 小花合议团 · 人道观察 | ✅ 落宫 |
+| muxu | 苜蓿 | ch2 | 小花合议团 · 人道观察 | ✅ 落宫 |
+| tumi | 荼蘼 | ash3 | 小花合议团 · 人道观察 | ✅ 落宫 |
+| zhuyu | 茱萸 | de | 小花合议团 · 人道观察 | ✅ 落宫 |
+| **violet** | **紫罗兰** | ⏳ warden（规划） | **Flower Manager（小花组掌门）** | ⏳ 未落宫 |
+
+**Group Policy（固定）**：
+- 石头组（12 黄道内阁）→ **Acting Agent**（台前博弈履职）
+- 小花组（昴宿七姐妹）→ **场景专家合议 / Review / Jury Panel**
+- **Violet（紫罗兰）= Flower Manager**（小花组掌门，未落宫）
+
+## 附：12 黄道内阁权威名单补充（石头组）
+
+| agent | 石 | 节点 | 状态 |
+|-------|-----|------|------|
+| jasper | 碧石（非 Jade！） | ⏳ vault 宿主（规划） | ⏳ 未落宫 |
+| obsidian | 黑曜石 | xgp | ✅ |
+| luna | 月华石 | onecloud2 | ✅ |
+| leopard | 豹纹石 | suse（被告人尊长席） | ✅ |
+
+> ⚠️ **非权威**：`jade`、`opal`、`garnet`、`pearl` 等不在 Vault Space 名单内，勿用于工位。
