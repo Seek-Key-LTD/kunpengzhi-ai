@@ -13,6 +13,7 @@ import openai
 import os
 import time
 import html
+from pathlib import Path
 from core.token_ring import RobertTokenRingEngine
 from core.contract import default_contract, summarize_contract
 from core.script_compiler import compile_contract
