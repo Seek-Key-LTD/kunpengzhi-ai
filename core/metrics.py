@@ -91,6 +91,69 @@ def _autodetect_keywords(text: str, filename: str = "") -> list[str]:
     return []
 
 
+def contribution_scan(text: str, keywords: list[str] | None = None) -> list[dict]:
+    """逐发言轮计算对全局论证的边际贡献（图灵测试 2.0 跑分核心）。
+
+    每个发言的贡献 = 增量覆盖×2 + 回应性 + 影响力 − 冗余×0.5：
+      - inc_cover: 该轮首次命中的案卷锚点数（补论证缺口）
+      - redundancy: 复述已覆盖锚点 + 与全局公共 4-gram 的重合（注水）
+      - responsiveness: 与前一/前二轮共享的锚点数（真接话证据）
+      - influence: 该轮命中锚点被后续轮再次引用的次数（推动全局）
+    按 "### {席位}" 轮次切分；无轮次结构时返回 []。
+    """
+    keywords = keywords or []
+    rounds = []
+    cur_header, cur_lines = None, []
+    for line in text.split("\n"):
+        if line.strip().startswith("### "):
+            if cur_header is not None:
+                rounds.append((cur_header, "\n".join(cur_lines)))
+            cur_header, cur_lines = line.strip()[4:].strip(), []
+        else:
+            cur_lines.append(line)
+    if cur_header is not None:
+        rounds.append((cur_header, "\n".join(cur_lines)))
+    if len(rounds) < 2:
+        return []
+
+    covered = set()
+    results = []
+    grams_global = set()
+    plain = re.sub(r"\s+", "", text)
+    for i in range(len(plain) - 3):
+        grams_global.add(plain[i:i + 4])
+
+    for i, (header, body) in enumerate(rounds):
+        hits = {k for k in keywords if k in body}
+        inc_cover = len(hits - covered)
+        redundancy_covered = len(hits & covered)
+        body_plain = re.sub(r"\s+", "", body)
+        body_grams = {body_plain[j:j + 4] for j in range(len(body_plain) - 3)} if len(body_plain) > 3 else set()
+        # 与全文其他轮的公共 gram 比例 ≈ 套话度（用整篇 gram 集合近似，含自身则偏稳）
+        shared_rate = (len(body_grams & grams_global) / len(body_grams)) if body_grams else 0.0
+        redundancy = redundancy_covered + round(shared_rate * 2, 2)
+
+        prev_union = set()
+        for h, b in rounds[max(0, i - 2):i]:
+            prev_union |= {k for k in keywords if k in b}
+        responsiveness = len(hits & prev_union)
+
+        influence = 0
+        for h, b in rounds[i + 1:]:
+            influence += sum(1 for k in hits if k in b)
+
+        covered |= hits
+        results.append({
+            "header": header,
+            "inc_cover": inc_cover,
+            "redundancy": redundancy,
+            "responsiveness": responsiveness,
+            "influence": influence,
+            "contribution": round(inc_cover * 2 + responsiveness + influence - redundancy * 0.5, 2),
+        })
+    return results
+
+
 def record_metrics(text: str, filename: str, archive_dir: str | Path,
                    keywords: list[str] | None = None, push: bool = True) -> dict:
     """扫描一次产出并追加 metrics.jsonl（push=True 时推 MinIO + lake1）。
@@ -101,6 +164,15 @@ def record_metrics(text: str, filename: str, archive_dir: str | Path,
     metric = scan(text, keywords)
     metric["file"] = filename
     metric["ts"] = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # 发言贡献度（法庭/多轮笔录按 "### {席位}" 轮次逐轮计算，随产出自动落库）
+    if metric.get("speech_rounds", 0) > 0:
+        contribs = contribution_scan(text, keywords)
+        if contribs:
+            metric["contributions"] = contribs
+            metric["top_contributors"] = [
+                c["header"] for c in sorted(contribs, key=lambda c: c["contribution"], reverse=True)[:5]
+            ]
 
     archive_dir = Path(archive_dir)
     archive_dir.mkdir(parents=True, exist_ok=True)
