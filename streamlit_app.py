@@ -793,7 +793,8 @@ with mid_col:
             fname = close_stream(
                 st.session_state["stream_path"], st.session_state["stream_file"],
                 st.session_state["stream_ts"], "法庭", "极昼-阜阳中院",
-                {"steps": len(st.session_state.get("messages", [])), "scenario": selected_scenario_key},
+                {"steps": len(st.session_state.get("messages", [])), "scenario": selected_scenario_key,
+                 "_steps": engine.steps},
             )
             st.success(f"💾 庭审实录已流式落盘 (本地 + MinIO + lake1): {fname}")
         except Exception as e:

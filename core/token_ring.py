@@ -8,6 +8,8 @@ token_holder 令牌持有 / 定向接话共享上下文 / 前发言人陈词 / �
 - 同阵营既往陈词：按 team 定向注入（prosecutor/defense/judge/court）
 - 小花组：普通成员只接前一位（独立维度防复读），violet 注入全部小花（汇总所需）
 """
+import datetime
+import time
 import openai
 
 
@@ -18,6 +20,7 @@ class RobertTokenRingEngine:
         self.scenario = scenario
         self.token_holder = "ruby"          # 令牌初始在审判长（红宝石）手中
         self.shared_context = []            # 共享法庭笔录上下文 (Shared Memory)
+        self.steps = []                     # 过程元数据：每步耗时/模型/上下文注入清单
         self._model = "nova-deepseek-v4-flash-aggr"
 
     # ---- 共享上下文 ----
@@ -83,6 +86,8 @@ class RobertTokenRingEngine:
             f"你的任务指令：{instruction}\n"
             f"发言要求：沉静、严肃、有法理深度，直接切入，不超 400 字。"
         )
+        start_ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        t0 = time.time()
         try:
             resp = self.client.chat.completions.create(
                 model=model,
@@ -90,7 +95,20 @@ class RobertTokenRingEngine:
                 timeout=60,
             )
             content = resp.choices[0].message.content.strip()
+            ok = True
         except Exception as e:
             content = f"（{header} 引擎调用失败: {e}）"
+            ok = False
+        self.steps.append({
+            "seat": en_key,
+            "header": header,
+            "team": team,
+            "model": model,
+            "start_ts": start_ts,
+            "duration_sec": round(time.time() - t0, 2),
+            "chars": len(content),
+            "ok": ok,
+            "ctx": [{"label": label, "chars": len(c)} for label, c in blocks],
+        })
         self.add_to_shared_context(header, content, team)
         return (header, content)

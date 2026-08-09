@@ -53,7 +53,12 @@ def _push_to_ssd(archive_dir: Path, relpath: str) -> bool:
 
 
 def _finalize(target_dir: Path, filename: str, ts: str, kind: str, title: str, meta: dict, text: str) -> None:
-    """存档收尾（save_run 与 close_stream 共用）：索引 + MinIO + lake1 + 指标。"""
+    """存档收尾（save_run 与 close_stream 共用）：索引 + MinIO + lake1 + 指标。
+
+    meta 可带 "_steps"：每步过程元数据（耗时/模型/上下文注入清单），
+    摘要进索引行，完整数组仅落 lake1 文档（不进 runs.jsonl）。
+    """
+    steps_detail = meta.pop("_steps", None)
     entry = {
         "kind": kind,
         "title": title,
@@ -63,6 +68,11 @@ def _finalize(target_dir: Path, filename: str, ts: str, kind: str, title: str, m
         "commit": _git_commit(),
         "env": os.environ.get("HOSTNAME", os.environ.get("COMPUTERNAME", "unknown")),
     }
+    if steps_detail:
+        entry["steps_count"] = len(steps_detail)
+        entry["duration_total_sec"] = round(sum(s.get("duration_sec", 0) for s in steps_detail), 2)
+        entry["avg_step_sec"] = round(entry["duration_total_sec"] / max(len(steps_detail), 1), 2)
+        entry["steps_failed"] = sum(1 for s in steps_detail if not s.get("ok", True))
     entry.update({k: v for k, v in meta.items() if k not in entry})
 
     with open(target_dir / RUNS_INDEX, "a", encoding="utf-8") as f:
@@ -73,7 +83,10 @@ def _finalize(target_dir: Path, filename: str, ts: str, kind: str, title: str, m
 
     try:
         from core.lake import upsert as lake_upsert
-        lake_upsert(filename, entry)
+        doc = dict(entry)
+        if steps_detail:
+            doc["steps"] = steps_detail
+        lake_upsert(filename, doc)
     except Exception as e:
         log.warning(f"Archive: lake1 落库失败: {e}")
 

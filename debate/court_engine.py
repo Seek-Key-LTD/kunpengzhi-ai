@@ -8,6 +8,9 @@
 - RobertTokenRingEngine: 共享上下文 + 令牌发言执行器 + 独立起诉书撰写
 """
 
+import datetime
+import time
+
 import openai
 
 OPENAI_BASE_URL = "https://litellm.capitaltrain.cn/v1"
@@ -102,6 +105,7 @@ class RobertTokenRingEngine:
         self.client = openai.OpenAI(base_url=base_url, api_key=api_key)
         self.article_text = article_text
         self.shared_context = []
+        self.steps = []
 
     def add_to_shared_context(self, seat_key, content, team=None):
         seat = SEATS_DICT[seat_key]
@@ -177,6 +181,8 @@ class RobertTokenRingEngine:
             "本案关乎一个人、一个家族与时代的承重。请以极其严肃专业、沉静有力的语气陈词与答辩。"
         )
 
+        start_ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        t0 = time.time()
         try:
             resp = self.client.chat.completions.create(
                 model=seat["model"],
@@ -187,8 +193,21 @@ class RobertTokenRingEngine:
                 timeout=55
             )
             content = resp.choices[0].message.content.strip()
+            ok = True
         except Exception as e:
             content = f"（{header} 连线超时: {e}）"
+            ok = False
 
+        self.steps.append({
+            "seat": seat_key,
+            "header": header,
+            "team": seat.get("team", ""),
+            "model": seat["model"],
+            "start_ts": start_ts,
+            "duration_sec": round(time.time() - t0, 2),
+            "chars": len(content),
+            "ok": ok,
+            "ctx": [{"label": label, "chars": len(c)} for label, c in blocks],
+        })
         self.add_to_shared_context(seat_key, content)
         return header, content

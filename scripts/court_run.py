@@ -53,7 +53,7 @@ async def main():
 
     filename = close_stream(
         path, filename, ts, "法庭", "极昼-阜阳中院",
-        {"models": ",".join(sorted(models)), "steps": total + 1},
+        {"models": ",".join(sorted(models)), "steps": total + 1, "_steps": engine.steps},
     )
 
     print(f"\n{'=' * 60}")
