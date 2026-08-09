@@ -12,6 +12,20 @@ import openai
 import os
 import time
 
+import os
+def check_password():
+    if os.environ.get(ENV, ) == dev:
+        return True
+    if authenticated not in st.session_state:
+        st.session_state.authenticated = False
+    if not st.session_state.authenticated:
+        pin = st.text_input(🔑 访客 PIN 码（3131）：, type=password)
+        if pin == 3131:
+            st.session_state.authenticated = True
+            st.rerun()
+        return False
+    return True
+
 st.set_page_config(
     page_title="鲲鹏志 · 《极昼》阜阳案沉静模拟法庭",
     page_icon="⚖️",
