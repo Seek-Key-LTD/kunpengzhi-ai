@@ -349,7 +349,7 @@ def render_custom_css():
 render_custom_css()
 
 # 场景选择
-selected_scenario_key = st.sidebar.radio("🎭 请选择场景化身模式：", list(SCENARIOS.keys()), format_func=lambda x: SCENARIOS[x])
+selected_scenario_key = "court"  # 模式由 Coding Agent 剧本决定（暂固定 court）
 
 # 5 个核心庭审阶段定义（刑事诉讼法流程）
 STAGES = [
@@ -409,11 +409,8 @@ def render_progress_components(current_stage):
 
 render_progress_components(st.session_state.get("current_stage_id", 0))
 
-# ============ 看盘式布局：左 ticker / 中状态 / 右流程进度 ============
 def render_speaker_ticker(current_speaker=None):
-    """左区：发言者 ticker（谁在发言→高亮/blinking）"""
-    st.markdown("### 📊 席位实时状态")
-    st.caption("发言者会高亮闪烁")
+    """左区（sidebar）：发言者 ticker——谁在发言→高亮"""
     spk = current_speaker or st.session_state.get("current_speaker", "")
     for k, v in VAULT_ZODIAC_CABINETS.items():
         avatar = v["avatars"].get(selected_scenario_key, v["avatars"].get("court", k))
@@ -426,221 +423,252 @@ def render_speaker_ticker(current_speaker=None):
         st.markdown(f"<div style='color:#9c27b0;padding:4px 8px;'>🌸 {avatar}</div>", unsafe_allow_html=True)
 
 def render_stage_progress():
-    """右区：刑事诉讼法流程进度（当前步高亮，给 layperson）"""
+    """右区（25%）：刑事诉讼法流程进度——当前步高亮（给 layperson）"""
     st.markdown("### ⚖️ 刑事诉讼法·庭审进度")
     cur = st.session_state.get("current_stage_id", 0)
     for stage in STAGES:
         sid = stage["id"]
         if sid < cur:
-            mark = "✅"
-            style = "color:#4CAF50;"
+            mark, style = "✅", "color:#4CAF50;"
         elif sid == cur:
-            mark = "▶️"
-            style = "color:#FF9800;font-weight:bold;background:#FF980022;"
+            mark, style = "▶️", "color:#FF9800;font-weight:bold;background:#FF980022;"
         else:
-            mark = "⏳"
-            style = "color:#888;"
+            mark, style = "⏳", "color:#888;"
         st.markdown(f"<div style='{style}padding:6px 8px;border-radius:4px;margin:2px 0;'>{mark} {stage['emoji']} {stage['name']}</div>", unsafe_allow_html=True)
 
-tick_col, stat_col, prog_col = st.columns([1, 3, 1], gap="small")
-with tick_col:
+def build_court_markdown() -> str:
+    lines = ["# 🦅 鲲鹏志 · 法庭实录", ""]
+    lines.append(f"场景: {SCENARIOS.get(selected_scenario_key, selected_scenario_key)}")
+    lines.append(f"阶段进度: {st.session_state.get('current_stage_id', 0)}/5")
+    lines.append("")
+    if st.session_state.get("indictment_text"):
+        lines += ["## 📜 起诉书 (阜检刑诉〔2026〕88号)", st.session_state.indictment_text, ""]
+    for msg in st.session_state.get("messages", []):
+        lines += [f"## {msg['header']}", msg.get("content", ""), ""]
+    return "\n".join(lines)
+
+
+def save_court_transcript() -> str:
+    from core.archive import save_run
+    return save_run(
+        "法庭", "极昼-阜阳中院", build_court_markdown(),
+        {"steps": len(st.session_state.get("messages", [])), "scenario": selected_scenario_key},
+    )
+
+
+left_col, mid_col, right_col = st.columns([1, 2, 1], gap="small")
+with left_col:
     render_speaker_ticker()
-with stat_col:
-    st.markdown("### ⚖️ 当前庭审")
-    cur = st.session_state.get("current_stage_id", 0)
-    spk = st.session_state.get("current_speaker", "—")
-    st.caption(f"阶段：{cur}/5 · 当前发言：{spk}")
-    st.caption("（中区为庭审主流程，见下方）")
-with prog_col:
+with right_col:
     render_stage_progress()
-st.divider()
-# ============ 看盘式布局结束 ============
 
 
-st.markdown('<div class="main-title">⚖️ 鲲鹏志 · 《极昼》案 12 黄道与紫罗兰掌门法庭</div>', unsafe_allow_html=True)
-st.markdown(f'<div class="sub-title">☀️ 12 黄道内阁 (Jasper规划落宫至vault) + 🌸 昴宿七姐妹 (紫罗兰Manager规划落宫至warden) · 场景：<b>{SCENARIOS[selected_scenario_key]}</b></div>', unsafe_allow_html=True)
 
-def load_research_file(filepath):
-    if not filepath or not os.path.exists(filepath):
-        return ""
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            return f.read()
-    except Exception as e:
-        return f"加载文献失败: {e}"
 
-with st.sidebar:
-    st.divider()
-    st.markdown("### ☀️ Vault 12 黄道内阁 (Acting Agents)")
-    for k, v in VAULT_ZODIAC_CABINETS.items():
-        avatar = v["avatars"].get(selected_scenario_key, v["avatars"]["court"])
-        st.caption(f"• **{v['base_stone']}**: **{avatar}** (`{v['node']}`)")
+
+with mid_col:
+    st.markdown('<div class="main-title">⚖️ 鲲鹏志 · 《极昼》案 12 黄道与紫罗兰掌门法庭</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sub-title">☀️ 12 黄道内阁 (Jasper规划落宫至vault) + 🌸 昴宿七姐妹 (紫罗兰Manager规划落宫至warden) · 场景：<b>{SCENARIOS[selected_scenario_key]}</b></div>', unsafe_allow_html=True)
+
+    def load_research_file(filepath):
+        if not filepath or not os.path.exists(filepath):
+            return ""
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                return f.read()
+        except Exception as e:
+            return f"加载文献失败: {e}"
+
+    with st.sidebar:
+        st.markdown("### 📊 席位实时状态（ticker）")
+        render_speaker_ticker()
+        st.divider()
+        st.markdown("### ☀️ Vault 12 黄道内阁 (Acting Agents)")
+        for k, v in VAULT_ZODIAC_CABINETS.items():
+            avatar = v["avatars"].get(selected_scenario_key, v["avatars"]["court"])
+            st.caption(f"• **{v['base_stone']}**: **{avatar}** (`{v['node']}`)")
         
-    st.divider()
-    st.markdown("### 🌸 昴宿七姐妹星团 (Flower Team)")
-    for k, v in FLOWER_PLEIADES_TABLE.items():
-        avatar = v["avatars"].get(selected_scenario_key, v["avatars"]["court"])
-        st.caption(f"• **{v['base_flower']}**: **{avatar}** (`{v['node']}`)")
+        st.divider()
+        st.markdown("### 🌸 昴宿七姐妹星团 (Flower Team)")
+        for k, v in FLOWER_PLEIADES_TABLE.items():
+            avatar = v["avatars"].get(selected_scenario_key, v["avatars"]["court"])
+            st.caption(f"• **{v['base_flower']}**: **{avatar}** (`{v['node']}`)")
 
-article_text = load_research_file("research/极昼.md")
+        st.divider()
+        if st.button("💾 保存庭审实录 (本地 + MinIO + lake1)", use_container_width=True):
+            if st.session_state.get("messages"):
+                try:
+                    fname = save_court_transcript()
+                    st.success(f"✅ 已落盘存档: {fname}")
+                except Exception as e:
+                    st.warning(f"落盘失败（不影响笔录展示）: {e}")
+            else:
+                st.warning("暂无庭审笔录可保存")
 
-with st.expander("📌 安徽省阜阳市监委移送案卷与《极昼.md》研究全文", expanded=True):
-    st.markdown("### **案由：尊长涉嫌利用影响力受贿罪、国有公司人员失职罪案**")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info("**留置事实**：2026年8月3日从住处带走送至安徽阜阳留置，由阜阳市监委移送阜阳市检察院审查起诉。")
-    with col2:
-        st.success("**辩方四罪排除**：受贿、滥用职权、贪污、高利转贷完全不成立，从旧兼从轻。")
+    article_text = load_research_file("research/极昼.md")
+
+    with st.expander("📌 安徽省阜阳市监委移送案卷与《极昼.md》研究全文", expanded=True):
+        st.markdown("### **案由：尊长涉嫌利用影响力受贿罪、国有公司人员失职罪案**")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info("**留置事实**：2026年8月3日从住处带走送至安徽阜阳留置，由阜阳市监委移送阜阳市检察院审查起诉。")
+        with col2:
+            st.success("**辩方四罪排除**：受贿、滥用职权、贪污、高利转贷完全不成立，从旧兼从轻。")
         
-    if article_text:
-        st.markdown(f'<div style="background:#f8f9fa;padding:10px;border-left:4px solid #B71C1C;font-size:0.88rem;max-height:180px;overflow-y:auto;">{article_text[:2500]}...\n\n*(共 {len(article_text)} 字符全量案卷)*</div>', unsafe_allow_html=True)
+        if article_text:
+            st.markdown(f'<div style="background:#f8f9fa;padding:10px;border-left:4px solid #B71C1C;font-size:0.88rem;max-height:180px;overflow-y:auto;">{article_text[:2500]}...\n\n*(共 {len(article_text)} 字符全量案卷)*</div>', unsafe_allow_html=True)
 
-st.divider()
+    st.divider()
 
-col_btn1, col_btn2 = st.columns([2, 1])
-with col_btn1:
-    start_btn = st.button("⚖️ 敲响法槌 · 启动 12 黄道与紫罗兰掌门法庭演练", type="primary", use_container_width=True)
-with col_btn2:
-    clear_btn = st.button("🧹 清空庭审笔录", use_container_width=True)
+    col_btn1, col_btn2 = st.columns([2, 1])
+    with col_btn1:
+        start_btn = st.button("⚖️ 敲响法槌 · 启动 12 黄道与紫罗兰掌门法庭演练", type="primary", use_container_width=True)
+    with col_btn2:
+        clear_btn = st.button("🧹 清空庭审笔录", use_container_width=True)
 
-if clear_btn:
-    st.session_state.messages = []
-    st.session_state.indictment_text = ""
-    st.session_state.current_stage_id = 0
-    st.rerun()
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-if "indictment_text" in st.session_state and st.session_state.indictment_text:
-    st.markdown("### 📜 公诉机关独立撰写之正式起诉书")
-    st.markdown(f'<div class="indictment-box">{st.session_state.indictment_text}</div>', unsafe_allow_html=True)
-
-st.markdown("### 📜 阜阳中院 12 黄道内阁与紫罗兰掌门笔录 (Shared Memory 永久驻留)")
-chat_container = st.container()
-
-with chat_container:
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"], avatar=msg.get("avatar", "⚖️")):
-            st.markdown(f"### {msg['header']}")
-            st.markdown(msg["content"])
-
-if start_btn:
-    st.session_state.messages = []
-    st.session_state.current_stage_id = 1
-    engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text, selected_scenario_key)
-    
-    st.session_state.current_stage_id = 2
-    topaz_avatar = VAULT_ZODIAC_CABINETS["topaz"]["avatars"].get(selected_scenario_key, VAULT_ZODIAC_CABINETS["topaz"]["avatars"]["court"])
-    with st.spinner(f"⚖️ 公诉团队 ({topaz_avatar}) 正在独立撰写《起诉书》(阜检刑诉〔2026〕88号)..."):
-        indictment_text = engine.draft_official_indictment()
-        st.session_state.indictment_text = indictment_text
+    if clear_btn:
+        st.session_state.messages = []
+        st.session_state.indictment_text = ""
+        st.session_state.current_stage_id = 0
         st.rerun()
 
-if "indictment_text" in st.session_state and st.session_state.indictment_text and len(st.session_state.messages) == 0:
-    engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text, selected_scenario_key)
-    topaz_avatar = VAULT_ZODIAC_CABINETS["topaz"]["avatars"].get(selected_scenario_key, VAULT_ZODIAC_CABINETS["topaz"]["avatars"]["court"])
-    engine.add_to_shared_context(topaz_avatar, f"【起诉书全景】:\n{st.session_state.indictment_text}")
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    if "indictment_text" in st.session_state and st.session_state.indictment_text:
+        st.markdown("### 📜 公诉机关独立撰写之正式起诉书")
+        st.markdown(f'<div class="indictment-box">{st.session_state.indictment_text}</div>', unsafe_allow_html=True)
+
+    st.markdown("### 📜 阜阳中院 12 黄道内阁与紫罗兰掌门笔录 (Shared Memory 永久驻留)")
+    chat_container = st.container()
+
+    with chat_container:
+        for msg in st.session_state.messages:
+            with st.chat_message(msg["role"], avatar=msg.get("avatar", "⚖️")):
+                st.markdown(f"### {msg['header']}")
+                st.markdown(msg["content"])
+
+    if start_btn:
+        st.session_state.messages = []
+        st.session_state.current_stage_id = 1
+        engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text, selected_scenario_key)
     
-    progress_bar = st.progress(0, text="正在敲响法槌，带被告人尊长到庭...")
+        st.session_state.current_stage_id = 2
+        topaz_avatar = VAULT_ZODIAC_CABINETS["topaz"]["avatars"].get(selected_scenario_key, VAULT_ZODIAC_CABINETS["topaz"]["avatars"]["court"])
+        with st.spinner(f"⚖️ 公诉团队 ({topaz_avatar}) 正在独立撰写《起诉书》(阜检刑诉〔2026〕88号)..."):
+            indictment_text = engine.draft_official_indictment()
+            st.session_state.indictment_text = indictment_text
+            st.rerun()
+
+    if "indictment_text" in st.session_state and st.session_state.indictment_text and len(st.session_state.messages) == 0:
+        engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text, selected_scenario_key)
+        topaz_avatar = VAULT_ZODIAC_CABINETS["topaz"]["avatars"].get(selected_scenario_key, VAULT_ZODIAC_CABINETS["topaz"]["avatars"]["court"])
+        engine.add_to_shared_context(topaz_avatar, f"【起诉书全景】:\n{st.session_state.indictment_text}")
     
-    # Vault 内阁流转
-    COURT_FLOW = [
-        # 阶段 1
-        (1, VAULT_ZODIAC_CABINETS["ruby"], "敲响法槌！宣布：‘安徽省阜阳市中级人民法院刑事审判第一庭，现在开庭！带被告人尊长到庭！’核对尊长基本信息，告知回避权！"),
-        (1, DEFENDANT_SEAT, "【被告人尊长实时应答】回答：‘报告审判长，我叫尊长，原中煤党组成员，2026年8月3日被带至阜阳留置... 身份属实！听清了权利，不申请回避！’"),
-        
-        # 阶段 2
-        (2, VAULT_ZODIAC_CABINETS["ruby"], "宣布准备结束，请阜阳市检察院公诉团队宣读《阜检刑诉〔2026〕88号起诉书》！"),
-        (2, VAULT_ZODIAC_CABINETS["topaz"], "宣读《阜检刑诉〔2026〕88号起诉书》：指控2016年春节尊长筹措1000万划转亲家企业，构成利用影响力受贿罪与失职罪！"),
-        (2, VAULT_ZODIAC_CABINETS["carbonado"], "受公诉人指派补充举证：强调职务影响与私情拆借的隐形背书与破窗效应！"),
-        (2, VAULT_ZODIAC_CABINETS["obsidian"], "【黑曜石监察特派员】监察法务补强举证：强调监委调查留置移送卷宗合规性！"),
-        
-        # 阶段 3
-        (3, VAULT_ZODIAC_CABINETS["diamond"], "发表无罪答辩：针对起诉书，掏出《极昼.md》【四大罪名排除矩阵】与1000万10次平价还本水单书证！"),
-        (3, VAULT_ZODIAC_CABINETS["jasper"], "【碧石大律师 (vault LXC)】补充资深合规辩护：引用《刑法》第12条从旧兼从轻原则，阻断2016年4月新司法解释的违宪追溯！"),
-        (3, VAULT_ZODIAC_CABINETS["quartz"], "法理分析：证明主观非法占有目的为零，客观中煤财产零亏空！"),
-        (3, VAULT_ZODIAC_CABINETS["argentite"], "伦理与法理双重质证：还原2015-2016山河四省最冷冬天背景，致敬时代的承重梁！"),
-        
-        # 阶段 4
-        (4, LUNA_JUDGE, "【合议庭质询】审判员月华石发难质询：追问公诉人有无公款损失凭证，追问辩护人如何证明脱离职务影响？"),
-        (4, VAULT_ZODIAC_CABINETS["azure"], "【合议庭质询】审判员天蓝石质询：要求控辩双方说明从旧兼从轻在2016年2月行为着手点的适用边界！"),
-        (4, VAULT_ZODIAC_CABINETS["emerald"], "【资产审计质询】祖母绿审计师核查账目审计书证！"),
-        
-        (4, FLOWER_PLEIADES_TABLE["meigui"], FLOWER_PLEIADES_TABLE["meigui"]["instruction"]),
-        (4, FLOWER_PLEIADES_TABLE["qiangwei"], FLOWER_PLEIADES_TABLE["qiangwei"]["instruction"]),
-        (4, FLOWER_PLEIADES_TABLE["tumi"], FLOWER_PLEIADES_TABLE["tumi"]["instruction"]),
-        (4, FLOWER_PLEIADES_TABLE["zhuyu"], FLOWER_PLEIADES_TABLE["zhuyu"]["instruction"]),
-        (4, FLOWER_PLEIADES_TABLE["moli"], FLOWER_PLEIADES_TABLE["moli"]["instruction"]),
-        (4, FLOWER_PLEIADES_TABLE["muxu"], FLOWER_PLEIADES_TABLE["muxu"]["instruction"]),
-        (4, FLOWER_PLEIADES_TABLE["violet"], FLOWER_PLEIADES_TABLE["violet"]["instruction"]),
-        
-        # 阶段 5
-        (5, DEFENDANT_SEAT, "【被告人尊长最后陈述】发表最后陈述：‘在阜阳留置室的这半年极昼里我问心无愧，我救的是企业和工人，未占公家一分钱！’"),
-        (5, VAULT_ZODIAC_CABINETS["ruby"], "收回发言权！结合 Vault 12 黄道内阁质询及紫罗兰掌门带领的七姐妹星团专家合议意见书，敲响法槌，宣告被告人尊长无罪，发表判词！")
-    ]
+        progress_bar = st.progress(0, text="正在敲响法槌，带被告人尊长到庭...")
     
-    total_steps = len(COURT_FLOW)
-    for idx, (stage_id, seat_info, instruction) in enumerate(COURT_FLOW, 1):
-        st.session_state.current_stage_id = stage_id
-        avatar_name = seat_info["avatars"].get(selected_scenario_key, seat_info["avatars"]["court"])
+        # Vault 内阁流转
+        COURT_FLOW = [
+            # 阶段 1
+            (1, VAULT_ZODIAC_CABINETS["ruby"], "敲响法槌！宣布：‘安徽省阜阳市中级人民法院刑事审判第一庭，现在开庭！带被告人尊长到庭！’核对尊长基本信息，告知回避权！"),
+            (1, DEFENDANT_SEAT, "【被告人尊长实时应答】回答：‘报告审判长，我叫尊长，原中煤党组成员，2026年8月3日被带至阜阳留置... 身份属实！听清了权利，不申请回避！’"),
         
-        progress_bar.progress(idx / total_steps, text=f"【阶段 {stage_id}/5 推进 -> {avatar_name}】 ...")
+            # 阶段 2
+            (2, VAULT_ZODIAC_CABINETS["ruby"], "宣布准备结束，请阜阳市检察院公诉团队宣读《阜检刑诉〔2026〕88号起诉书》！"),
+            (2, VAULT_ZODIAC_CABINETS["topaz"], "宣读《阜检刑诉〔2026〕88号起诉书》：指控2016年春节尊长筹措1000万划转亲家企业，构成利用影响力受贿罪与失职罪！"),
+            (2, VAULT_ZODIAC_CABINETS["carbonado"], "受公诉人指派补充举证：强调职务影响与私情拆借的隐形背书与破窗效应！"),
+            (2, VAULT_ZODIAC_CABINETS["obsidian"], "【黑曜石监察特派员】监察法务补强举证：强调监委调查留置移送卷宗合规性！"),
         
-        header, content = engine.execute_speech(seat_info, instruction)
+            # 阶段 3
+            (3, VAULT_ZODIAC_CABINETS["diamond"], "发表无罪答辩：针对起诉书，掏出《极昼.md》【四大罪名排除矩阵】与1000万10次平价还本水单书证！"),
+            (3, VAULT_ZODIAC_CABINETS["jasper"], "【碧石大律师 (vault LXC)】补充资深合规辩护：引用《刑法》第12条从旧兼从轻原则，阻断2016年4月新司法解释的违宪追溯！"),
+            (3, VAULT_ZODIAC_CABINETS["quartz"], "法理分析：证明主观非法占有目的为零，客观中煤财产零亏空！"),
+            (3, VAULT_ZODIAC_CABINETS["argentite"], "伦理与法理双重质证：还原2015-2016山河四省最冷冬天背景，致敬时代的承重梁！"),
         
-        if "team" in seat_info and seat_info["team"] == "judge":
-            avatar = "🏛️"
-        elif "team" in seat_info and seat_info["team"] == "prosecutor":
-            avatar = "⚖️"
-        elif "team" in seat_info and seat_info["team"] == "defense":
-            avatar = "🛡️"
-        elif "team" in seat_info and seat_info["team"] == "court":
-            avatar = "📜"
-        else:
-            avatar = "👤" if seat_info["en_key"] == "leopard" else "🌸"
+            # 阶段 4
+            (4, LUNA_JUDGE, "【合议庭质询】审判员月华石发难质询：追问公诉人有无公款损失凭证，追问辩护人如何证明脱离职务影响？"),
+            (4, VAULT_ZODIAC_CABINETS["azure"], "【合议庭质询】审判员天蓝石质询：要求控辩双方说明从旧兼从轻在2016年2月行为着手点的适用边界！"),
+            (4, VAULT_ZODIAC_CABINETS["emerald"], "【资产审计质询】祖母绿审计师核查账目审计书证！"),
         
-        msg_obj = {
-            "role": avatar_name,
-            "header": header,
-            "content": content,
-            "avatar": avatar
-        }
-        st.session_state.messages.append(msg_obj)
+            (4, FLOWER_PLEIADES_TABLE["meigui"], FLOWER_PLEIADES_TABLE["meigui"]["instruction"]),
+            (4, FLOWER_PLEIADES_TABLE["qiangwei"], FLOWER_PLEIADES_TABLE["qiangwei"]["instruction"]),
+            (4, FLOWER_PLEIADES_TABLE["tumi"], FLOWER_PLEIADES_TABLE["tumi"]["instruction"]),
+            (4, FLOWER_PLEIADES_TABLE["zhuyu"], FLOWER_PLEIADES_TABLE["zhuyu"]["instruction"]),
+            (4, FLOWER_PLEIADES_TABLE["moli"], FLOWER_PLEIADES_TABLE["moli"]["instruction"]),
+            (4, FLOWER_PLEIADES_TABLE["muxu"], FLOWER_PLEIADES_TABLE["muxu"]["instruction"]),
+            (4, FLOWER_PLEIADES_TABLE["violet"], FLOWER_PLEIADES_TABLE["violet"]["instruction"]),
         
-        with chat_container:
-            with st.chat_message(avatar_name, avatar=avatar):
-                st.markdown(f"### {header}")
-                st.markdown(content)
-        time.sleep(0.5)
+            # 阶段 5
+            (5, DEFENDANT_SEAT, "【被告人尊长最后陈述】发表最后陈述：‘在阜阳留置室的这半年极昼里我问心无愧，我救的是企业和工人，未占公家一分钱！’"),
+            (5, VAULT_ZODIAC_CABINETS["ruby"], "收回发言权！结合 Vault 12 黄道内阁质询及紫罗兰掌门带领的七姐妹星团专家合议意见书，敲响法槌，宣告被告人尊长无罪，发表判词！")
+        ]
+    
+        total_steps = len(COURT_FLOW)
+        for idx, (stage_id, seat_info, instruction) in enumerate(COURT_FLOW, 1):
+            st.session_state.current_stage_id = stage_id
+            avatar_name = seat_info["avatars"].get(selected_scenario_key, seat_info["avatars"]["court"])
+        
+            progress_bar.progress(idx / total_steps, text=f"【阶段 {stage_id}/5 推进 -> {avatar_name}】 ...")
+        
+            header, content = engine.execute_speech(seat_info, instruction)
+        
+            if "team" in seat_info and seat_info["team"] == "judge":
+                avatar = "🏛️"
+            elif "team" in seat_info and seat_info["team"] == "prosecutor":
+                avatar = "⚖️"
+            elif "team" in seat_info and seat_info["team"] == "defense":
+                avatar = "🛡️"
+            elif "team" in seat_info and seat_info["team"] == "court":
+                avatar = "📜"
+            else:
+                avatar = "👤" if seat_info["en_key"] == "leopard" else "🌸"
+        
+            msg_obj = {
+                "role": avatar_name,
+                "header": header,
+                "content": content,
+                "avatar": avatar
+            }
+            st.session_state.messages.append(msg_obj)
+        
+            with chat_container:
+                with st.chat_message(avatar_name, avatar=avatar):
+                    st.markdown(f"### {header}")
+                    st.markdown(content)
+            time.sleep(0.5)
                 
-    st.session_state.current_stage_id = 5
-    progress_bar.progress(1.0, text="⚖️ 5 阶段 Vault 权威 12 黄道内阁法庭与紫罗兰掌门合议全流程落幕！全案笔录已永久驻留！")
-    st.balloons()
-    st.rerun()
+        st.session_state.current_stage_id = 5
+        progress_bar.progress(1.0, text="⚖️ 5 阶段 Vault 权威 12 黄道内阁法庭与紫罗兰掌门合议全流程落幕！全案笔录已永久驻留！")
+        try:
+            fname = save_court_transcript()
+            st.success(f"💾 庭审实录已自动落盘 (本地 + MinIO + lake1): {fname}")
+        except Exception as e:
+            st.warning(f"自动落盘失败（不影响笔录展示）: {e}")
+        st.balloons()
+        st.rerun()
 
-# ============ 底部 newsfeed：实时总结流 + 小花组媒体评论（异步） ============
-st.divider()
-st.markdown("### 📰 场外媒体评论团（小花组 · 异步）")
-media_views = {
-    "🌸 玫瑰（BBC 视角）": "西方法理强调程序正义与证据链，此案核心在'利用影响力'与'私人信用'的边界。",
-    "🌸 茉莉（CCTV 视角）": "官方叙事关注国企合规与党纪要求，未报备的救急行为存在程序瑕疵。",
-    "🌸 紫罗兰（Flower Manager）": "汇总各立场：事实层面资金闭环无亏空，但程序层面存在'未报备'瑕疵——法理与情理在此对峙。",
-}
-for k, v in media_views.items():
-    st.markdown(f"**{k}**：{v}")
+    # ============ 底部 newsfeed：实时总结流 + 小花组媒体评论（异步） ============
+    st.divider()
+    st.markdown("### 📰 场外媒体评论团（小花组 · 异步）")
+    media_views = {
+        "🌸 玫瑰（BBC 视角）": "西方法理强调程序正义与证据链，此案核心在'利用影响力'与'私人信用'的边界。",
+        "🌸 茉莉（CCTV 视角）": "官方叙事关注国企合规与党纪要求，未报备的救急行为存在程序瑕疵。",
+        "🌸 紫罗兰（Flower Manager）": "汇总各立场：事实层面资金闭环无亏空，但程序层面存在'未报备'瑕疵——法理与情理在此对峙。",
+    }
+    for k, v in media_views.items():
+        st.markdown(f"**{k}**：{v}")
 
-st.markdown("### 📜 庭审实时总结流（newsfeed）")
-if st.session_state.get("messages"):
-    for msg in st.session_state.messages[-6:]:
-        st.markdown(f"- **{msg['header']}**：{(msg['content'] or '')[:80]}...")
-else:
-    st.caption("庭审尚未开始——敲响法槌后，每步发言将实时滚动总结。")
-# ============ newsfeed 结束 ============
+    st.markdown("### 📜 庭审实时总结流（newsfeed）")
+    if st.session_state.get("messages"):
+        for msg in st.session_state.messages[-6:]:
+            st.markdown(f"- **{msg['header']}**：{(msg['content'] or '')[:80]}...")
+    else:
+        st.caption("庭审尚未开始——敲响法槌后，每步发言将实时滚动总结。")
+    # ============ newsfeed 结束 ============
 
-st.divider()
-st.markdown(
-    "<div style='text-align:center;color:#888;font-size:0.85rem;padding:1.5rem 0;'>"
+    st.divider()
+    st.markdown(
+        "<div style='text-align:center;color:#888;font-size:0.85rem;padding:1.5rem 0;'>"
     "🦅 鲲鹏志 AI · 12 黄道内阁 + 昴宿七姐妹 (紫罗兰 Manager) · 2026"
     "</div>",
     unsafe_allow_html=True
