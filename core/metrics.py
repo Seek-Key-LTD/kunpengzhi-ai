@@ -69,7 +69,7 @@ def scan(text: str, keywords: list[str] | None = None) -> dict:
     # 发言轮数（法庭笔录按 "### {席位}" 标题计轮）
     speech_rounds = sum(1 for line in text.split("\n") if line.strip().startswith("### "))
 
-    return {
+    result = {
         "chars_debate": len(debate),
         "chars_teahouse": len(teahouse),
         "speech_rounds": speech_rounds,
@@ -80,6 +80,9 @@ def scan(text: str, keywords: list[str] | None = None) -> dict:
         "keyword_coverage": f"{kw_covered}/{len(kw_hits)}" if kw_hits else "0/0",
         "dup_rate_4gram": round(dup_rate, 4),
     }
+    if speech_rounds > 0:
+        result["adversarial"] = adversarial_scan(text, keywords)
+    return result
 
 
 def _autodetect_keywords(text: str, filename: str = "") -> list[str]:
@@ -89,6 +92,75 @@ def _autodetect_keywords(text: str, filename: str = "") -> list[str]:
         if k in head:
             return words
     return []
+
+
+def _split_rounds(text: str) -> list[tuple[str, str]]:
+    rounds = []
+    cur_header, cur_lines = None, []
+    for line in text.split("\n"):
+        if line.strip().startswith("### "):
+            if cur_header is not None:
+                rounds.append((cur_header, "\n".join(cur_lines)))
+            cur_header, cur_lines = line.strip()[4:].strip(), []
+        else:
+            cur_lines.append(line)
+    if cur_header is not None:
+        rounds.append((cur_header, "\n".join(cur_lines)))
+    return rounds
+
+
+def _team_of(header: str) -> str:
+    if "起诉书" in header:
+        return "indictment"
+    if "⚖️" in header:
+        return "prosecutor"
+    if "🛡️" in header:
+        return "defense"
+    if "🏛️" in header:
+        return "judge"
+    if "👤" in header:
+        return "defendant"
+    return "other"
+
+
+def adversarial_scan(text: str, keywords: list[str] | None = None) -> dict:
+    """对抗强度扫描（朱日和检验）：交锋锚点数 / 质询回应率 / 判词要件检验。
+
+    - cross_fire: 同一锚点被控方与辩方（含被告人）都命中的数量——真交锋证据
+    - query_response: 合议庭质询轮后，紧邻轮是否命中质询锚点（回应而非哑火）
+    - verdict: 判词是否逐项检验构成要件、结论是否明确（有罪/无罪均可）
+    无轮次结构或无关键词时返回 {}。
+    """
+    keywords = keywords or []
+    rounds = _split_rounds(text)
+    if len(rounds) < 3 or not keywords:
+        return {}
+
+    by_team: dict[str, set] = {}
+    for header, body in rounds:
+        by_team.setdefault(_team_of(header), set()).update(k for k in keywords if k in body)
+
+    cross_fire = sorted(
+        (by_team.get("prosecutor", set()) & (by_team.get("defense", set()) | by_team.get("defendant", set()))))
+
+    query_rounds, query_answered = 0, 0
+    for i, (header, body) in enumerate(rounds[:-1]):
+        if _team_of(header) == "judge" and "质询" in body:
+            query_rounds += 1
+            hits = {k for k in keywords if k in body}
+            if hits and any(k in rounds[i + 1][1] for k in hits):
+                query_answered += 1
+
+    verdict_round = rounds[-1][1]
+    return {
+        "cross_fire_anchors": len(cross_fire),
+        "cross_fire_list": cross_fire,
+        "query_rounds": query_rounds,
+        "query_response_rate": round(query_answered / query_rounds, 2) if query_rounds else None,
+        "verdict_explicit": ("无罪" in verdict_round) or ("有罪" in verdict_round),
+        "verdict_basis_check": "构成要件" in verdict_round,
+        "verdict_excerpt": verdict_round[:60],
+    }
 
 
 def contribution_scan(text: str, keywords: list[str] | None = None) -> list[dict]:
