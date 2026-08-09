@@ -694,6 +694,11 @@ with mid_col:
         with st.spinner(f"⚖️ 公诉团队 ({topaz_avatar}) 正在独立撰写《起诉书》(阜检刑诉〔2026〕88号)..."):
             indictment_text = engine.draft_official_indictment()
             st.session_state.indictment_text = indictment_text
+            # 流式会话文件：边跑边写，中断不丢已发言
+            from core.archive import open_stream, append_stream
+            path, filename, ts = open_stream("法庭", "极昼-阜阳中院")
+            st.session_state.stream_path, st.session_state.stream_file, st.session_state.stream_ts = path, filename, ts
+            append_stream(path, f"📜 起诉书 (阜检刑诉〔2026〕88号)", indictment_text)
             st.rerun()
 
     if "indictment_text" in st.session_state and st.session_state.indictment_text and len(st.session_state.messages) == 0:
@@ -766,6 +771,11 @@ with mid_col:
                 "avatar": avatar
             }
             st.session_state.messages.append(msg_obj)
+
+            # 流式落盘：每席发言实时追加，不等待整轮结束
+            if st.session_state.get("stream_path"):
+                from core.archive import append_stream
+                append_stream(st.session_state["stream_path"], header, content)
         
             # 看盘式：中区只替换「此刻」画面，不堆叠历史；历史进右栏滚动区
             with focus_ph.container():
@@ -779,8 +789,13 @@ with mid_col:
         st.session_state.current_stage_id = 5
         progress_bar.progress(1.0, text="⚖️ 5 阶段 Vault 权威 12 黄道内阁法庭与紫罗兰掌门合议全流程落幕！全案笔录已永久驻留！")
         try:
-            fname = save_court_transcript()
-            st.success(f"💾 庭审实录已自动落盘 (本地 + MinIO + lake1): {fname}")
+            from core.archive import close_stream
+            fname = close_stream(
+                st.session_state["stream_path"], st.session_state["stream_file"],
+                st.session_state["stream_ts"], "法庭", "极昼-阜阳中院",
+                {"steps": len(st.session_state.get("messages", [])), "scenario": selected_scenario_key},
+            )
+            st.success(f"💾 庭审实录已流式落盘 (本地 + MinIO + lake1): {fname}")
         except Exception as e:
             st.warning(f"自动落盘失败（不影响笔录展示）: {e}")
         st.balloons()
