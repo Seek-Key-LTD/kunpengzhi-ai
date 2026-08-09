@@ -52,7 +52,7 @@ async def main():
     indictment = engine.draft_official_indictment()
     models.add(SEATS_DICT["prosecutor_chief"]["model"])
     print(f"   ✅ 起诉书 {len(indictment)} 字符")
-    engine.add_to_shared_context("prosecutor_chief", f"【起诉书全景】:\n{indictment}")
+    engine.add_to_shared_context("prosecutor_chief", f"【起诉书全景】:\n{indictment}", team="indictment")
 
     total = len(ROBERTS_STEPS)
     for idx, (seat_key, instruction) in enumerate(ROBERTS_STEPS, 1):

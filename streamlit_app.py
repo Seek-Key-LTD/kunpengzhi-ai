@@ -262,6 +262,7 @@ FLOWER_PLEIADES_TABLE = {
         "pleiades_trait": "✨ 昴宿一 (Maia) · 连绵对韵 [平平]",
         "avatars": {"court": "🌸 程序合议员 · 玫瑰仙子", "honglou": "🌹 玫瑰花神", "fengyue": "玫瑰绝色"},
         "node": "ash1",
+        "team": "flower",
         "model": "azure-deepseek-v4-flash",
         "instruction": "你是昴宿一【玫瑰】。针对庭审发表程序合议评议：复核阜阳留置与最高法指定管辖程序，重点评议《刑法》第12条从旧兼从轻对2016年4月新规的阻断效力！"
     },
@@ -271,6 +272,7 @@ FLOWER_PLEIADES_TABLE = {
         "pleiades_trait": "✨ 昴宿二 (Electra) · 连绵对韵 [平平]",
         "avatars": {"court": "🌸 实体证据合议员 · 蔷薇仙子", "honglou": "🌹 蔷薇花神", "fengyue": "蔷薇芳客"},
         "node": "ash2",
+        "team": "flower",
         "model": "azure-deepseek-v4-flash",
         "instruction": "你是昴宿二【蔷薇】。针对庭审发表实体证据合议评议：复核1000万10次平价还本水单，确认中煤账目零亏空，认定四大罪名完全不成立！"
     },
@@ -280,6 +282,7 @@ FLOWER_PLEIADES_TABLE = {
         "pleiades_trait": "✨ 昴宿三 (Taygeta) · 连绵对韵 [平平]",
         "avatars": {"court": "🌸 常理社会合议员 · 荼蘼仙子", "honglou": "🥀 荼蘼花神", "fengyue": "荼蘼浪子"},
         "node": "ash3",
+        "team": "flower",
         "model": "azure-deepseek-v4-flash",
         "instruction": "你是昴宿三【荼蘼】。针对庭审发表社会常情合议评议：还原2015-2016山河四省最冷冬天的真实背景，认定尊长救助亲家属于无罪义举！"
     },
@@ -289,6 +292,7 @@ FLOWER_PLEIADES_TABLE = {
         "pleiades_trait": "✨ 昴宿四 (Alcyone) · 连绵对韵 [平平]",
         "avatars": {"court": "🌸 谦抑法理合议员 · 茱萸仙子", "honglou": "🌿 茱萸香客", "fengyue": "茱萸高客"},
         "node": "onecloud1",
+        "team": "flower",
         "model": "azure-deepseek-v4-flash",
         "instruction": "你是昴宿四【茱萸】。针对庭审发表刑法谦抑性评议：强调无财物收受与权钱交易对价时，不得以道德或拟制罪名构陷无辜！"
     },
@@ -298,6 +302,7 @@ FLOWER_PLEIADES_TABLE = {
         "pleiades_trait": "✨ 昴宿五 (Celaeno) · 连绵对韵 [去去]",
         "avatars": {"court": "🌸 证据闭环合议员 · 茉莉仙子", "honglou": "🌼 茉莉花神", "fengyue": "茉莉仙姬"},
         "node": "suse2",
+        "team": "flower",
         "model": "azure-deepseek-v4-flash",
         "instruction": "你是昴宿五【茉莉】。针对庭审发表证据闭环评议：强调书证效力优先于监委口供，1000万平进平出证明主观非法占有目的为零！"
     },
@@ -307,6 +312,7 @@ FLOWER_PLEIADES_TABLE = {
         "pleiades_trait": "✨ 昴宿六 (Sterope) · 连绵对韵 [去去]",
         "avatars": {"court": "🌸 裁决复核合议员 · 苜蓿仙子", "honglou": "🌱 苜蓿草仙", "fengyue": "苜蓿逸客"},
         "node": "xgp2",
+        "team": "flower",
         "model": "azure-deepseek-v4-flash",
         "instruction": "你是昴宿六【苜蓿】。针对庭审发表合议裁决评议：复核全体连绵小花组成员意见，确认控方起诉证据链断裂！"
     },
@@ -316,6 +322,7 @@ FLOWER_PLEIADES_TABLE = {
         "pleiades_trait": "👑 昴宿七 (Merope) · 小花组掌门/主理",
         "avatars": {"court": "👑 评审团团长兼主理 · 紫罗兰仙子", "honglou": "🪻 紫罗掌门仙女", "fengyue": "紫罗兰主理"},
         "node": "warden (规划LXC)",
+        "team": "flower",
         "model": "azure-deepseek-v4-flash",
         "instruction": "你是昴宿七兼小花组掌门【紫罗兰】。作为 Flower Team Manager，代表全连绵小花组向审判长红宝石提交《无罪合议意见书》，建议依法宣告尊长无罪！"
     }
@@ -567,7 +574,7 @@ with mid_col:
     if "indictment_text" in st.session_state and st.session_state.indictment_text and len(st.session_state.messages) == 0:
         engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text, selected_scenario_key)
         topaz_avatar = VAULT_ZODIAC_CABINETS["topaz"]["avatars"].get(selected_scenario_key, VAULT_ZODIAC_CABINETS["topaz"]["avatars"]["court"])
-        engine.add_to_shared_context(topaz_avatar, f"【起诉书全景】:\n{st.session_state.indictment_text}")
+        engine.add_to_shared_context(topaz_avatar, f"【起诉书全景】:\n{st.session_state.indictment_text}", team="indictment")
     
         progress_bar = st.progress(0, text="正在敲响法槌，带被告人尊长到庭...")
     

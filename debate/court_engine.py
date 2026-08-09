@@ -103,13 +103,33 @@ class RobertTokenRingEngine:
         self.article_text = article_text
         self.shared_context = []
 
-    def add_to_shared_context(self, seat_key, content):
+    def add_to_shared_context(self, seat_key, content, team=None):
         seat = SEATS_DICT[seat_key]
         header = f"{seat['role']} ({seat['agent']} @ {seat['node']})"
-        self.shared_context.append({"seat_key": seat_key, "header": header, "content": content})
+        team = team if team is not None else seat.get("team", "")
+        self.shared_context.append({"seat_key": seat_key, "header": header, "content": content, "team": team})
 
     def get_shared_context_str(self):
         return "\n\n".join(f"【{m['header']}】:\n{m['content']}" for m in self.shared_context)
+
+    def _build_context_blocks(self, seat_key):
+        """定向接话上下文：起诉书锚 + 前一位陈词 + 同阵营既往陈词。"""
+        seat = SEATS_DICT[seat_key]
+        team = seat.get("team", "")
+        blocks = []
+        for m in self.shared_context:
+            if m.get("team") == "indictment":
+                blocks.append(("起诉书（全局控方立场锚）", m["content"]))
+                break
+        if self.shared_context and self.shared_context[-1].get("team") != "indictment":
+            last = self.shared_context[-1]
+            blocks.append((f"前一位发言人 ({last['header']}) 的具体陈词", last["content"]))
+        if team and team != "flower":
+            last_header = self.shared_context[-1]["header"] if self.shared_context else ""
+            same = [m for m in self.shared_context
+                    if m.get("team") == team and m["header"] != last_header]
+            blocks += [(f"同阵营既往陈词 ({m['header']})", m["content"]) for m in same]
+        return blocks
 
     def draft_official_indictment(self):
         """公诉机关独立自主撰写完整起诉书"""
@@ -135,10 +155,8 @@ class RobertTokenRingEngine:
         seat = SEATS_DICT[seat_key]
         header = f"{seat['role']} ({seat['agent']} @ {seat['node']})"
 
-        prev_speaker_str = ""
-        if len(self.shared_context) > 0:
-            last = self.shared_context[-1]
-            prev_speaker_str = f"\n【前一位庭审发言人 ({last['header']}) 的具体陈词】:\n\"\"\"\n{last['content']}\n\"\"\"\n"
+        blocks = self._build_context_blocks(seat_key)
+        ctx_str = "\n\n".join(f"【{label}】:\n{content}" for label, content in blocks) or "(刚开场)"
 
         doc_mem = f"\n【《极昼.md》案卷记忆】:\n{self.article_text[:18000]}\n" if self.article_text else ""
 
@@ -146,9 +164,7 @@ class RobertTokenRingEngine:
             f"你是模拟法庭角色：【{header}】。\n"
             f"你当前持有【法庭发言令牌 Token】！\n"
             f"{doc_mem}\n"
-            f"【共享法庭笔录上下文 (Shared Memory)】:\n"
-            f"{self.get_shared_context_str() if self.shared_context else '(刚开场)'}\n"
-            f"{prev_speaker_str}\n"
+            f"【定向接话上下文 (Shared Memory)】:\n{ctx_str}\n"
             f"你的具体庭审任务：{specific_instruction}\n\n"
             f"💥 沉静严肃·人文关怀庭审指令：\n"
             f"1. 严格尊重《极昼.md》案卷真实事实：尊长于2026年8月3日从住处被带走送至【安徽省阜阳市】留置！起诉机关为【安徽省阜阳市人民检察院】！\n"
