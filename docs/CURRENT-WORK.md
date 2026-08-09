@@ -59,7 +59,7 @@ fixed 的要义 = 只显示「此刻」的一个画面（当前阶段/当前发�
 2. ~~中区 60% 高度核心 + 下方 33% newsfeed~~ ✅（court-focus 60% + court-newsfeed 33%，固定视口）
 3. ~~比例微调（左 25 / 中 50 / 右 25）~~ ✅（实测 25/48/24）
 4. ~~右栏完善（进度/证据/法条，可滚动）~~ ✅（进度 + 全量笔录可滚）
-5. **Coding Agent 剧本编译器**：选题 → 模式/角色/流程自动（Flow 引擎 #4）
+5. ~~Coding Agent 剧本编译器~~ ✅ **MVP 已通**（2026-08-09，commit 18a5786）：任意文本 → Session Contract → 契约驱动执行（海雾案实测）；进阶：Underlay 闭门博弈 + Credit 结算未做（关联 Auction #6）
 6. **令牌环动态化**：发言权按规则实时流转（打断/响应）
 7. **replay 模式**：不烧 token，回放之前成功笔录（调试用）
 8. **暗黑模式切换**（先纯白）
@@ -70,7 +70,8 @@ fixed 的要义 = 只显示「此刻」的一个画面（当前阶段/当前发�
 
 ```
 代码：nuc ~/Projects/github/kunpengzhi-ai（Gitea dev 分支）
-引擎：core/token_ring.py
+引擎：core/token_ring.py（execute_contract 契约驱动）
+剧本编译：core/script_compiler.py（Coding Agent 管线）+ core/contract.py（Session Contract/校验）+ core/protocols.py（协议注册表）
 布局：streamlit_app.py（render_focus / render_newsfeed / render_transcript / st.empty() 占位替换）
 设计文档：docs/zodiac-cabinet-architecture.md（12 内阁/花名/落宫）
 Vision：docs/flow-engine-vision.md（#4）、auction-allocation-vision.md（#6）、production-analysis-design.md（#7）
