@@ -1,9 +1,9 @@
 """
-🦅 鲲鹏志 · 《极昼》案 10 席位沉静法庭 (双进度指示：顶部油管 Banner + 右下角悬浮圆环)
+🦅 鲲鹏志 · 《极昼》案 双组分布式法庭 (石头组·法庭控辩 + 小花组·专家评审团)
 =================================================================================
-1. 顶部 Sticky Top Banner：分段式进度条（已完成-绿，进行中-橙，未开始-灰）。
-2. 右下角 Dynamic Circular Badge：CSS 环形渐变进度圆环 (conic-gradient)，实时显示充盈百分比与阶段。
-3. 10 席位沉静庭审、起诉书自主撰写、从旧兼从轻与 1000 万平价还本凭证。
+1. 💎 石头组 (Gemstone Team)：红宝石(ruby)、黄玉(topaz)、金刚石(diamond)、黑金刚石(carbonado)、辉银矿(argentite)、玛瑙(agate)、石英(quartz)、豹纹石(leopard)。担当法庭控辩与被告人应答。
+2. 🌸 小花组 (Flower Team)：玫瑰(meigui@ash1)、蔷薇(qiangwei@ash2)、月桂(luna@onecloud2)、紫罗兰(ziwulan@ch1)。担当独立专家评审团/合议评判组。
+3. 中文名称全面正化：统一采用优雅的标准中文宝石与名花称谓。
 """
 
 import streamlit as st
@@ -12,7 +12,7 @@ import os
 import time
 
 st.set_page_config(
-    page_title="鲲鹏志 · 《极昼》沉静法庭",
+    page_title="鲲鹏志 · 《极昼》双组法庭",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -21,78 +21,108 @@ st.set_page_config(
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://litellm.seekkey.eu.org/v1")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-47318")
 
-# 5 个核心庭审阶段定义
+# 5 个核心庭审阶段
 STAGES = [
-    {"id": 1, "name": "1. 准备与核对身份", "emoji": "⚖️", "desc": "审判长核对尊长基本信息，告知回避权，被告人现场应答"},
-    {"id": 2, "name": "2. 控方起诉与举证", "emoji": "📜", "desc": "阜阳市检察院独立撰写并宣读《阜检刑诉〔2026〕88号起诉书》"},
-    {"id": 3, "name": "3. 辩方无罪质证", "emoji": "🛡️", "desc": "辩护团队掏出【四大罪名排除矩阵】与从旧兼从轻水单质证"},
-    {"id": 4, "name": "4. 法庭辩论与质询", "emoji": "⚔️", "desc": "合议庭追问公款损失凭证，控辩双方展开剧烈法理交锋"},
-    {"id": 5, "name": "5. 尊长陈述与宣判", "emoji": "🏛️", "desc": "尊长发表问心无愧陈述，审判长敲响法槌宣告无罪"}
+    {"id": 1, "name": "1. 准备与核对身份", "emoji": "⚖️", "desc": "审判长红宝石核对尊长基本信息，被告人豹纹石现场应答"},
+    {"id": 2, "name": "2. 控方起诉与举证", "emoji": "📜", "desc": "黄玉与黑金刚石宣读并举证《阜检刑诉〔2026〕88号起诉书》"},
+    {"id": 3, "name": "3. 辩方无罪质证", "emoji": "🛡️", "desc": "金刚石、辉银矿与玛瑙出示【四大罪名排除矩阵】与从旧兼从轻凭证"},
+    {"id": 4, "name": "4. 小花组专家合议", "emoji": "🌸", "desc": "玫瑰、蔷薇、月桂、紫罗兰组成专家评审团，发表独立合议评议"},
+    {"id": 5, "name": "5. 尊长陈述与宣判", "emoji": "🏛️", "desc": "尊长发表问心无愧陈述，审判长红宝石根据评审团意见宣告无罪"}
 ]
 
-SEATS_DICT = {
+# 💎 石头组 (Gemstones) - 模拟法庭攻防
+GEM_SEATS = {
     "judge_chief": {
+        "cn_name": "💎 红宝石 (Ruby)",
         "role": "🏛️ 审判长",
         "agent": "ruby",
         "node": "nuc",
-        "model": "nova-deepseek-v4-flash-aggr",
-        "team": "judge"
+        "model": "nova-deepseek-v4-flash-aggr"
     },
     "defendant": {
+        "cn_name": "💎 豹纹石 (Leopard)",
         "role": "👤 被告人 (尊长)",
         "agent": "leopard",
         "node": "suse",
-        "model": "azure-deepseek-v4-flash",
-        "team": "defendant"
+        "model": "azure-deepseek-v4-flash"
     },
     "prosecutor_chief": {
+        "cn_name": "💎 黄玉 (Topaz)",
         "role": "⚖️ 首席公诉人 (阜阳市检察院)",
         "agent": "topaz",
         "node": "raccoon",
-        "model": "topaz-deepseek-v4-flash",
-        "team": "prosecutor"
+        "model": "topaz-deepseek-v4-flash"
     },
     "prosecutor_asst1": {
+        "cn_name": "💎 黑金刚石 (Carbonado)",
         "role": "⚖️ 助理公诉人 1",
         "agent": "carbonado",
         "node": "pve2",
-        "model": "carbonado-deepseek-v4-flash",
-        "team": "prosecutor"
+        "model": "carbonado-deepseek-v4-flash"
     },
     "defense_chief": {
+        "cn_name": "💎 金刚石 (Diamond)",
         "role": "🛡️ 首席辩护律师",
         "agent": "diamond",
         "node": "pve",
-        "model": "diamond-deepseek-v4-flash",
-        "team": "defense"
+        "model": "diamond-deepseek-v4-flash"
     },
     "defense_asst1": {
+        "cn_name": "💎 辉银矿 (Argentite)",
         "role": "🛡️ 辩护助理 1",
         "agent": "argentite",
         "node": "pve3",
-        "model": "argentite-deepseek-v4-flash",
-        "team": "defense"
+        "model": "argentite-deepseek-v4-flash"
     },
     "defense_asst2": {
+        "cn_name": "💎 玛瑙 (Agate)",
         "role": "🛡️ 辩护助理 2",
         "agent": "agate",
         "node": "xgp",
-        "model": "agate-deepseek-v4-flash",
-        "team": "defense"
+        "model": "agate-deepseek-v4-flash"
     },
-    "judge_a": {
-        "role": "🏛️ 审判员 A (常理)",
-        "agent": "luna",
-        "node": "onecloud2",
-        "model": "azure-deepseek-v4-flash",
-        "team": "judge"
-    },
-    "judge_b": {
-        "role": "🏛️ 审判员 B (程序)",
+    "prosecutor_asst2": {
+        "cn_name": "💎 石英 (Quartz)",
+        "role": "⚖️ 助理公诉人 2",
+        "agent": "quartz",
+        "node": "pbs3",
+        "model": "quartz-deepseek-v4-flash"
+    }
+}
+
+# 🌸 小花组 (Flowers) - 专家评审团/合议评判组
+FLOWER_JURY = {
+    "jury_1": {
+        "cn_name": "🌸 玫瑰 (Rose)",
+        "role": "🌸 专家评审 - 程序法合议员",
         "agent": "meigui",
         "node": "ash1",
         "model": "azure-deepseek-v4-flash",
-        "team": "judge"
+        "instruction": "你是小花专家评审团成员【玫瑰】。针对庭审发表程序合议评议：核查阜阳留置与最高法指定管辖程序，重点评议《刑法》第12条从旧兼从轻对2016年4月新规的阻断效力！"
+    },
+    "jury_2": {
+        "cn_name": "🌸 蔷薇 (Wild Rose)",
+        "role": "🌸 专家评审 - 实体证据合议员",
+        "agent": "qiangwei",
+        "node": "ash2",
+        "model": "azure-deepseek-v4-flash",
+        "instruction": "你是小花专家评审团成员【蔷薇】。针对庭审发表实体证据合议评议：复核1000万10次平价还本水单，确认中煤账目零亏空，认定四大罪名完全不成立！"
+    },
+    "jury_3": {
+        "cn_name": "🌸 月桂 (Moonflower)",
+        "role": "🌸 专家评审 - 社会常情合议员",
+        "agent": "luna",
+        "node": "onecloud2",
+        "model": "azure-deepseek-v4-flash",
+        "instruction": "你是小花专家评审团成员【月桂】。针对庭审发表社会常情合议评议：还原2015-2016山河四省最冷冬天的真实悲壮背景，认定尊长自筹资金救助亲家属于守住社会底线的无罪义举！"
+    },
+    "jury_4": {
+        "cn_name": "🌸 紫罗兰 (Violet)",
+        "role": "🌸 专家评审 - 终审裁决合议员",
+        "agent": "ziwulan",
+        "node": "ch1",
+        "model": "azure-deepseek-v4-flash",
+        "instruction": "你是小花专家评审团成员【紫罗兰】。发表专家评审团总结裁决：全票通过《无罪合议意见书》，正式向审判长红宝石建议宣告尊长无罪！"
     }
 }
 
@@ -104,7 +134,7 @@ def render_custom_css():
         """
         <style>
         .main-title {
-            font-size: 2.3rem;
+            font-size: 2.2rem;
             font-weight: 800;
             color: #B71C1C;
             text-align: center;
@@ -127,7 +157,6 @@ def render_custom_css():
             margin-bottom: 1.5rem;
         }
         
-        /* 右下角悬浮圆形进度组件 */
         .circle-progress-widget {
             position: fixed;
             bottom: 28px;
@@ -174,18 +203,16 @@ def render_custom_css():
     )
 
 def render_progress_components(current_stage):
-    # 计算充盈百分比 (1~5 阶段)
     pct = int((current_stage / 5) * 100) if current_stage > 0 else 0
     
-    # 1. 顶部悬浮分段条 (Sticky Top Banner)
     segments_html = ""
     for stage in STAGES:
         if stage["id"] < current_stage:
-            color = "#4CAF50" # 已完成-绿
+            color = "#4CAF50"
         elif stage["id"] == current_stage:
-            color = "#FF9800" # 当前-橙
+            color = "#FF9800"
         else:
-            color = "#333333" # 未开始-灰
+            color = "#333333"
             
         segments_html += f'<div style="flex: 1; height: 8px; border-radius: 4px; background-color: {color}; transition: all 0.4s;"></div>'
         
@@ -211,7 +238,6 @@ def render_progress_components(current_stage):
     """
     st.markdown(top_banner, unsafe_allow_html=True)
     
-    # 2. 右下角悬浮圆形进度徽章 (conic-gradient 环形充盈)
     deg = int((pct / 100) * 360)
     circle_bg = f"conic-gradient(#FF9800 0deg {deg}deg, #333333 {deg}deg 360deg)"
     
@@ -231,26 +257,24 @@ class RobertTokenRingEngine:
         self.article_text = article_text
         self.shared_context = []
         
-    def add_to_shared_context(self, seat_key, content):
-        seat = SEATS_DICT[seat_key]
-        header = f"{seat['role']} ({seat['agent']} @ {seat['node']})"
-        self.shared_context.append({"seat_key": seat_key, "header": header, "content": content})
+    def add_to_shared_context(self, name, content):
+        self.shared_context.append({"header": name, "content": content})
 
     def get_shared_context_str(self):
         return "\n\n".join(f"【{m['header']}】:\n{m['content']}" for m in self.shared_context)
 
     def draft_official_indictment(self):
         prompt = (
-            "你是安徽省阜阳市人民检察院首席公诉人。请以正式公文格式自主撰写《安徽省阜阳市人民检察院起诉书》（字号：阜检刑诉〔2026〕88号）。\n"
+            "你是安徽省阜阳市人民检察院首席公诉人【💎 黄玉】。请以正式公文格式自主撰写《安徽省阜阳市人民检察院起诉书》（字号：阜检刑诉〔2026〕88号）。\n"
             "案卷根据《极昼.md》：\n"
-            "被告人尊长，男，196X年生，原中煤集团党组成员，退休两年，2026年8月3日被带至安徽省阜阳市由阜阳市监察委员会留置并调查终结移送起诉。\n"
+            "被告人尊长（💎 豹纹石），男，196X年生，原中煤集团党组成员，退休两年，2026年8月3日被带至安徽省阜阳市由阜阳市监察委员会留置并调查终结移送起诉。\n"
             "指控事实：2016年春节，尊长筹集1000万元划转至其亲家民营房企账户化解爆雷危机，分10次平价还本。\n"
             "指控罪名：利用影响力受贿罪、国有公司人员失职罪。\n"
             "格式要求：标准公文格式，字数400字左右，严谨严肃。"
         )
         try:
             resp = self.client.chat.completions.create(
-                model=SEATS_DICT["prosecutor_chief"]["model"],
+                model=GEM_SEATS["prosecutor_chief"]["model"],
                 messages=[{"role": "user", "content": prompt}],
                 timeout=55
             )
@@ -258,29 +282,27 @@ class RobertTokenRingEngine:
         except Exception as e:
             return f"起诉书生成异常: {e}"
 
-    def execute_token_speech(self, seat_key, specific_instruction):
-        seat = SEATS_DICT[seat_key]
-        header = f"{seat['role']} ({seat['agent']} @ {seat['node']})"
+    def execute_speech(self, seat_info, specific_instruction):
+        header = f"{seat_info['role']} ({seat_info['cn_name']} @ {seat_info['node']})"
         
         prev_speaker_str = ""
         if len(self.shared_context) > 0:
             last = self.shared_context[-1]
-            prev_speaker_str = f"\n【前一位庭审发言人 ({last['header']}) 的具体陈词】:\n\"\"\"\n{last['content']}\n\"\"\"\n"
+            prev_speaker_str = f"\n【前一位发言人 ({last['header']}) 的陈词】:\n\"\"\"\n{last['content']}\n\"\"\"\n"
             
         doc_mem = f"\n【《极昼.md》案卷记忆】:\n{self.article_text[:18000]}\n" if self.article_text else ""
         
         prompt_user = (
             f"你是模拟法庭角色：【{header}】。\n"
-            f"你当前持有【法庭发言令牌 Token】！\n"
             f"{doc_mem}\n"
             f"【共享法庭笔录上下文 (Shared Memory)】:\n"
             f"{self.get_shared_context_str() if self.shared_context else '(刚开场)'}\n"
             f"{prev_speaker_str}\n"
             f"你的具体庭审任务：{specific_instruction}\n\n"
             f"💥 沉静严肃·人文关怀庭审指令：\n"
-            f"1. 严格尊重《极昼.md》案卷真实事实：尊长于2026年8月3日从住处被带走送至【安徽省阜阳市】留置！起诉机关为【安徽省阜阳市人民检察院】！\n"
+            f"1. 严格尊重《极昼.md》案卷真实事实：尊长（💎 豹纹石）于2026年8月3日从住处被带走送至【安徽省阜阳市】留置！起诉机关为【安徽省阜阳市人民检察院】！\n"
             f"2. 语言必须极其沉静、严肃、专业，带有法理温度与力量，严禁急躁喧嚣！\n"
-            f"3. 发言完毕后，宣告归还令牌给审判长。字数控制在 380 字以内。"
+            f"3. 字数控制在 380 字以内。"
         )
         
         system_prompt = (
@@ -290,7 +312,7 @@ class RobertTokenRingEngine:
         
         try:
             resp = self.client.chat.completions.create(
-                model=seat["model"],
+                model=seat_info["model"],
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt_user}
@@ -301,14 +323,14 @@ class RobertTokenRingEngine:
         except Exception as e:
             content = f"（{header} 连线超时: {e}）"
             
-        self.add_to_shared_context(seat_key, content)
+        self.add_to_shared_context(header, content)
         return header, content
 
 render_custom_css()
 render_progress_components(st.session_state.current_stage_id)
 
-st.markdown('<div class="main-title">⚖️ 鲲鹏志 · 《极昼》案 沉静严肃法庭</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">为家族关怀与严密法理演练倾力打造 · 独立起诉书撰写 · 5阶段双进度指示模拟</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">⚖️ 鲲鹏志 · 《极昼》案 双组模拟法庭</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">💎 石头组 (法庭控辩) + 🌸 小花组 (专家合议评审团) · 全面中文规范称谓</div>', unsafe_allow_html=True)
 
 def load_research_file(filepath):
     if not filepath or not os.path.exists(filepath):
@@ -320,28 +342,14 @@ def load_research_file(filepath):
         return f"加载文献失败: {e}"
 
 with st.sidebar:
-    st.markdown("### 🏛️ 10 席位法庭人员与物理节点")
-    st.markdown("#### ⚖️ 三人合议庭 (阜阳中院)")
-    st.caption("• 审判长: `ruby` @ `nuc`")
-    st.caption("• 审判员A: `luna` @ `onecloud2`")
-    st.caption("• 审判员B: `meigui` @ `ash1`")
-    
-    st.markdown("#### 👤 被告人席")
-    st.caption("• 被告人尊长: `leopard` @ `suse` (2026.8.3带至阜阳)")
-    
-    st.markdown("#### 🔴 阜阳市检察院公诉团队")
-    st.caption("• 首席公诉: `topaz` @ `raccoon`")
-    st.caption("• 助理公诉1: `carbonado` @ `pve2`")
-    
-    st.markdown("#### 🔵 辩护团队 (无罪辩护)")
-    st.caption("• 首席辩护: `diamond` @ `pve`")
-    st.caption("• 辩护助理1: `argentite` @ `pve3`")
-    st.caption("• 辩护助理2: `agate` @ `xgp`")
-
+    st.markdown("### 💎 石头组 · 模拟法庭攻防")
+    for k, v in GEM_SEATS.items():
+        st.caption(f"• {v['role']}: **{v['cn_name']}** (`{v['agent']}` @ `{v['node']}`)")
+        
     st.divider()
-    st.markdown("#### 🎯 5 大核心庭审阶段")
-    for s in STAGES:
-        st.caption(f"{s['emoji']} **{s['name']}**: {s['desc']}")
+    st.markdown("### 🌸 小花组 · 专家合议评审团")
+    for k, v in FLOWER_JURY.items():
+        st.caption(f"• {v['role']}: **{v['cn_name']}** (`{v['agent']}` @ `{v['node']}`)")
 
 article_text = load_research_file("research/极昼.md")
 
@@ -360,7 +368,7 @@ st.divider()
 
 col_btn1, col_btn2 = st.columns([2, 1])
 with col_btn1:
-    start_btn = st.button("⚖️ 敲响法槌 · 开启 5 阶段沉静严肃庭审演练", type="primary", use_container_width=True)
+    start_btn = st.button("⚖️ 敲响法槌 · 启动双组法庭与小花专家合议", type="primary", use_container_width=True)
 with col_btn2:
     clear_btn = st.button("🧹 清空庭审笔录", use_container_width=True)
 
@@ -378,7 +386,7 @@ if "indictment_text" in st.session_state and st.session_state.indictment_text:
     st.markdown("### 📜 公诉机关独立撰写之正式起诉书")
     st.markdown(f'<div class="indictment-box">{st.session_state.indictment_text}</div>', unsafe_allow_html=True)
 
-st.markdown("### 📜 阜阳中院沉静庭审笔录 (Shared Memory 永久驻留显示)")
+st.markdown("### 📜 阜阳中院庭审与小花专家合议笔录 (Shared Memory 永久驻留)")
 chat_container = st.container()
 
 with chat_container:
@@ -392,50 +400,68 @@ if start_btn:
     st.session_state.current_stage_id = 1
     engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text)
     
-    # 阶段 2 触发独立起诉书
+    # 阶段 2 独立起诉书
     st.session_state.current_stage_id = 2
-    with st.spinner("⚖️ 安徽省阜阳市人民检察院公诉团队正在独立撰写《起诉书》(阜检刑诉〔2026〕88号)..."):
+    with st.spinner("⚖️ 安徽省阜阳市人民检察院公诉团队 (💎 黄玉) 正在独立撰写《起诉书》(阜检刑诉〔2026〕88号)..."):
         indictment_text = engine.draft_official_indictment()
         st.session_state.indictment_text = indictment_text
         st.rerun()
 
 if "indictment_text" in st.session_state and st.session_state.indictment_text and len(st.session_state.messages) == 0:
     engine = RobertTokenRingEngine(OPENAI_BASE_URL, OPENAI_API_KEY, article_text)
-    engine.add_to_shared_context("prosecutor_chief", f"【起诉书全景】:\n{st.session_state.indictment_text}")
+    engine.add_to_shared_context("💎 黄玉 (Topaz)", f"【起诉书全景】:\n{st.session_state.indictment_text}")
     
     progress_bar = st.progress(0, text="正在敲响法槌，沉静带被告人尊长到庭...")
     
-    # 5 个核心阶段精准流转
-    ROBERTS_STEPS = [
-        # 阶段 1
-        (1, "judge_chief", "敲响法槌！宣布：‘安徽省阜阳市中级人民法院刑事审判第一庭，现在开庭！带被告人尊长到庭！’现场核对尊长基本信息（2026年8月3日带至阜阳留置等），告知诉讼权利与回避权，将令牌派给被告人！"),
-        (1, "defendant", "【被告人尊长实时应答】向审判长明确回答：‘报告审判长，我叫尊长，原中煤集团党组成员，退休两年。2026年8月3日被带至安徽阜阳留置... 身份属实！我听清了权利，不申请回避！’归还令牌！"),
-        # 阶段 2
-        (2, "judge_chief", "收回令牌！宣布法庭准备结束，正式进入法庭调查阶段，请安徽省阜阳市人民检察院公诉人宣读刚刚独立撰写完成的《阜检刑诉〔2026〕88号起诉书》！将令牌派发给首席公诉人！"),
-        (2, "prosecutor_chief", "拿到了令牌！宣读《阜检刑诉〔2026〕88号起诉书》：说明由阜阳市监委调查终结移送起诉，指控2016年春节尊长利用职务影响筹措1000万划转亲家企业，构成利用影响力受贿罪与失职罪！归还令牌！"),
-        (2, "prosecutor_asst1", "受公诉人指派补充举证：强调职务影响与私情拆借的隐形背书与破窗效应！归还令牌！"),
-        # 阶段 3
-        (3, "defense_chief", "拿到了令牌！发表全盘无罪答辩：针对阜阳起诉书，掏出《极昼.md》【四大罪名排除矩阵】与1000万10次平价还本水单书证！归还令牌！"),
-        (3, "defense_asst1", "补充辩护：引用《刑法》第12条从旧兼从轻原则，阻断2016年4月新司法解释在阜阳案中的违宪追溯！归还令牌！"),
-        (3, "defense_asst2", "还原2015-2016山河四省最冷冬天背景，致敬时代的承重梁！归还令牌！"),
-        # 阶段 4
-        (4, "judge_a", "合议庭审判员A发难质询：追问阜阳公诉人有无公款损失凭证，追问辩护人如何证明脱离职务影响？归还令牌！"),
-        # 阶段 5
-        (5, "defendant", "【被告人尊长最后陈述】发表最后陈述：‘在阜阳留置室的这半年极昼里我问心无愧，我救的是企业和工人，未占公家一分钱！’归还令牌！"),
-        (5, "judge_chief", "收回令牌！综合合议庭评议，敲响法槌，宣告被告人尊长无罪，发表判词！")
+    # 双组流程（阶段 1~3 石头组控辩，阶段 4 小花组合议，阶段 5 宣判）
+    COURT_FLOW = [
+        # 阶段 1：准备与核对身份 (石头组)
+        (1, GEM_SEATS["judge_chief"], "敲响法槌！宣布：‘安徽省阜阳市中级人民法院刑事审判第一庭，现在开庭！带被告人尊长（💎 豹纹石）到庭！’现场核对尊长基本信息，告知诉讼权利与回避权！"),
+        (1, GEM_SEATS["defendant"], "【被告人尊长（💎 豹纹石）实时应答】回答：‘报告审判长，我叫尊长，原中煤党组成员，2026年8月3日被带至阜阳留置... 身份属实！听清了权利，不申请回避！’"),
+        
+        # 阶段 2：控方起诉与举证 (石头组)
+        (2, GEM_SEATS["judge_chief"], "宣布法庭准备结束，请安徽省阜阳市人民检察院公诉人宣读独立撰写的《阜检刑诉〔2026〕88号起诉书》！"),
+        (2, GEM_SEATS["prosecutor_chief"], "宣读《阜检刑诉〔2026〕88号起诉书》：指控2016年春节尊长筹措1000万划转亲家企业，构成利用影响力受贿罪与失职罪！"),
+        (2, GEM_SEATS["prosecutor_asst1"], "受公诉人指派补充举证：强调职务影响与私情拆借的隐形背书与破窗效应！"),
+        
+        # 阶段 3：辩方无罪质证 (石头组)
+        (3, GEM_SEATS["defense_chief"], "发表无罪答辩：针对起诉书，掏出《极昼.md》【四大罪名排除矩阵】与1000万10次平价还本水单书证！"),
+        (3, GEM_SEATS["defense_asst1"], "补充辩护：引用《刑法》第12条从旧兼从轻原则，阻断2016年4月新司法解释的违宪追溯！"),
+        (3, GEM_SEATS["defense_asst2"], "还原2015-2016山河四省最冷冬天背景，致敬时代的承重梁！"),
+        
+        # 阶段 4：小花组专家评审团独立合议 (小花组)
+        (4, FLOWER_JURY["jury_1"], FLOWER_JURY["jury_1"]["instruction"]),
+        (4, FLOWER_JURY["jury_2"], FLOWER_JURY["jury_2"]["instruction"]),
+        (4, FLOWER_JURY["jury_3"], FLOWER_JURY["jury_3"]["instruction"]),
+        (4, FLOWER_JURY["jury_4"], FLOWER_JURY["jury_4"]["instruction"]),
+        
+        # 阶段 5：尊长陈述与审判长宣判 (石头组)
+        (5, GEM_SEATS["defendant"], "【被告人尊长（💎 豹纹石）最后陈述】发表最后陈述：‘在阜阳留置室的这半年极昼里我问心无愧，我救的是企业和工人，未占公家一分钱！’"),
+        (5, GEM_SEATS["judge_chief"], "收回发言权！结合小花组专家评审团的全票无罪合议意见书，敲响法槌，宣告被告人尊长无罪，发表判词！")
     ]
     
-    total_steps = len(ROBERTS_STEPS)
-    for idx, (stage_id, seat_key, instruction) in enumerate(ROBERTS_STEPS, 1):
+    total_steps = len(COURT_FLOW)
+    for idx, (stage_id, seat_info, instruction) in enumerate(COURT_FLOW, 1):
         st.session_state.current_stage_id = stage_id
-        seat = SEATS_DICT[seat_key]
-        progress_bar.progress(idx / total_steps, text=f"【阶段 {stage_id}/5 推进 -> {seat['role']}】({seat['agent']} @ {seat['node']}) ...")
         
-        header, content = engine.execute_token_speech(seat_key, instruction)
-        avatar = "🏛️" if seat["team"] == "judge" else ("👤" if seat["team"] == "defendant" else ("⚖️" if seat["team"] == "prosecutor" else "🛡️"))
+        progress_bar.progress(idx / total_steps, text=f"【阶段 {stage_id}/5 推进 -> {seat_info['role']} {seat_info['cn_name']}】 ...")
+        
+        header, content = engine.execute_speech(seat_info, instruction)
+        
+        # 头像区分
+        if "team" in seat_info and seat_info["team"] == "judge":
+            avatar = "🏛️"
+        elif "team" in seat_info and seat_info["team"] == "defendant":
+            avatar = "👤"
+        elif "team" in seat_info and seat_info["team"] == "prosecutor":
+            avatar = "⚖️"
+        elif "team" in seat_info and seat_info["team"] == "defense":
+            avatar = "🛡️"
+        else:
+            avatar = "🌸"
         
         msg_obj = {
-            "role": seat["role"],
+            "role": seat_info["role"],
             "header": header,
             "content": content,
             "avatar": avatar
@@ -443,20 +469,20 @@ if "indictment_text" in st.session_state and st.session_state.indictment_text an
         st.session_state.messages.append(msg_obj)
         
         with chat_container:
-            with st.chat_message(seat["role"], avatar=avatar):
+            with st.chat_message(seat_info["role"], avatar=avatar):
                 st.markdown(f"### {header}")
                 st.markdown(content)
         time.sleep(0.5)
                 
     st.session_state.current_stage_id = 5
-    progress_bar.progress(1.0, text="⚖️ 阜阳案 5 阶段沉静刑事庭审演练落幕！全案笔录已永久驻留！")
+    progress_bar.progress(1.0, text="⚖️ 5 阶段双组法庭演练与小花专家合议全流程落幕！全案笔录已永久驻留！")
     st.balloons()
     st.rerun()
 
 st.divider()
 st.markdown(
     "<div style='text-align:center;color:#888;font-size:0.85rem;padding:1.5rem 0;'>"
-    "🦅 鲲鹏志 AI · 5 阶段沉静严肃法庭 Simulation · 2026"
+    "🦅 鲲鹏志 AI · 石头组控辩 + 小花组专家评审团 · 2026"
     "</div>",
     unsafe_allow_html=True
 )
