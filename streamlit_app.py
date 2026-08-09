@@ -343,6 +343,12 @@ def render_custom_css():
         font-weight: bold; font-size: 0.78rem; text-align: center; line-height: 1.1;
       }
       .circle-percent { font-size: 0.95rem; color: #FF9800; font-weight: 800; }
+      /* 右栏：可滚动信息流（像 sidebar 一样独立滚动） */
+      .stMain [data-testid="stColumn"]:last-child > div {
+        max-height: calc(100vh - 140px);
+        overflow-y: auto;
+        padding-right: 6px;
+      }
     </style>
     """, unsafe_allow_html=True)
 
@@ -456,9 +462,7 @@ def save_court_transcript() -> str:
     )
 
 
-left_col, mid_col, right_col = st.columns([1, 2, 1], gap="small")
-with left_col:
-    render_speaker_ticker()
+mid_col, right_col = st.columns([2, 1], gap="small")
 with right_col:
     render_stage_progress()
 
