@@ -16,6 +16,7 @@ dependencies = [
     "tiktoken>=0.8.0",
     "voyageai>=0.2.0",
     "pyjwt>=2.9.0",
+    "pymongo>=4.17.0",
 ]
 
 [tool.setuptools]

@@ -166,23 +166,16 @@ class DebateOrchestrator:
         }
 
         if save_dir:
-            os.makedirs(save_dir, exist_ok=True)
-            import datetime
-            ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"擂台-{match.topic['title'][:12]}-{ts}.md"
-            filepath = os.path.join(save_dir, filename)
-
-            with open(filepath, "w") as f:
-                f.write(f"# 🦅 鲲鹏志 · 擂台\n\n")
-                f.write(f"**辩题**: {match.topic['title']}\n\n")
-                f.write(f"---\n\n## 🎤 辩论正赛\n\n{debate_text}\n\n")
-                f.write(f"---\n\n## 🍵 讲茶大堂\n\n{teahouse_text}\n\n")
-                f.write(f"---\n\n## 📊 统计\n")
-                f.write(f"- 辩论: {len(debate_text)} 字符\n")
-                f.write(f"- 评论: {len(teahouse_text)} 字符\n")
-                f.write(f"- 模型: {model}\n")
-
-            result["file"] = filepath
+            from core.archive import save_run
+            text = f"# 🦅 鲲鹏志 · 擂台\n\n"
+            text += f"**辩题**: {match.topic['title']}\n\n"
+            text += f"---\n\n## 🎤 辩论正赛\n\n{debate_text}\n\n"
+            text += f"---\n\n## 🍵 讲茶大堂\n\n{teahouse_text}\n\n"
+            text += f"---\n\n## 📊 统计\n"
+            text += f"- 辩论: {len(debate_text)} 字符\n"
+            text += f"- 评论: {len(teahouse_text)} 字符\n"
+            text += f"- 模型: {model}\n"
+            result["file"] = os.path.join(save_dir, save_run("擂台", match.topic["title"], text, {"model": model}, archive_dir=save_dir))
 
         return result
 

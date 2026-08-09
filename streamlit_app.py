@@ -450,7 +450,7 @@ def build_court_markdown() -> str:
     if st.session_state.get("indictment_text"):
         lines += ["## 📜 起诉书 (阜检刑诉〔2026〕88号)", st.session_state.indictment_text, ""]
     for msg in st.session_state.get("messages", []):
-        lines += [f"## {msg['header']}", msg.get("content", ""), ""]
+        lines += [f"### {msg['header']}", msg.get("content", ""), ""]
     return "\n".join(lines)
 
 

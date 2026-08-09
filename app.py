@@ -599,6 +599,14 @@ async def save_and_index_transcript(topic_id: str, history: str, pro_strat: str,
         await index_sources({f"辩论实录/{title_safe}_{ts}": index_text},
                            source_type="debate")
         log.info(f"📝 辩论已归档: {key}")
+
+        # 统一落盘存档（本地 擂台存档/ + MinIO ssd + runs.jsonl）
+        try:
+            from core.archive import save_run
+            save_run("辩论", t["title"], transcript_md,
+                     {"model": DEBATE_MODEL, "topic_id": topic_id, "chars": len(history)})
+        except Exception as e:
+            log.warning(f"Archive save_run fail: {e}")
     except Exception as e:
         log.warning(f"Archive fail: {e}")
 
