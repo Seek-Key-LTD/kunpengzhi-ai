@@ -56,6 +56,7 @@ def check_password():
 if not check_password():
     st.stop()
 
+# 多环境：经环境变量注入（dev=本地 litellm / staging-Heroku=seekkey.eu.org），代码不硬编码
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://litellm.seekkey.eu.org/v1")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-47318")
 
