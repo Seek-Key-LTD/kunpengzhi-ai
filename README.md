@@ -184,18 +184,25 @@ CI：
 │   ├── minutes/                # 8 agent 思辨会纪要
 │   ├── hierarchy-plan.md       # V2.0 5 层架构蓝图
 │   ├── whatif-analysis.md      # What-If 压力测试
-│   └── burn-5000-plan.md       # 5000 次烧录校准计划
+│   └── 指标空间设计-v2.md       # 六维指标空间设计
+│
+├── dossiers/                   # 案卷（按案分目录）
+│   ├── 极昼/                   # 诉讼阶段（真实案件）
+│   │   ├── 极昼.md             # 案卷正文
+│   │   ├── 反方弹药-恶意揣测.md # 公诉内部研判
+│   │   ├── 实录/               # 辩论实录（.gitignore 忽略）
+│   │   └── metrics/            # 竞技场指标（.gitignore 忽略）
+│   └── 似有暗香来/             # 侦察阶段（虚构剧本杀，极昼创作渊源）
 │
 ├── research/                   # 内容研究
-│   ├── deep-research-brief.md  # 《鲲鹏志》深度研究简报
-│   └── 极昼.md                  # 极昼案模拟法庭案卷原文
+│   └── deep-research-brief.md  # 《鲲鹏志》深度研究简报
 │
 └── vibe-debating/              # 礼乐双轴评价设计稿
     ├── 0001-螺线谱与礼乐评价体系.md
     └── issues/                 # 4 个议题
 ```
 
-**辩论实录归档**：迁移至 `ssd/kunpengzhi-archive/擂台存档/`（`mc alias ssd = minio-s3`），仓库不跟踪。
+**运行时产物归档**：辩论实录 + 竞技场指标按案归入 `dossiers/<案名>/`（.gitignore 忽略），长期归档到 `ssd/kunpengzhi-archive/`（`mc alias ssd = minio-s3`）。
 
 ---
 
@@ -247,7 +254,8 @@ uv run python arena.py 1 --no-tts       # 跑辩题 1，无语音
 
 - **小说文本**：GitHub `Seek-Key-LTD/kunpengzhi`（raw 直读，`digest` 分支）
 - **评论文章**：`digest/彩虹屁/` 与 `digest/批判/`
-- **极昼案卷**：[`research/极昼.md`](research/极昼.md)
+- **极昼案卷**：[`dossiers/极昼/极昼.md`](dossiers/极昼/极昼.md)（诉讼阶段·真实案件）
+- **似有暗香来**：[`dossiers/似有暗香来/红色剧本杀——似有暗香来.md`](dossiers/似有暗香来/红色剧本杀——似有暗香来.md)（侦察阶段·虚构剧本杀，极昼创作渊源）
 - **深度研究**：[`research/deep-research-brief.md`](research/deep-research-brief.md)
 
 ---

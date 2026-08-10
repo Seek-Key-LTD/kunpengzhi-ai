@@ -8,8 +8,9 @@ package.json
 mem_ops_api.py
 .chainlit/
 
-# 运行时产物：辩论实录归档到 ssd/kunpengzhi-archive（mc alias ssd = minio-s3）
-擂台存档/
+# 运行时产物：辩论实录 + 竞技场指标（按案归入 dossiers/<案名>/，长期归档到 ssd/kunpengzhi-archive）
+dossiers/*/实录/
+dossiers/*/metrics/
 
 # Cloudflare Wrangler CLI 本地缓存（含账号信息，禁止 commit）
 .wrangler/
