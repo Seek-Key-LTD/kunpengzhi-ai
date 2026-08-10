@@ -13,10 +13,85 @@ import openai
 import os
 import time
 import html
+import json
+import subprocess
 from pathlib import Path
 from core.token_ring import RobertTokenRingEngine
 from core.contract import default_contract, summarize_contract
 from core.script_compiler import compile_contract
+
+# ⚙️ FIELD 场配置：field = 场景化节目容器（法庭只是其中一种场）
+# trading panel 只显示「此刻」一个画面；content_source 决定素材通道
+FIELD_REGISTRY = {
+    "court": {
+        "name": "⚖️ 法庭场（看盘式庭审）",
+        "layout": "left=ticker / right=order flow / mid-top=trading panel(庭辩) / mid-bottom=news feed(笔录)",
+        "content_source": "case",          # 案件卷宗（dossiers/ 本地）
+        "gameplay": "庭辩对抗：12 黄道内阁 vs 公诉 · 剧本编译驱动",
+    },
+    "interrogation": {
+        "name": "🕵️ 讯问场（调查阶段）",
+        "layout": "left=讯问流 / right=证据笔录 / mid-top=被讯问人状态 / mid-bottom=攻心节奏",
+        "content_source": "case",          # 似有暗香来调查阶段
+        "gameplay": "讯问攻防：证据牌系统 + 心理防线模型（规划中）",
+    },
+    "studio": {
+        "name": "📡 演播场（发布会/播报）",
+        "layout": "left=ticker / right=order flow / mid-top=播报画面 / mid-bottom=news feed",
+        "content_source": "essay",         # 鲲鹏志论述（gbrain RAG）
+        "gameplay": "RAG 播报：gbrain 检索章节 → 编译剧本 → 播报（规划中）",
+    },
+}
+
+DEFAULT_FIELD = "court"
+
+
+def load_research_file(filepath):
+    if not filepath or not os.path.exists(filepath):
+        return ""
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        return f"加载文献失败: {e}"
+
+
+def load_material(mtype: str, query: str = "") -> str:
+    """统一调用层（大一统）：
+    type=case  → dossiers/ 本地案卷文件（内容资产）
+    type=essay → gbrain RAG 检索鲲鹏志论述（content 在 gbrain，不搬文件）
+    """
+    if mtype == "case":
+        return load_research_file(query)
+    if mtype == "essay":
+        return gbrain_query(query)
+    return ""
+
+
+def gbrain_query(question: str, limit: int = 3) -> str:
+    """gbrain RAG 检索（nuc 本地调用，VOYAGE_API_KEY 已纳管 /etc/environment）"""
+    if not question:
+        return ""
+    try:
+        env = dict(os.environ)
+        env.setdefault("VOYAGE_API_KEY", "")  # subprocess 继承环境；如无则 gbrain 全文兜底
+        r = subprocess.run(
+            [os.path.expanduser("~/.bun/bin/bun"), os.path.expanduser("~/.bun/bin/gbrain"),
+             "query", question, "--detail", "low"],
+            capture_output=True, text=True, timeout=90, env=env,
+        )
+        out = (r.stdout or "").strip()
+        if not out or "No results" in out:
+            # 向量失败时回退全文检索
+            r2 = subprocess.run(
+                [os.path.expanduser("~/.bun/bin/bun"), os.path.expanduser("~/.bun/bin/gbrain"),
+                 "search", question],
+                capture_output=True, text=True, timeout=60, env=env,
+            )
+            out = (r2.stdout or "").strip()
+        return out[:12000]
+    except Exception as e:
+        return f"gbrain 检索失败: {e}"
 
 st.set_page_config(
     page_title="鲲鹏志 · 12黄道内阁与紫罗兰掌门法庭",
@@ -624,14 +699,17 @@ with mid_col:
     cur_c = st.session_state.get("contract") or default_contract()
     st.markdown(f'<div class="sub-title">☀️ 12 黄道内阁 + 🌸 昴宿七姐妹 · 剧本：<b>{cur_c["meta"].get("title", "?")}</b> · 协议：<b>{cur_c.get("protocol")}</b> · {len(cur_c.get("acts", []))} 幕</div>', unsafe_allow_html=True)
 
-    def load_research_file(filepath):
-        if not filepath or not os.path.exists(filepath):
-            return ""
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                return f.read()
-        except Exception as e:
-            return f"加载文献失败: {e}"
+    # 🎛️ FIELD 选择器（场 = 场景化节目容器）
+    field_key = st.session_state.get("field", DEFAULT_FIELD)
+    field_opts = list(FIELD_REGISTRY.keys())
+    field_names = [FIELD_REGISTRY[k]["name"] for k in field_opts]
+    sel_field = st.sidebar.radio("🎛️ 场 (Field)", field_names, index=field_opts.index(field_key) if field_key in field_opts else 0, key="field_selector")
+    selected_field = field_opts[field_names.index(sel_field)]
+    if selected_field != field_key:
+        st.session_state.field = selected_field
+        st.rerun()
+    field_cfg = FIELD_REGISTRY[selected_field]
+    st.sidebar.caption(f"⚙️ {field_cfg['gameplay']}")
 
     with st.sidebar:
         # 🎬 Coding Agent 编剧室：任意文本 → 剧本编译（Session Contract）
@@ -667,6 +745,53 @@ with mid_col:
                 st.rerun()
             cur_c = st.session_state.get("contract") or default_contract()
             st.caption(f"当前剧本：{cur_c['meta'].get('title', '?')} · 协议 {cur_c.get('protocol')} · {len(cur_c.get('acts', []))} 幕")
+
+        # 📚 卷宗素材库（RAG 统一调用层）：case=本地案卷 / essay=gbrain 论述
+        with st.expander("📚 卷宗素材库 · RAG（case 本地 / essay gbrain）", expanded=False):
+            essay_books = []
+            essay_dir = Path(__file__).parent / "dossiers" / "论述"
+            if essay_dir.exists():
+                essay_books = [f.stem for f in sorted(essay_dir.glob("*.json"))]
+            mtype = st.radio("素材类型", ["essay（gbrain 论述）", "case（本地案卷）"], horizontal=True, key="rag_mtype")
+            if mtype.startswith("essay"):
+                if essay_books:
+                    book = st.selectbox("📖 书目", essay_books, key="rag_book")
+                    meta = json.load(open(essay_dir / f"{book}.json", encoding="utf-8"))
+                    chap_titles = [f"{c['title']}（{c['slug']}）" for c in meta["chapters"]]
+                    chap = st.selectbox("章节", chap_titles, key="rag_chap")
+                    if st.button("🔍 拉取 gbrain 章节", use_container_width=True, key="rag_fetch"):
+                        slug = chap.split("（")[-1].rstrip("）")
+                        with st.spinner("gbrain 检索中..."):
+                            text = load_material("essay", slug)
+                        if text and not text.startswith("gbrain 检索失败"):
+                            st.session_state.material_text = text
+                            st.session_state.rag_source = f"gbrain/{book}/{slug}"
+                            st.session_state.messages = []
+                            st.session_state.indictment_text = ""
+                            st.session_state.current_stage_id = 0
+                            st.success(f"✅ 已拉取 {book}/{slug}（{len(text)} 字符）→ 可编译剧本")
+                            st.rerun()
+                        else:
+                            st.warning(text or "gbrain 未命中")
+                else:
+                    st.caption("无 dossiers/论述 注册表（可先在仓库添加）")
+            else:
+                case_opts = ["dossiers/极昼/极昼.md", "dossiers/极昼/反方弹药-恶意揣测.md", "dossiers/似有暗香来/红色剧本杀——似有暗香来.md"]
+                sel_case = st.selectbox("📁 案卷", case_opts, key="rag_case")
+                if st.button("📥 载入案卷", use_container_width=True, key="rag_case_btn"):
+                    text = load_material("case", sel_case)
+                    if text:
+                        st.session_state.material_text = text
+                        st.session_state.rag_source = sel_case
+                        st.session_state.messages = []
+                        st.session_state.indictment_text = ""
+                        st.session_state.current_stage_id = 0
+                        st.success(f"✅ 已载入 {sel_case}（{len(text)} 字符）")
+                        st.rerun()
+                    else:
+                        st.warning("文件不存在")
+            if st.session_state.get("rag_source"):
+                st.caption(f"当前素材源：{st.session_state.rag_source}")
 
         st.markdown("### 📊 席位实时状态（ticker）")
         render_speaker_ticker()
