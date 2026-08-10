@@ -48,7 +48,7 @@
 | 文档 | 类型 | 内容 |
 |------|------|------|
 | [deep-research-brief.md](../research/deep-research-brief.md) | 内容研究 | 《鲲鹏志》深度研究简报（Initial Letter Theory / 连绵词翻译检测法） |
-| [极昼.md](../research/极昼.md) | 案卷原文 | 极昼案模拟法庭原始案卷（驱动 streamlit_app.py） |
+| [极昼.md](../dossiers/极昼/极昼.md) | 案卷原文 | 极昼案模拟法庭原始案卷（驱动 streamlit_app.py） |
 
 ---
 
