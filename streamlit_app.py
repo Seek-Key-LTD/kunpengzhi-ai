@@ -69,12 +69,26 @@ def load_material(mtype: str, query: str = "") -> str:
 
 
 def gbrain_query(question: str, limit: int = 3) -> str:
-    """gbrain RAG 检索（nuc 本地调用，VOYAGE_API_KEY 已纳管 /etc/environment）"""
+    """gbrain RAG 检索（nuc 本地调用，VOYAGE_API_KEY 已纳管 /etc/environment）
+    1) 先直接 get（question 为注册表 slug 时精确拉全文）
+    2) 失败再 query 定位 slug → get 拉全文（--detail low 只给片段）
+    """
     if not question:
         return ""
+    env = dict(os.environ)
     try:
-        env = dict(os.environ)
-        env.setdefault("VOYAGE_API_KEY", "")  # subprocess 继承环境；如无则 gbrain 全文兜底
+        # ① 直接 get：slug 精确拉取（如 第13章-黄河之水天上来）
+        r0 = subprocess.run(
+            [os.path.expanduser("~/.bun/bin/bun"), os.path.expanduser("~/.bun/bin/gbrain"),
+             "get", question],
+            capture_output=True, text=True, timeout=60, env=env,
+        )
+        full0 = (r0.stdout or "").strip()
+        low0 = (full0 + (r0.stderr or "")).lower()
+        if full0 and "not found" not in low0 and "error" not in low0 and "usage:" not in low0:
+            return full0[:12000]
+
+        # ② query 定位（自由文本）
         r = subprocess.run(
             [os.path.expanduser("~/.bun/bin/bun"), os.path.expanduser("~/.bun/bin/gbrain"),
              "query", question, "--detail", "low"],
@@ -82,13 +96,25 @@ def gbrain_query(question: str, limit: int = 3) -> str:
         )
         out = (r.stdout or "").strip()
         if not out or "No results" in out:
-            # 向量失败时回退全文检索
             r2 = subprocess.run(
                 [os.path.expanduser("~/.bun/bin/bun"), os.path.expanduser("~/.bun/bin/gbrain"),
                  "search", question],
                 capture_output=True, text=True, timeout=60, env=env,
             )
             out = (r2.stdout or "").strip()
+        # 提取首个命中 slug（行首 [score] slug -- 标题）→ 拉全文
+        import re
+        m = re.search(r"^\[[0-9.]+\]\s+(\S+)\s+--", out, re.M)
+        if m:
+            slug = m.group(1)
+            r3 = subprocess.run(
+                [os.path.expanduser("~/.bun/bin/bun"), os.path.expanduser("~/.bun/bin/gbrain"),
+                 "get", slug],
+                capture_output=True, text=True, timeout=60, env=env,
+            )
+            full = (r3.stdout or "").strip()
+            if full and len(full) > len(out):
+                return full[:12000]
         return out[:12000]
     except Exception as e:
         return f"gbrain 检索失败: {e}"
