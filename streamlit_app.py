@@ -693,7 +693,7 @@ with mid_col:
             else:
                 st.warning("暂无庭审笔录可保存")
 
-    article_text = st.session_state.get("material_text") or load_research_file("research/极昼.md")
+    article_text = st.session_state.get("material_text") or load_research_file("dossiers/极昼/极昼.md")
     cur_title = (st.session_state.get("contract") or default_contract())["meta"].get("title", "极昼")
 
     with st.expander(f"📌 当前素材全文（{cur_title}）", expanded=False):

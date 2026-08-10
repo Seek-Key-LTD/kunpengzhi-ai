@@ -28,7 +28,7 @@
 
 - 8 席位 = 8 个 key agent（15 个可用：ruby/topaz/leopard/azure/luna/agate/argentite/meigui/qiangwei/tumi/moli/muxu/diamond/carbonado/quartz）
 - 流程：先空跑一轮（链路验证）→ 再发真实辩题
-- 辩题：`research/极昼.md`（已入库，原始文本）
+- 辩题：`dossiers/极昼/极昼.md`（已入库，原始文本）
 - 推送：Matrix 房间 + 网页双通道（待搭）
 
 ## 待办
