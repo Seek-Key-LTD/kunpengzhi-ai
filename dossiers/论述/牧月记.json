@@ -1,0 +1,25 @@
+{
+  "book": "牧月记",
+  "source": "gbrain",
+  "count": 3,
+  "chapters": [
+    {
+      "slug": "yuanbao-0802-muyueji-logic-map",
+      "type": "concept",
+      "date": "2026-08-09",
+      "title": "Yuanbao 0802 Muyueji Logic Map"
+    },
+    {
+      "slug": "牧月记-序言",
+      "type": "concept",
+      "date": "2026-08-09",
+      "title": "序言"
+    },
+    {
+      "slug": "牧月记-目录",
+      "type": "concept",
+      "date": "2026-08-09",
+      "title": "牧月记：目录"
+    }
+  ]
+}
