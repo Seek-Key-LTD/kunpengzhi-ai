@@ -10,3 +10,6 @@ mem_ops_api.py
 
 # 运行时产物：辩论实录归档到 ssd/kunpengzhi-archive（mc alias ssd = minio-s3）
 擂台存档/
+
+# Cloudflare Wrangler CLI 本地缓存（含账号信息，禁止 commit）
+.wrangler/

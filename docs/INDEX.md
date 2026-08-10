@@ -39,7 +39,7 @@
 ### 计划类
 | 文档 | 内容 |
 |------|------|
-| [burn-5000-plan.md](burn-5000-plan.md) | 5000 次调用烧录计划 — V2.0 评分系统大规模校准 |
+| [指标空间设计-v2.md](指标空间设计-v2.md) | 六维指标空间设计（帅将/监委/媒体/Mind/自省/谱系） |
 
 ---
 
@@ -61,7 +61,9 @@
 | [issues/001-八席根音分配方案.md](../vibe-debating/issues/001-八席根音分配方案.md) | 议题 1 — 八席根音分配 |
 | [issues/002-礼乐双轴评分标准.md](../vibe-debating/issues/002-礼乐双轴评分标准.md) | 议题 2 — 礼乐双轴评分 |
 | [issues/003-螺线谱可视化技术方案.md](../vibe-debating/issues/003-螺线谱可视化技术方案.md) | 议题 3 — 螺线谱技术方案 |
+| [issues/003-AGI评估的演绎推导.md](../vibe-debating/issues/003-AGI评估的演绎推导.md) | 议题 3 — AGI 评估的演绎推导 |
 | [issues/004-指挥家与交付网络WBS.md](../vibe-debating/issues/004-指挥家与交付网络WBS.md) | 议题 4 — 指挥家与交付网络 WBS |
+| [papers/001-Parallogic-视差逻辑-AGI评估的演绎判据.md](../vibe-debating/papers/001-Parallogic-视差逻辑-AGI评估的演绎判据.md) | 论文 001 — Parallogic 视差逻辑 |
 
 ---
 
@@ -87,3 +89,4 @@
 ## 修订历史
 
 - 2026-08-09: 整理文档组织。迁移擂台存档至 SSD，删除过时 session 文件，重写 README/chainlit.md/AGENT.md，新建本导航。
+- 2026-08-09: 同步 9485211 commit 后的变化——删除 burn-5000-plan 引用，添加 003-AGI评估议题、papers/001 论文、指标空间设计-v2。
