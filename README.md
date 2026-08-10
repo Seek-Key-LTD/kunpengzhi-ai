@@ -12,7 +12,7 @@
 | 🥊 4v4 鹰洋鱼盲测辩论 | [`app.py`](app.py) | Chainlit | 主线（本地运行） |
 | ⚖️ 极昼案模拟法庭 | [`streamlit_app.py`](streamlit_app.py) | Streamlit | dev=nuc / staging+prod=Heroku |
 | 🎼 Vibe Debating 礼乐评价 | [`vibe-debating/`](vibe-debating/) | 设计稿 + ERC-20 | 设计阶段 |
-| 🦞 Shrimp 打赏网关 | https://shrimp-agent-ash3.capitaltrain.cn | FastAPI + Base Sepolia | ✅ 全网可达（领豆/打赏/广播） |
+| 🦞 Shrimp 打赏网关 | https://shrimp-agent.seekkey.eu.org | FastAPI + Base Sepolia | ✅ 全网可达（领豆/打赏/广播） |
 | 🎫 VibeTicket 链上确权 | [`contracts/vibe-ticket/`](contracts/vibe-ticket/) | Solidity | Base Sepolia 部署 |
 
 ---
