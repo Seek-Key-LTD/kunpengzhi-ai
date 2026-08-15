@@ -139,7 +139,7 @@ def open_stream(kind: str, title: str, archive_dir: str | Path | None = None) ->
     target_dir = Path(archive_dir) if archive_dir else ARCHIVE_DIR
     target_dir.mkdir(parents=True, exist_ok=True)
     path = target_dir / filename
-    path.write_text(f"# 🦅 鲲鹏志 · {kind}实录 · 流式会话\n\n", encoding="utf-8")
+    path.write_text(f"# 🐋🦅 鲲鹏志 · {kind}实录 · 流式会话\n\n", encoding="utf-8")
     return str(path), filename, ts
 
 

@@ -167,7 +167,7 @@ class DebateOrchestrator:
 
         if save_dir:
             from core.archive import save_run
-            text = f"# 🦅 鲲鹏志 · 擂台\n\n"
+            text = f"# 🐋🦅 鲲鹏志 · 擂台\n\n"
             text += f"**辩题**: {match.topic['title']}\n\n"
             text += f"---\n\n## 🎤 辩论正赛\n\n{debate_text}\n\n"
             text += f"---\n\n## 🍵 讲茶大堂\n\n{teahouse_text}\n\n"
@@ -192,7 +192,7 @@ if __name__ == "__main__":
         result = await DebateOrchestrator.run(topic_id, save_dir=save_dir)
 
         print(f"\n{'='*60}")
-        print(f"🦅 鲲鹏志 · 擂台")
+        print(f"🐋🦅 鲲鹏志 · 擂台")
         print(f"辩题: {result['title']}")
         print(f"{'='*60}")
         print(f"\n🎤 辩论 ({len(result['debate'])} 字符)")

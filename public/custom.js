@@ -1,6 +1,6 @@
-// 鲲鹏志 · Chainlit 自定义注入 (v9 — 🔍 弹出搜索页)
+// 鲲鹏志 · Chainlit 自定义注入 (v10 — 🐋🦅 favicon 鲲鹏互变)
 (function(){
-    console.log('[鲲鹏志] v9');
+    console.log('[鲲鹏志] v10');
 
     function waitBody(fn) {
         if (document.body) { fn(); return; }
@@ -10,6 +10,34 @@
     }
 
     waitBody(function(){
+        // ===== 0. favicon 鲲鹏互变 (北冥有鱼, 化而为鸟) =====
+        (function(){
+            var states = ['🐋', '🦅'];
+            var idx = 0;
+            function setFavicon(emoji) {
+                var old = document.getElementById('kz-favicon');
+                if (old) old.remove();
+                var canvas = document.createElement('canvas');
+                canvas.width = 64; canvas.height = 64;
+                var ctx = canvas.getContext('2d');
+                ctx.font = '56px serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(emoji, 32, 36);
+                var link = document.createElement('link');
+                link.id = 'kz-favicon';
+                link.rel = 'icon';
+                link.type = 'image/png';
+                link.href = canvas.toDataURL('image/png');
+                document.head.appendChild(link);
+            }
+            setFavicon(states[0]);
+            setInterval(function() {
+                idx = (idx + 1) % states.length;
+                setFavicon(states[idx]);
+            }, 2000);
+        })();
+
         // ===== 1. 左右固定侧栏 =====
         function makeSidebar(id, src, pos) {
             if (document.getElementById(id)) return;

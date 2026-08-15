@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>螺线谱 · Spiral Notation — 鲲鹏志AI</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: radial-gradient(ellipse at center, #0a0a1a 0%, #000005 100%);
+    color: #e0d8c0;
+    font-family: "Songti SC", "Noto Serif SC", serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; overflow-x: hidden;
+  }
+  h1 {
+    margin: 18px 0 4px; font-size: 22px; letter-spacing: 8px;
+    color: #d4af37; text-shadow: 0 0 12px rgba(212,175,55,.4);
+    font-weight: 400;
+  }
+  .sub { font-size: 12px; color: #6b6555; margin-bottom: 10px; letter-spacing: 2px; }
+  #stage { position: relative; width: 720px; height: 720px; max-width: 95vw; }
+  canvas { position: absolute; top: 0; left: 0; }
+  #ctrl {
+    margin: 8px 0 20px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center;
+  }
+  button {
+    background: transparent; border: 1px solid #d4af3766; color: #d4af37;
+    padding: 6px 18px; border-radius: 3px; cursor: pointer;
+    font-family: inherit; font-size: 13px; letter-spacing: 3px; transition: all .25s;
+  }
+  button:hover { background: #d4af3722; box-shadow: 0 0 10px #d4af3755; }
+  button.active { background: #d4af3733; }
+  .legend {
+    font-size: 11px; color: #7a7462; margin-bottom: 14px; text-align: center; line-height: 1.7;
+  }
+  .seat-row { display:inline-block; margin: 0 6px; }
+  .seat-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:3px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<h1>螺 线 谱</h1>
+<div class="sub">SPIRAL NOTATION · 八度一圈 · 十二地支 · 三合局转调</div>
+<div id="stage">
+  <canvas id="cv" width="720" height="720"></canvas>
+</div>
+<div id="ctrl">
+  <button id="btnPlay">▶ 演奏</button>
+  <button id="btnScales">八卦音阶</button>
+  <button id="btnFree">自由点触</button>
+  <button id="btnSanhe">三合局路径</button>
+  <button id="btnClear">✕ 清除</button>
+</div>
+<div class="legend">
+  <span class="seat-row"><span class="seat-dot" style="background:#ffd700"></span>乾·吕洞宾 G</span>
+  <span class="seat-row"><span class="seat-dot" style="background:#98fb98"></span>坤·何仙姑 C</span>
+  <span class="seat-row"><span class="seat-dot" style="background:#ff6b6b"></span>艮·张果老 D</span>
+  <span class="seat-row"><span class="seat-dot" style="background:#87ceeb"></span>兑·韩湘子 A</span><br>
+  <span class="seat-row"><span class="seat-dot" style="background:#ffa07a"></span>离·汉钟离 Eb</span>
+  <span class="seat-row"><span class="seat-dot" style="background:#da70d6"></span>坎·蓝采和 Ab</span>
+  <span class="seat-row"><span class="seat-dot" style="background:#cd853f"></span>震·曹国舅 Bb</span>
+  <span class="seat-row"><span class="seat-dot" style="background:#a8a8a8"></span>巽·铁拐李 Db</span>
+</div>
+<script>
+// ═══════════════════════════════════════════════
+// 螺线谱 Spiral Notation — 十二平均律螺旋可视化
+// 数学: r(θ) = r0 + k·θ  (阿基米德螺旋, 每圈=1八度)
+//   θ = 音高角度 (12半音=360°=十二地支)
+//   r = 音区 (内圈低音, 外圈高音)
+// 设计稿: vibe-debating/0001 + issues/003 (方案B)
+// ═══════════════════════════════════════════════
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const CX = W/2, CY = H/2;
+const R0 = 40;          // 内圈起始半径(无极点留白)
+const OCT = 78;         // 每八度径向增量
+const R_MAX = Math.min(CX,CY) - 30;
+
+// ── 音名·地支·星座 (C=子=0°) ──
+const NOTES = [
+  {n:'C',  z:'子', s:'♈'}, {n:'C#', z:'丑', s:'♉'}, {n:'D',  z:'寅', s:'♊'},
+  {n:'Eb', z:'卯', s:'♋'}, {n:'E',  z:'辰', s:'♌'}, {n:'F',  z:'巳', s:'♍'},
+  {n:'F#', z:'午', s:'♎'}, {n:'G',  z:'未', s:'♏'}, {n:'Ab', z:'申', s:'♐'},
+  {n:'A',  z:'酉', s:'♑'}, {n:'Bb', z:'戌', s:'♒'}, {n:'B',  z:'亥', s:'♓'},
+];
+const ANG0 = -Math.PI/2;   // 子位在正上
+const angOf = i => ANG0 + i * (Math.PI*2/12);
+const freqOf = (pc, oct) => 440 * Math.pow(2, (pc - 9)/12 + (oct - 4));
+
+// ── 八席 (设计稿0001映射表) ──
+const SEATS = {
+  '吕洞宾': {pc:7,  oct:3, ang:0,   color:'#ffd700', trigram:'☰乾'},
+  '何仙姑': {pc:0,  oct:3, ang:90,  color:'#98fb98', trigram:'☷坤'},
+  '张果老': {pc:2,  oct:3, ang:180, color:'#ff6b6b', trigram:'☶艮'},
+  '韩湘子': {pc:9,  oct:3, ang:270, color:'#87ceeb', trigram:'☱兑'},
+  '汉钟离': {pc:3,  oct:3, ang:45,  color:'#ffa07a', trigram:'☲离'},
+  '蓝采和': {pc:8,  oct:3, ang:135, color:'#da70d6', trigram:'☵坎'},
+  '曹国舅': {pc:10, oct:3, ang:225, color:'#cd853f', trigram:'☳震'},
+  '铁拐李': {pc:1,  oct:3, ang:315, color:'#a8a8a8', trigram:'☴巽'},
+};
+// 三合局: 申子辰(水) 亥卯未(木) 寅午戌(火) 巳酉丑(金)
+const TRI_UNIONS = [
+  {name:'水局·申子辰', members:[8,0,4],  color:'#4a90d9'},
+  {name:'木局·亥卯未', members:[11,3,7], color:'#5dbb63'},
+  {name:'火局·寅午戌', members:[2,6,10], color:'#e2543e'},
+  {name:'金局·巳酉丑', members:[5,9,1],  color:'#d9c14a'},
+];
+
+// ── WebAudio ──
+let AC = null;
+function audio() {
+  if (!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function playNote(freq, dur=1.2, vol=0.16, type='sine') {
+  const ac = audio();
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, ac.currentTime);
+  g.gain.linearRampToValueAtTime(vol, ac.currentTime + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+  o.connect(g).connect(ac.destination);
+  o.start(); o.stop(ac.currentTime + dur + 0.1);
+  return o;
+}
+
+// ── 状态 ──
+let mode = 'free';          // free | scales | sanhe
+let notesOn = [];           // 激活的音 {pc, oct, seat?}
+let ripples = [];           // 播放涟漪 {x,y,r,alpha}
+let sweepAng = null;        // 演奏扫描角
+
+// ── 绘制基础盘面 ──
+function drawBase() {
+  // 无极点: 中心微光 (不可达的暗示)
+  const g = ctx.createRadialGradient(CX,CY,0, CX,CY,60);
+  g.addColorStop(0,'rgba(212,175,55,0.12)');
+  g.addColorStop(1,'rgba(212,175,55,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(CX,CY,60,0,7); ctx.fill();
+
+  // 八度圈 (细环) — 圈数随半径自适应
+  ctx.strokeStyle = 'rgba(150,140,110,0.12)';
+  ctx.lineWidth = 1;
+  const nOct = Math.floor((R_MAX - R0) / OCT);
+  for (let o = 0; o <= nOct; o++) {
+    ctx.beginPath(); ctx.arc(CX, CY, R0 + o*OCT, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // 12地支射线 (从中心到外缘)
+  NOTES.forEach((N,i) => {
+    const a = angOf(i);
+    ctx.strokeStyle = 'rgba(150,140,110,0.10)';
+    ctx.beginPath();
+    ctx.moveTo(CX + R0*Math.cos(a), CY + R0*Math.sin(a));
+    ctx.lineTo(CX + R_MAX*Math.cos(a), CY + R_MAX*Math.sin(a));
+    ctx.stroke();
+    // 地支标签 (最外圈)
+    const lx = CX + (R_MAX+16)*Math.cos(a), ly = CY + (R_MAX+16)*Math.sin(a);
+    ctx.fillStyle = 'rgba(160,150,120,0.55)';
+    ctx.font = '13px "Songti SC", serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(N.z, lx, ly);
+    // 星座小标
+    const sx = CX + (R_MAX+30)*Math.cos(a), sy = CY + (R_MAX+30)*Math.sin(a);
+    ctx.fillStyle = 'rgba(120,110,90,0.35)';
+    ctx.font = '10px serif';
+    ctx.fillText(N.s, sx, sy);
+  });
+
+  // 主螺旋线 (阿基米德) — 金色
+  ctx.strokeStyle = 'rgba(212,175,55,0.4)';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  for (let t = 0; t <= Math.PI*2*nOct; t += 0.02) {
+    const r = R0 + (OCT/(Math.PI*2)) * t;
+    const x = CX + r*Math.cos(t + ANG0), y = CY + r*Math.sin(t + ANG0);
+    t === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+}
+
+// ── 三合局弧线 ──
+function drawSanhe(show) {
+  if (!show) return;
+  TRI_UNIONS.forEach(u => {
+    ctx.strokeStyle = u.color + '55';
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([4,4]);
+    u.members.forEach((pc,k) => {
+      const a1 = angOf(u.members[k]);
+      const a2 = angOf(u.members[(k+1)%3]);
+      // 大弧连接 (120°跳跃)
+      ctx.beginPath();
+      ctx.arc(CX, CY, R0 + OCT*2.5, a1, a2, (a2 - a1) < Math.PI);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  });
+}
+
+// ── 八席位标注 ──
+function drawSeats() {
+  Object.entries(SEATS).forEach(([name,S]) => {
+    const a = angOf(S.pc);
+    // 定位角标记线
+    const aa = ANG0 + S.ang * Math.PI/180;
+    ctx.strokeStyle = S.color + '33';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.lineTo(CX + (R_MAX-4)*Math.cos(aa), CY + (R_MAX-4)*Math.sin(aa));
+    ctx.stroke();
+    // 根音标记 (oct=3圈)
+    const r = R0 + S.oct*OCT;
+    const x = CX + r*Math.cos(a), y = CY + r*Math.sin(a);
+    ctx.fillStyle = S.color;
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill();
+    ctx.shadowColor = S.color; ctx.shadowBlur = 10;
+    ctx.fill(); ctx.shadowBlur = 0;
+    // 名牌
+    const lx = CX + (r+26)*Math.cos(a), ly = CY + (r+26)*Math.sin(a);
+    ctx.fillStyle = S.color + 'cc';
+    ctx.font = '11px "Songti SC", serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(S.trigram.split('')[1] + '·' + name.slice(0,2), lx, ly);
+  });
+}
+
+// ── 激活音符 ──
+function drawNotes() {
+  notesOn.forEach(N => {
+    const a = angOf(N.pc);
+    const r = R0 + N.oct*OCT;
+    const x = CX + r*Math.cos(a), y = CY + r*Math.sin(a);
+    const color = N.seat ? SEATS[N.seat].color : '#fff';
+    ctx.fillStyle = color;
+    ctx.shadowColor = color; ctx.shadowBlur = N.glow||12;
+    ctx.beginPath(); ctx.arc(x, y, N.size||7, 0, 7); ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+}
+
+// ── 涟漪 ──
+function drawRipples() {
+  ripples = ripples.filter(R => R.alpha > 0.01);
+  ripples.forEach(R => {
+    ctx.strokeStyle = `rgba(212,175,55,${R.alpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(R.x, R.y, R.r, 0, 7); ctx.stroke();
+    R.r += 1.8; R.alpha *= 0.965;
+  });
+}
+
+// ── 演奏扫描 (旋转的光楔) ──
+function drawSweep() {
+  if (sweepAng === null) return;
+  ctx.save();
+  ctx.translate(CX, CY); ctx.rotate(sweepAng);
+  const g = ctx.createLinearGradient(0,0,R_MAX,0);
+  g.addColorStop(0, 'rgba(212,175,55,0.0)');
+  g.addColorStop(0.85,'rgba(212,175,55,0.10)');
+  g.addColorStop(1, 'rgba(255,230,150,0.35)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(0,0); ctx.arc(0,0,R_MAX,-0.06,0); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  sweepAng += 0.016;
+  if (sweepAng > Math.PI*2*4) sweepAng = null; // 4圈后停
+}
+
+// ── 主循环 ──
+function render() {
+  ctx.clearRect(0,0,W,H);
+  drawBase();
+  drawSanhe(mode==='sanhe');
+  drawSeats();
+  drawNotes();
+  drawRipples();
+  drawSweep();
+  requestAnimationFrame(render);
+}
+render();
+
+// ── 交互: 自由点触 ──
+cv.addEventListener('click', e => {
+  const rect = cv.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * (W/rect.width) - CX;
+  const y = (e.clientY - rect.top) * (H/rect.height) - CY;
+  const r = Math.hypot(x,y);
+  if (r < R0-10 || r > R_MAX+10) return;
+  let ang = Math.atan2(y,x) - ANG0;
+  while (ang < 0) ang += Math.PI*2;
+  const pc = Math.round(ang / (Math.PI*2/12)) % 12;
+  const oct = Math.max(0, Math.round((r - R0)/OCT));
+  // 吸附到螺旋上
+  const nr = R0 + oct*OCT;
+  const nx = CX + nr*Math.cos(angOf(pc)), ny = CY + nr*Math.sin(angOf(pc));
+  const f = freqOf(pc, oct + 1); // oct 0 = C1
+  playNote(f, 1.6, 0.15);
+  notesOn.push({pc, oct, size:7, glow:14});
+  ripples.push({x:nx, y:ny, r:8, alpha:0.7});
+});
+
+// ── 八卦音阶模式: 点击席位演奏其五声音阶 ──
+const SCALES = {
+  '吕洞宾': [0,2,4,7,9],  // 宫调式五声 (G为宫)
+  '何仙姑': [0,2,4,7,9],
+  '张果老': [0,2,4,7,9],
+  '韩湘子': [0,2,4,7,9],
+  '汉钟离': [0,3,5,7,10], // 羽调式五声
+  '蓝采和': [0,3,5,7,10],
+  '曹国舅': [0,2,3,7,8],  // 商调式
+  '铁拐李': [0,2,3,7,8],
+};
+function playSeatScale(name) {
+  const S = SEATS[name], sc = SCALES[name];
+  sc.forEach((step,k) => {
+    const pc = (S.pc + step) % 12;
+    const carry = Math.floor((S.pc + step)/12);
+    setTimeout(() => {
+      playNote(freqOf(pc, S.oct+1+carry), 1.4, 0.15, 'triangle');
+      notesOn.push({pc, oct:S.oct+carry, seat:name, size:6, glow:10});
+      setTimeout(()=>{ notesOn = notesOn.filter(n=>!(n.pc===pc&&n.oct===S.oct+carry&&n.seat===name)); }, 1300);
+    }, k*320);
+  });
+  sweepAng = angOf(S.pc);
+}
+
+// ── 按钮逻辑 ──
+document.getElementById('btnPlay').onclick = () => {
+  audio();
+  // 八席轮流起音 — 巡礼
+  const names = Object.keys(SEATS);
+  names.forEach((n,i) => setTimeout(()=>playSeatScale(n), i*1400));
+};
+let sanheOn = false;
+document.getElementById('btnScales').onclick = e => {
+  audio();
+  const names = Object.keys(SEATS);
+  const name = names[Math.floor(Math.random()*names.length)];
+  playSeatScale(name);
+  e.target.classList.add('active');
+  setTimeout(()=>e.target.classList.remove('active'), 2500);
+};
+document.getElementById('btnFree').onclick = () => { mode='free'; };
+document.getElementById('btnSanhe').onclick = () => {
+  mode = mode==='sanhe' ? 'free' : 'sanhe';
+  document.getElementById('btnSanhe').classList.toggle('active', mode==='sanhe');
+};
+document.getElementById('btnClear').onclick = () => { notesOn=[]; ripples=[]; };
+</script>
+</body>
+</html>
