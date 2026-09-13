@@ -58,7 +58,7 @@
 |---|---|
 | 灌入者 | 任意 agent，遵循管线五步 |
 | 宣告者 | `mcp-registry` CLI（raccoon /opt/mcp-farm/mcp-registry） |
-| 验证者 | 案卷内容：keyagent/adkgo；硬数据：searxng/原文核对；终审：用户（徐厚重） |
+| 验证者 | 案卷内容：keyagent/adkgo；硬数据：searxng/原文核对；终审：用户（锁侠） |
 | 消费者 | field（法庭/讯问/演播）经 `load_material()` 统一调用层取资产 |
 
 ## 6. 触发时机
